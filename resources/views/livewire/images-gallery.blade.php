@@ -9,7 +9,7 @@
     </div>
 
     {{-- Gallery grid --}}
-    <div class="flex-1 overflow-y-auto bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]">
+    <div class="flex-1 overflow-y-auto">
         @if($images->isEmpty())
             <div class="flex items-center justify-center py-20 text-zinc-400">
                 {{ __('No images yet. Upload one from the Desktop.') }}

@@ -199,7 +199,7 @@
     </div>
 
     {{-- Canvas container --}}
-    <div class="relative flex-1 overflow-auto bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]"
+    <div class="relative flex-1 overflow-auto"
          id="desktop-viewport"
          x-data="desktopViewport"
          x-on:scroll="updateScroll()">

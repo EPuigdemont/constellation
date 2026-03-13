@@ -47,7 +47,7 @@
     {{-- Content --}}
     @if($displayMode === 'paginated')
         {{-- Paginated notebook spread --}}
-        <div class="diary-spread relative flex flex-1 flex-col overflow-hidden bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]"
+        <div class="diary-spread relative flex flex-1 flex-col overflow-hidden"
              x-data="{ turning: false, direction: '' }"
              x-on:page-turn.window="turning = true; direction = $event.detail.direction; setTimeout(() => turning = false, 400)">
             {{-- Left edge arrow --}}
@@ -135,7 +135,7 @@
         </div>
     @else
         {{-- Scroll mode --}}
-        <div class="flex-1 overflow-y-auto bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]">
+        <div class="flex-1 overflow-y-auto">
             <div class="mx-auto max-w-3xl space-y-4 px-0 py-0">
                 @forelse($allEntries as $entry)
                     @php $moodClass = $entry->mood ? 'mood-' . $entry->mood->value : ''; @endphp
