@@ -86,6 +86,11 @@ select:focus[data-flux-control] {
     --card-badge-text: var(--color-zinc-300);
 }
 
+.desktop-card-selected {
+    outline: 2px solid var(--color-blue-400);
+    outline-offset: 1px;
+}
+
 .desktop-card-inner {
     @apply relative flex flex-col gap-1;
 }

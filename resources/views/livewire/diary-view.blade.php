@@ -34,7 +34,7 @@
     @if($displayMode === 'paginated')
         {{-- Paginated notebook spread — flex-1 fills remaining height, no scroll --}}
         <div class="flex flex-1 flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-            <div class="mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-6 overflow-hidden p-6">
+            <div class="mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-6 overflow-hidden px-6">
                 @forelse($entries as $entry)
                     <div class="flex flex-1 flex-col overflow-y-auto rounded-lg border border-zinc-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-900"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
@@ -78,7 +78,7 @@
 
             {{-- Pagination controls — anchored to bottom --}}
             @if($totalPages > 1)
-                <div class="flex shrink-0 items-center justify-center gap-4 border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-900">
+                <div class="flex shrink-0 items-center justify-center gap-4 border-t border-zinc-200 bg-zinc-50 px-4 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
                     <flux:button size="sm" wire:click="previousPage" :disabled="$currentPage <= 1" icon="chevron-left">
                         {{ __('Previous') }}
                     </flux:button>
@@ -94,7 +94,7 @@
     @else
         {{-- Infinite scroll mode --}}
         <div class="flex-1 overflow-y-auto bg-zinc-100 dark:bg-zinc-800">
-            <div class="mx-auto max-w-3xl space-y-6 p-8">
+            <div class="mx-auto max-w-3xl space-y-4 px-8 py-0">
                 @forelse($allEntries as $entry)
                     <div class="diary-entry rounded-lg border border-zinc-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-900 {{ $entry->mood ? 'mood-' . $entry->mood->value : '' }}"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>

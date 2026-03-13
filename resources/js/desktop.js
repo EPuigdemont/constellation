@@ -392,6 +392,9 @@ document.addEventListener('alpine:init', () => {
         snapToGrid: false,
         linkingMode: '',
         linkingEntityId: '',
+        selectedCardId: '',
+        selectedCardType: '',
+        selectedCardIsOwner: false,
     });
 
     /**
@@ -481,6 +484,16 @@ document.addEventListener('alpine:init', () => {
                     this.$wire.completeLinking(this.entityId, this.entityType);
                     return;
                 }
+
+                // Mark as selected
+                const dStore = Alpine.store('desktop');
+                dStore.selectedCardId = this.entityId;
+                dStore.selectedCardType = this.entityType;
+                dStore.selectedCardIsOwner = this.isOwner;
+
+                // Visual selection
+                document.querySelectorAll('.desktop-card.desktop-card-selected').forEach(el => el.classList.remove('desktop-card-selected'));
+                this.$el.classList.add('desktop-card-selected');
 
                 this.$wire.bringToFront(this.entityId, this.entityType).then((newZ) => {
                     if (newZ) {
@@ -743,6 +756,44 @@ document.addEventListener('alpine:init', () => {
                     el.style.backgroundColor = colorOverride;
                 } else {
                     el.style.backgroundColor = '';
+                }
+            });
+
+            // Delete/Backspace to delete selected card
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+
+                // Don't trigger when typing in inputs/textareas/contenteditable
+                const tag = e.target.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+
+                const dStore = Alpine.store('desktop');
+                if (!dStore.selectedCardId || !dStore.selectedCardIsOwner) return;
+
+                e.preventDefault();
+
+                const cardId = dStore.selectedCardId;
+                const cardType = dStore.selectedCardType;
+
+                if (confirm('Delete this entity?')) {
+                    this.$wire.deleteEntity(cardId, cardType);
+
+                    // Clear selection
+                    dStore.selectedCardId = '';
+                    dStore.selectedCardType = '';
+                    dStore.selectedCardIsOwner = false;
+                    document.querySelectorAll('.desktop-card.desktop-card-selected').forEach(el => el.classList.remove('desktop-card-selected'));
+                }
+            });
+
+            // Clear selection when clicking canvas background
+            this.$el.addEventListener('click', (e) => {
+                if (e.target === this.$el || e.target.id === 'desktop-canvas') {
+                    const dStore = Alpine.store('desktop');
+                    dStore.selectedCardId = '';
+                    dStore.selectedCardType = '';
+                    dStore.selectedCardIsOwner = false;
+                    document.querySelectorAll('.desktop-card.desktop-card-selected').forEach(el => el.classList.remove('desktop-card-selected'));
                 }
             });
 
