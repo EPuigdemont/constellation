@@ -55,16 +55,40 @@
 
         {{-- Search & Filter --}}
         <div x-data="desktopSearch" class="flex items-center gap-2">
-            {{-- Entity type quick-filter --}}
+            {{-- Entity type multi-select filter (icons) --}}
             <div class="hidden items-center gap-0.5 rounded-md border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800 md:flex">
-                <template x-for="f in typeFilters" :key="f.value">
-                    <button type="button"
-                            x-on:click="filterByType(f.value)"
-                            :class="activeTypeFilter === f.value ? 'bg-zinc-200 dark:bg-zinc-700 font-semibold' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700'"
-                            class="rounded px-1.5 py-1 text-xs text-zinc-700 dark:text-zinc-300"
-                            x-text="f.label">
-                    </button>
-                </template>
+                {{-- Diary --}}
+                <button type="button"
+                        x-on:click="toggleType('diary_entry')"
+                        :class="isTypeActive('diary_entry') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                        title="{{ __('Diary Entries') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
+                </button>
+                {{-- Notes --}}
+                <button type="button"
+                        x-on:click="toggleType('note')"
+                        :class="isTypeActive('note') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                        title="{{ __('Notes') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                </button>
+                {{-- Post-its --}}
+                <button type="button"
+                        x-on:click="toggleType('postit')"
+                        :class="isTypeActive('postit') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                        title="{{ __('Post-its') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" /></svg>
+                </button>
+                {{-- Images --}}
+                <button type="button"
+                        x-on:click="toggleType('image')"
+                        :class="isTypeActive('image') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                        title="{{ __('Images') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                </button>
             </div>
 
             <div class="relative">
@@ -73,7 +97,7 @@
                        x-on:input.debounce.250ms="filterCards()"
                        placeholder="{{ __('Search cards...') }}"
                        class="w-28 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 lg:w-36">
-                <button x-show="searchQuery !== '' || activeTagFilter !== null || activeTypeFilter !== null"
+                <button x-show="searchQuery !== '' || activeTagFilter !== null || activeTypeFilters.length < allTypes.length"
                         x-on:click="clearFilters()"
                         x-cloak
                         type="button"

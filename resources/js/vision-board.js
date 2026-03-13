@@ -6,6 +6,115 @@
 
 import interact from 'interactjs';
 
+/** Grid cell size in pixels */
+const VB_GRID_SIZE = 40;
+
+function vbSnapToGrid(value) {
+    return Math.round(value / VB_GRID_SIZE) * VB_GRID_SIZE;
+}
+
+function vbGetCardElements() {
+    const canvas = document.getElementById('vb-canvas');
+    if (!canvas) return [];
+    return Array.from(canvas.querySelectorAll('[data-card-id]'));
+}
+
+function vbGetCardsBoundingBox() {
+    const cards = vbGetCardElements();
+    if (cards.length === 0) return null;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    for (const el of cards) {
+        if (el.style.display === 'none') continue;
+        const x = parseFloat(el.style.left) || 0;
+        const y = parseFloat(el.style.top) || 0;
+        const w = el.offsetWidth || 280;
+        const h = el.offsetHeight || 220;
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + w);
+        maxY = Math.max(maxY, y + h);
+    }
+
+    return { minX, minY, maxX, maxY };
+}
+
+function vbShowGuideLines(dragEl) {
+    const store = Alpine.store('visionBoard');
+    if (!store.showGuides) return;
+
+    const guidesContainer = document.getElementById('vb-guides');
+    if (!guidesContainer) return;
+
+    guidesContainer.innerHTML = '';
+
+    const dragX = parseFloat(dragEl.style.left) || 0;
+    const dragY = parseFloat(dragEl.style.top) || 0;
+    const dragW = dragEl.offsetWidth || 280;
+    const dragH = dragEl.offsetHeight || 220;
+    const dragCX = dragX + dragW / 2;
+    const dragCY = dragY + dragH / 2;
+
+    const THRESHOLD = 8;
+    const cards = vbGetCardElements();
+
+    for (const el of cards) {
+        if (el === dragEl) continue;
+
+        const x = parseFloat(el.style.left) || 0;
+        const y = parseFloat(el.style.top) || 0;
+        const w = el.offsetWidth || 280;
+        const h = el.offsetHeight || 220;
+        const cx = x + w / 2;
+        const cy = y + h / 2;
+
+        if (Math.abs(dragCX - cx) < THRESHOLD) {
+            guidesContainer.appendChild(vbCreateGuideLine('vertical', cx, Math.min(dragY, y), Math.max(dragY + dragH, y + h)));
+        }
+        if (Math.abs(dragX - x) < THRESHOLD) {
+            guidesContainer.appendChild(vbCreateGuideLine('vertical', x, Math.min(dragY, y), Math.max(dragY + dragH, y + h)));
+        }
+        if (Math.abs((dragX + dragW) - (x + w)) < THRESHOLD) {
+            guidesContainer.appendChild(vbCreateGuideLine('vertical', x + w, Math.min(dragY, y), Math.max(dragY + dragH, y + h)));
+        }
+        if (Math.abs(dragCY - cy) < THRESHOLD) {
+            guidesContainer.appendChild(vbCreateGuideLine('horizontal', Math.min(dragX, x), cy, Math.max(dragX + dragW, x + w)));
+        }
+        if (Math.abs(dragY - y) < THRESHOLD) {
+            guidesContainer.appendChild(vbCreateGuideLine('horizontal', Math.min(dragX, x), y, Math.max(dragX + dragW, x + w)));
+        }
+        if (Math.abs((dragY + dragH) - (y + h)) < THRESHOLD) {
+            guidesContainer.appendChild(vbCreateGuideLine('horizontal', Math.min(dragX, x), y + h, Math.max(dragX + dragW, x + w)));
+        }
+    }
+}
+
+function vbCreateGuideLine(orientation, startOrX, startYOrY, end) {
+    const line = document.createElement('div');
+    line.className = 'desktop-guide-line';
+
+    if (orientation === 'vertical') {
+        line.style.left = startOrX + 'px';
+        line.style.top = startYOrY + 'px';
+        line.style.width = '1px';
+        line.style.height = (end - startYOrY) + 'px';
+    } else {
+        line.style.left = startOrX + 'px';
+        line.style.top = startYOrY + 'px';
+        line.style.width = (end - startOrX) + 'px';
+        line.style.height = '1px';
+    }
+
+    return line;
+}
+
+function vbClearGuideLines() {
+    const guidesContainer = document.getElementById('vb-guides');
+    if (guidesContainer) guidesContainer.innerHTML = '';
+}
+
 document.addEventListener('alpine:init', () => {
 
     /**
@@ -15,6 +124,9 @@ document.addEventListener('alpine:init', () => {
         zoom: 1.0,
         scrollLeft: 0,
         scrollTop: 0,
+        showGrid: false,
+        showGuides: false,
+        snapToGrid: false,
         selectedCardId: '',
         selectedCardIsOwner: false,
     });
@@ -52,14 +164,28 @@ document.addEventListener('alpine:init', () => {
                         this.cardX += event.dx / zoom;
                         this.cardY += event.dy / zoom;
 
-                        this.$el.style.left = this.cardX + 'px';
-                        this.$el.style.top = this.cardY + 'px';
+                        if (Alpine.store('visionBoard').snapToGrid) {
+                            this.$el.style.left = vbSnapToGrid(this.cardX) + 'px';
+                            this.$el.style.top = vbSnapToGrid(this.cardY) + 'px';
+                        } else {
+                            this.$el.style.left = this.cardX + 'px';
+                            this.$el.style.top = this.cardY + 'px';
+                        }
+
+                        vbShowGuideLines(this.$el);
 
                         if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
                             this._hasDragged = true;
                         }
                     },
                     end: () => {
+                        vbClearGuideLines();
+
+                        if (Alpine.store('visionBoard').snapToGrid) {
+                            this.cardX = vbSnapToGrid(this.cardX);
+                            this.cardY = vbSnapToGrid(this.cardY);
+                        }
+
                         this._debouncedSave();
                     },
                 },
@@ -214,6 +340,62 @@ document.addEventListener('alpine:init', () => {
                 if (!canvas || !entityId) return;
                 const el = canvas.querySelector(`[data-card-id="${entityId}"]`);
                 if (el) el.remove();
+            });
+
+            // Center canvas
+            window.addEventListener('vb-center-canvas', () => {
+                const bbox = vbGetCardsBoundingBox();
+                if (!bbox) return;
+
+                const viewport = this.$el;
+                const zoom = Alpine.store('visionBoard').zoom || 1;
+
+                const contentCenterX = (bbox.minX + bbox.maxX) / 2;
+                const contentCenterY = (bbox.minY + bbox.maxY) / 2;
+
+                const scrollX = (contentCenterX * zoom) - (viewport.clientWidth / 2);
+                const scrollY = (contentCenterY * zoom) - (viewport.clientHeight / 2);
+
+                viewport.scrollTo({
+                    left: Math.max(0, scrollX),
+                    top: Math.max(0, scrollY),
+                    behavior: 'smooth',
+                });
+            });
+
+            // Zoom to fit
+            window.addEventListener('vb-zoom-to-fit', () => {
+                const bbox = vbGetCardsBoundingBox();
+                if (!bbox) return;
+
+                const viewport = this.$el;
+                const PADDING = 60;
+
+                const contentW = (bbox.maxX - bbox.minX) + PADDING * 2;
+                const contentH = (bbox.maxY - bbox.minY) + PADDING * 2;
+
+                const scaleX = viewport.clientWidth / contentW;
+                const scaleY = viewport.clientHeight / contentH;
+                let optimalZoom = Math.min(scaleX, scaleY);
+
+                optimalZoom = Math.max(0.25, Math.min(2.0, Math.round(optimalZoom * 10) / 10));
+
+                Alpine.store('visionBoard').zoom = optimalZoom;
+                this.$wire.saveZoom(optimalZoom);
+
+                setTimeout(() => {
+                    const contentCenterX = (bbox.minX + bbox.maxX) / 2;
+                    const contentCenterY = (bbox.minY + bbox.maxY) / 2;
+
+                    const scrollX = (contentCenterX * optimalZoom) - (viewport.clientWidth / 2);
+                    const scrollY = (contentCenterY * optimalZoom) - (viewport.clientHeight / 2);
+
+                    viewport.scrollTo({
+                        left: Math.max(0, scrollX),
+                        top: Math.max(0, scrollY),
+                        behavior: 'smooth',
+                    });
+                }, 50);
             });
 
             // Export vision board as PNG
@@ -424,13 +606,29 @@ document.addEventListener('alpine:init', () => {
                         const zoom = Alpine.store('visionBoard').zoom || 1;
                         cardX += event.dx / zoom;
                         cardY += event.dy / zoom;
-                        el.style.left = cardX + 'px';
-                        el.style.top = cardY + 'px';
+
+                        if (Alpine.store('visionBoard').snapToGrid) {
+                            el.style.left = vbSnapToGrid(cardX) + 'px';
+                            el.style.top = vbSnapToGrid(cardY) + 'px';
+                        } else {
+                            el.style.left = cardX + 'px';
+                            el.style.top = cardY + 'px';
+                        }
+
+                        vbShowGuideLines(el);
+
                         if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
                             hasDragged = true;
                         }
                     },
                     end: () => {
+                        vbClearGuideLines();
+
+                        if (Alpine.store('visionBoard').snapToGrid) {
+                            cardX = vbSnapToGrid(cardX);
+                            cardY = vbSnapToGrid(cardY);
+                        }
+
                         clearTimeout(debounceTimer);
                         debounceTimer = setTimeout(() => {
                             wire.savePosition(card.id, 'image', Math.round(cardX), Math.round(cardY), cardZ);
@@ -482,6 +680,26 @@ document.addEventListener('alpine:init', () => {
     }));
 
     /**
+     * visionBoardToggles — toolbar toggle buttons for grid/guides/snap
+     */
+    Alpine.data('visionBoardToggles', () => ({
+        get showGrid() { return Alpine.store('visionBoard').showGrid; },
+        get showGuides() { return Alpine.store('visionBoard').showGuides; },
+        get snapToGrid() { return Alpine.store('visionBoard').snapToGrid; },
+
+        toggleGrid() {
+            Alpine.store('visionBoard').showGrid = !Alpine.store('visionBoard').showGrid;
+        },
+        toggleGuides() {
+            Alpine.store('visionBoard').showGuides = !Alpine.store('visionBoard').showGuides;
+            if (!Alpine.store('visionBoard').showGuides) vbClearGuideLines();
+        },
+        toggleSnap() {
+            Alpine.store('visionBoard').snapToGrid = !Alpine.store('visionBoard').snapToGrid;
+        },
+    }));
+
+    /**
      * visionBoardZoom — zoom controls
      */
     Alpine.data('visionBoardZoom', () => ({
@@ -499,7 +717,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         zoomOut() {
-            this.zoom = Math.max(0.3, Math.round((this.zoom - 0.1) * 10) / 10);
+            this.zoom = Math.max(0.25, Math.round((this.zoom - 0.1) * 10) / 10);
             Alpine.store('visionBoard').zoom = this.zoom;
             this.$wire.saveZoom(this.zoom);
         },

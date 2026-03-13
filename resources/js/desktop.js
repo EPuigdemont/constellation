@@ -1138,14 +1138,8 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('desktopSearch', () => ({
         searchQuery: '',
         activeTagFilter: null,
-        activeTypeFilter: null,
-        typeFilters: [
-            { value: null, label: 'All' },
-            { value: 'diary_entry', label: 'Diary' },
-            { value: 'note', label: 'Notes' },
-            { value: 'postit', label: 'Post-its' },
-            { value: 'image', label: 'Images' },
-        ],
+        activeTypeFilters: ['diary_entry', 'note', 'postit', 'image'],
+        allTypes: ['diary_entry', 'note', 'postit', 'image'],
 
         filterCards() {
             const canvas = document.getElementById('desktop-canvas');
@@ -1154,7 +1148,7 @@ document.addEventListener('alpine:init', () => {
             const cards = this.$wire.cards || [];
             const query = this.searchQuery.toLowerCase().trim();
             const tagFilter = this.activeTagFilter;
-            const typeFilter = this.activeTypeFilter;
+            const typeFilters = this.activeTypeFilters;
 
             canvas.querySelectorAll('[data-card-id]').forEach(el => {
                 const cardId = el.getAttribute('data-card-id');
@@ -1163,8 +1157,8 @@ document.addEventListener('alpine:init', () => {
 
                 let visible = true;
 
-                if (typeFilter) {
-                    visible = el.getAttribute('data-card-type') === typeFilter;
+                if (typeFilters.length < this.allTypes.length) {
+                    visible = typeFilters.includes(el.getAttribute('data-card-type'));
                 }
 
                 if (visible && query) {
@@ -1182,9 +1176,20 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
-        filterByType(type) {
-            this.activeTypeFilter = type;
+        toggleType(type) {
+            const idx = this.activeTypeFilters.indexOf(type);
+            if (idx >= 0) {
+                if (this.activeTypeFilters.length > 1) {
+                    this.activeTypeFilters.splice(idx, 1);
+                }
+            } else {
+                this.activeTypeFilters.push(type);
+            }
             this.filterCards();
+        },
+
+        isTypeActive(type) {
+            return this.activeTypeFilters.includes(type);
         },
 
         filterByTag(tagId) {
@@ -1195,7 +1200,7 @@ document.addEventListener('alpine:init', () => {
         clearFilters() {
             this.searchQuery = '';
             this.activeTagFilter = null;
-            this.activeTypeFilter = null;
+            this.activeTypeFilters = [...this.allTypes];
             this.filterCards();
         },
     }));
