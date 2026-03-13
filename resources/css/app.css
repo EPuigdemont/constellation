@@ -319,14 +319,14 @@ select:focus[data-flux-control] {
 /* ─── Desktop Editor Modal (mood preview) ─── */
 
 .desktop-editor-modal {
-    background: var(--card-bg, var(--color-zinc-50));
-    border-radius: 0.75rem;
-    padding: 1.5rem;
+    background: var(--card-bg, var(--theme-bg, var(--color-zinc-50)));
+    border-radius: 0.5rem;
+    padding: 0.5rem;
     transition: background-color 0.3s ease;
 }
 
 .dark .desktop-editor-modal {
-    background: var(--card-bg, var(--color-zinc-800));
+    background: var(--card-bg, var(--theme-bg, var(--color-zinc-800)));
 }
 
 /* ─── Trashcan Drop Zone ─── */

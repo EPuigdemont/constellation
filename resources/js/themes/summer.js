@@ -1,12 +1,12 @@
 /**
- * Summer theme — floating sparkle particles in sidebar header
+ * Summer theme — floating sparkle particles
  */
 
 let animationFrame = null;
 let canvas = null;
 
 const particles = [];
-const MAX_PARTICLES = 15;
+const MAX_PARTICLES = 20;
 
 function createParticle(width, height) {
     return {
@@ -46,18 +46,15 @@ function animate(ctx, width, height) {
 }
 
 export function init() {
-    const container = document.querySelector('[data-flux-sidebar-header], flux\\:sidebar\\.header, [data-theme-particles]');
+    const container = document.querySelector('[data-theme-particles]');
     if (!container) return;
 
     canvas = document.createElement('canvas');
     canvas.classList.add('theme-particles-canvas');
-    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
-    container.style.position = 'relative';
     container.appendChild(canvas);
 
-    const rect = container.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     const ctx = canvas.getContext('2d');
     particles.length = 0;

@@ -17,10 +17,12 @@ function getActiveTheme() {
     return null;
 }
 
-function activateTheme() {
-    const name = getActiveTheme();
-    if (name === currentTheme) return;
+function activateTheme(force = false) {
+    if (!window.matchMedia('(prefers-reduced-motion: no-preference)').matches) return;
 
+    const name = getActiveTheme();
+
+    // Always destroy old theme first (canvas may have been removed by navigation)
     if (currentTheme && themes[currentTheme]) {
         themes[currentTheme].destroy();
     }
@@ -32,14 +34,14 @@ function activateTheme() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
-        activateTheme();
-    }
+// Initial load
+document.addEventListener('DOMContentLoaded', () => activateTheme());
+
+// Livewire navigation (wire:navigate)
+document.addEventListener('livewire:navigated', () => {
+    // Small delay to let DOM settle after Livewire morph
+    requestAnimationFrame(() => activateTheme(true));
 });
 
-document.addEventListener('theme-changed', () => {
-    if (window.matchMedia('(prefers-reduced-motion: no-preference)').matches) {
-        activateTheme();
-    }
-});
+// Manual theme change
+document.addEventListener('theme-changed', () => activateTheme(true));

@@ -1,6 +1,6 @@
 <div class="flex h-screen flex-col overflow-hidden">
     {{-- Toolbar --}}
-    <div class="flex items-center gap-3 border-b border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="flex items-center gap-3 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
         <flux:heading size="lg">{{ __('Images') }}</flux:heading>
 
         <flux:spacer />
@@ -9,7 +9,7 @@
     </div>
 
     {{-- Gallery grid --}}
-    <div class="flex-1 overflow-y-auto bg-zinc-100 dark:bg-zinc-800">
+    <div class="flex-1 overflow-y-auto bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]">
         @if($images->isEmpty())
             <div class="flex items-center justify-center py-20 text-zinc-400">
                 {{ __('No images yet. Upload one from the Desktop.') }}

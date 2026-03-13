@@ -42,14 +42,13 @@ new #[Title('Appearance settings')] class extends Component {
         </flux:radio.group>
     </x-pages::settings.layout>
 
-    <x-pages::settings.layout :heading="__('Theme')" :subheading="__('Choose a color theme for your workspace')">
+    <x-pages::settings.layout :heading="__('Theme')" :subheading="__('Choose a color theme for your workspace')" :show-nav="false">
         <div x-data="{
                 theme: @entangle('theme'),
-                setTheme(value) {
+                async setTheme(value) {
                     this.theme = value;
-                    $wire.updateTheme(value);
-                    document.body.className = document.body.className.replace(/theme-\w+/, 'theme-' + value);
-                    document.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: value } }));
+                    await $wire.updateTheme(value);
+                    window.location.reload();
                 }
              }"
              class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">

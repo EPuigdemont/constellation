@@ -5,7 +5,7 @@
     </head>
     <body class="min-h-screen bg-[var(--theme-bg,#fff)] dark:bg-[var(--theme-bg,theme(colors.zinc.800))] theme-{{ auth()->user()?->theme ?? 'summer' }}">
         <flux:sidebar sticky collapsible class="border-e bg-[var(--theme-sidebar-bg,theme(colors.zinc.50))] border-[var(--theme-sidebar-border,theme(colors.zinc.200))] dark:border-[var(--theme-sidebar-border,theme(colors.zinc.700))] dark:bg-[var(--theme-sidebar-bg,theme(colors.zinc.900))]">
-            <flux:sidebar.header data-theme-particles>
+            <flux:sidebar.header>
                 <div class="flex items-center gap-2">
                     <x-app-logo :sidebar="true" href="{{ route('canvas') }}" wire:navigate />
                     <x-theme-icon />
@@ -106,6 +106,9 @@
                 </flux:menu>
             </flux:dropdown>
         </flux:header>
+
+        {{-- Theme particle overlay --}}
+        <div data-theme-particles class="pointer-events-none fixed inset-0 z-[1] opacity-30"></div>
 
         {{ $slot }}
 

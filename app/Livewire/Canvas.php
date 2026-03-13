@@ -152,7 +152,7 @@ class Canvas extends Component
         $postit = Postit::create([
             'user_id' => $user->id,
             'body' => '',
-            'mood' => Mood::Summer,
+            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
             'is_public' => false,
         ]);
 
@@ -625,7 +625,7 @@ class Canvas extends Component
         $this->editingEntityId = '';
         $this->editorTitle = '';
         $this->editorBody = '';
-        $this->editorMood = 'plain';
+        $this->editorMood = Auth::user()->theme ?? 'summer';
         $this->editorColorOverride = null;
         $this->editorImage = null;
         $this->imageUpload = null;

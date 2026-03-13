@@ -1,6 +1,6 @@
 <div class="flex h-screen flex-col overflow-hidden">
     {{-- Toolbar --}}
-    <div class="flex items-center gap-3 border-b border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="flex items-center gap-3 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
         <flux:heading size="lg">{{ __('Diary') }}</flux:heading>
 
         <flux:spacer />
@@ -33,7 +33,7 @@
     {{-- Content --}}
     @if($displayMode === 'paginated')
         {{-- Paginated notebook spread — flex-1 fills remaining height, no scroll --}}
-        <div class="flex flex-1 flex-col overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+        <div class="flex flex-1 flex-col overflow-hidden bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]">
             <div class="mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-4 overflow-hidden px-0">
                 @forelse($entries as $entry)
                     <div class="flex flex-1 flex-col overflow-y-auto rounded-lg border border-zinc-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-900"
@@ -93,7 +93,7 @@
         </div>
     @else
         {{-- Infinite scroll mode --}}
-        <div class="flex-1 overflow-y-auto bg-zinc-100 dark:bg-zinc-800">
+        <div class="flex-1 overflow-y-auto bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]">
             <div class="mx-auto max-w-3xl space-y-4 px-0 py-0">
                 @forelse($allEntries as $entry)
                     <div class="diary-entry rounded-lg border border-zinc-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-900 {{ $entry->mood ? 'mood-' . $entry->mood->value : '' }}"
