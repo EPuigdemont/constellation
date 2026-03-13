@@ -1,5 +1,5 @@
 /**
- * Night theme — twinkling star dots
+ * Winter theme — gentle snowfall
  */
 
 let animationFrame = null;
@@ -12,27 +12,37 @@ function createParticle(width, height) {
     return {
         x: Math.random() * width,
         y: Math.random() * height,
-        size: Math.random() * 2 + 0.5,
-        baseOpacity: Math.random() * 0.4 + 0.2,
-        twinkleSpeed: Math.random() * 0.005 + 0.002,
-        phase: Math.random() * Math.PI * 2,
+        size: Math.random() * 3 + 1,
+        speedY: Math.random() * 0.3 + 0.1,
+        speedX: (Math.random() - 0.5) * 0.2,
+        opacity: Math.random() * 0.5 + 0.15,
+        sway: Math.random() * Math.PI * 2,
+        swaySpeed: Math.random() * 0.008 + 0.003,
     };
 }
 
-function animate(ctx, width, height, time) {
+function animate(ctx, width, height) {
     ctx.clearRect(0, 0, width, height);
 
-    for (const p of particles) {
-        const opacity = p.baseOpacity + Math.sin(time * p.twinkleSpeed + p.phase) * 0.3;
-        if (opacity <= 0) continue;
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.sway += p.swaySpeed;
+        p.x += p.speedX + Math.sin(p.sway) * 0.2;
+        p.y += p.speedY;
+
+        if (p.y > height + 5) {
+            particles[i] = createParticle(width, height);
+            particles[i].y = -5;
+            continue;
+        }
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(159, 168, 218, ${Math.max(0, opacity)})`;
+        ctx.fillStyle = `rgba(200, 220, 255, ${p.opacity})`;
         ctx.fill();
     }
 
-    animationFrame = requestAnimationFrame((t) => animate(ctx, width, height, t));
+    animationFrame = requestAnimationFrame(() => animate(ctx, width, height));
 }
 
 export function init() {
@@ -52,7 +62,7 @@ export function init() {
         particles.push(createParticle(canvas.width, canvas.height));
     }
 
-    animate(ctx, canvas.width, canvas.height, 0);
+    animate(ctx, canvas.width, canvas.height);
 }
 
 export function destroy() {

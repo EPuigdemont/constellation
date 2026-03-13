@@ -2,7 +2,10 @@
 @import '../../vendor/livewire/flux/dist/flux.css';
 
 /* ─── Theme Imports ─── */
+@import './themes/spring.css';
 @import './themes/summer.css';
+@import './themes/autumn.css';
+@import './themes/winter.css';
 @import './themes/love.css';
 @import './themes/breeze.css';
 @import './themes/night.css';
@@ -201,6 +204,20 @@ select:focus[data-flux-control] {
 
 /* ─── Mood Variants ─── */
 
+.mood-spring {
+    --card-bg: #e8f5e9;
+    --card-border: #a5d6a7;
+    --card-badge-bg: #a5d6a7;
+    --card-badge-text: #1b5e20;
+}
+
+.dark .mood-spring {
+    --card-bg: #142014;
+    --card-border: #1b5e20;
+    --card-badge-bg: #1b5e20;
+    --card-badge-text: #a5d6a7;
+}
+
 .mood-summer {
     --card-bg: #fff8e1;
     --card-border: #ffe082;
@@ -213,6 +230,34 @@ select:focus[data-flux-control] {
     --card-border: #6d4c00;
     --card-badge-bg: #6d4c00;
     --card-badge-text: #ffe082;
+}
+
+.mood-autumn {
+    --card-bg: #fff3e0;
+    --card-border: #ffab40;
+    --card-badge-bg: #ffab40;
+    --card-badge-text: #4e2700;
+}
+
+.dark .mood-autumn {
+    --card-bg: #2a1800;
+    --card-border: #4e2700;
+    --card-badge-bg: #4e2700;
+    --card-badge-text: #ffab40;
+}
+
+.mood-winter {
+    --card-bg: #e3f2fd;
+    --card-border: #90caf9;
+    --card-badge-bg: #90caf9;
+    --card-badge-text: #0d47a1;
+}
+
+.dark .mood-winter {
+    --card-bg: #0d2137;
+    --card-border: #0d47a1;
+    --card-badge-bg: #0d47a1;
+    --card-badge-text: #90caf9;
 }
 
 .mood-love {
@@ -281,7 +326,10 @@ select:focus[data-flux-control] {
 
 /* ─── Mood Dots (context menu) ─── */
 
+.mood-dot-spring { background-color: #a5d6a7; }
 .mood-dot-summer { background-color: #ffe082; }
+.mood-dot-autumn { background-color: #ffab40; }
+.mood-dot-winter { background-color: #90caf9; }
 .mood-dot-love { background-color: #f48fb1; }
 .mood-dot-breeze { background-color: #80deea; }
 .mood-dot-night { background-color: #9fa8da; }
@@ -725,7 +773,7 @@ select:focus[data-flux-control] {
     background-repeat: no-repeat;
     background-position: bottom center;
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
     opacity: 0.7;
 }
 
@@ -782,6 +830,30 @@ select:focus[data-flux-control] {
 /* ─── Theme Card Animations ─── */
 
 @media (prefers-reduced-motion: no-preference) {
+    .theme-spring .desktop-card,
+    .theme-spring .vb-card,
+    .theme-spring .diary-entry-themed {
+        animation: theme-float 4.5s ease-in-out infinite;
+    }
+
+    .theme-summer .desktop-card,
+    .theme-summer .vb-card,
+    .theme-summer .diary-entry-themed {
+        animation: theme-warm-glow 3.5s ease-in-out infinite;
+    }
+
+    .theme-autumn .desktop-card,
+    .theme-autumn .vb-card,
+    .theme-autumn .diary-entry-themed {
+        animation: theme-warm-glow 4s ease-in-out infinite;
+    }
+
+    .theme-winter .desktop-card,
+    .theme-winter .vb-card,
+    .theme-winter .diary-entry-themed {
+        animation: theme-shimmer 5s ease-in-out infinite;
+    }
+
     .theme-love .desktop-card,
     .theme-love .vb-card,
     .theme-love .diary-entry-themed {
@@ -792,12 +864,6 @@ select:focus[data-flux-control] {
     .theme-breeze .vb-card,
     .theme-breeze .diary-entry-themed {
         animation: theme-float 4s ease-in-out infinite;
-    }
-
-    .theme-summer .desktop-card,
-    .theme-summer .vb-card,
-    .theme-summer .diary-entry-themed {
-        animation: theme-warm-glow 3.5s ease-in-out infinite;
     }
 
     .theme-night .desktop-card,

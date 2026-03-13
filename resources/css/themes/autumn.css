@@ -1,0 +1,34 @@
+/* ─── Theme: Autumn ─── */
+/* Warm oranges and deep reds evoking falling leaves */
+
+.theme-autumn {
+    --theme-bg: #fff3e0;
+    --theme-bg-secondary: #ffe0b2;
+    --theme-sidebar-bg: #ffe0b2;
+    --theme-sidebar-border: #ffab40;
+    --theme-text: #4e2700;
+    --theme-text-muted: #8d5b2a;
+    --theme-accent: #e65100;
+    --theme-accent-hover: #bf360c;
+    --theme-border: #ffab40;
+    --theme-header-bg: #ffe0b2;
+    --theme-card-glow: rgba(255, 171, 64, 0.4);
+    /* Hill with bare tree and falling leaves */
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'%3E%3Cellipse cx='600' cy='260' rx='700' ry='120' fill='%23ffab40' opacity='0.25'/%3E%3Cellipse cx='300' cy='270' rx='400' ry='100' fill='%23ff9100' opacity='0.18'/%3E%3Crect x='540' y='110' width='8' height='70' rx='2' fill='%23795548' opacity='0.3'/%3E%3Cline x1='544' y1='130' x2='520' y2='108' stroke='%23795548' stroke-width='3' opacity='0.25' stroke-linecap='round'/%3E%3Cline x1='544' y1='120' x2='568' y2='100' stroke='%23795548' stroke-width='3' opacity='0.25' stroke-linecap='round'/%3E%3Cline x1='544' y1='140' x2='525' y2='125' stroke='%23795548' stroke-width='2' opacity='0.2' stroke-linecap='round'/%3E%3Ccircle cx='510' cy='140' r='3' fill='%23e65100' opacity='0.3'/%3E%3Ccircle cx='570' cy='130' r='2.5' fill='%23ff6d00' opacity='0.25'/%3E%3Ccircle cx='490' cy='155' r='2' fill='%23bf360c' opacity='0.2'/%3E%3Ccircle cx='580' cy='150' r='3' fill='%23e65100' opacity='0.2'/%3E%3Ccircle cx='530' cy='160' r='2.5' fill='%23ff8f00' opacity='0.18'/%3E%3C/svg%3E");
+}
+
+.dark.theme-autumn,
+.dark .theme-autumn {
+    --theme-bg: #1a0e00;
+    --theme-bg-secondary: #2a1800;
+    --theme-sidebar-bg: #1f1200;
+    --theme-sidebar-border: #4e2700;
+    --theme-text: #ffab40;
+    --theme-text-muted: #c07830;
+    --theme-accent: #e65100;
+    --theme-accent-hover: #ff6d00;
+    --theme-border: #4e2700;
+    --theme-header-bg: #1f1200;
+    --theme-card-glow: rgba(230, 81, 0, 0.2);
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'%3E%3Cellipse cx='600' cy='260' rx='700' ry='120' fill='%234e2700' opacity='0.35'/%3E%3Cellipse cx='300' cy='270' rx='400' ry='100' fill='%233a1c00' opacity='0.25'/%3E%3Crect x='540' y='110' width='8' height='70' rx='2' fill='%235d4037' opacity='0.3'/%3E%3Cline x1='544' y1='130' x2='520' y2='108' stroke='%235d4037' stroke-width='3' opacity='0.2' stroke-linecap='round'/%3E%3Cline x1='544' y1='120' x2='568' y2='100' stroke='%235d4037' stroke-width='3' opacity='0.2' stroke-linecap='round'/%3E%3C/svg%3E");
+}

@@ -1,10 +1,13 @@
+import * as spring from './themes/spring.js';
 import * as summer from './themes/summer.js';
+import * as autumn from './themes/autumn.js';
+import * as winter from './themes/winter.js';
 import * as love from './themes/love.js';
 import * as breeze from './themes/breeze.js';
 import * as night from './themes/night.js';
 import * as cozy from './themes/cozy.js';
 
-const themes = { summer, love, breeze, night, cozy };
+const themes = { spring, summer, autumn, winter, love, breeze, night, cozy };
 let currentTheme = null;
 
 function getActiveTheme() {

@@ -106,7 +106,7 @@
         </flux:header>
 
         {{-- Theme particle overlay --}}
-        <div data-theme-particles class="pointer-events-none fixed inset-0 z-[1] opacity-30"></div>
+        <div data-theme-particles class="pointer-events-none fixed inset-0 z-0 opacity-30"></div>
 
         {{ $slot }}
 
