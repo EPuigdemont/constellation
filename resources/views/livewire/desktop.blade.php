@@ -45,6 +45,24 @@
         </div>
     </div>
 
+    {{-- Linking mode banner --}}
+    <div x-show="Alpine.store('desktop').linkingMode !== ''"
+         x-cloak
+         class="flex items-center justify-between gap-3 border-b px-4 py-2"
+         :class="Alpine.store('desktop').linkingMode === 'attach'
+             ? 'border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/30'
+             : 'border-purple-300 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/30'">
+        <span class="text-sm font-medium"
+              :class="Alpine.store('desktop').linkingMode === 'attach'
+                  ? 'text-blue-700 dark:text-blue-300'
+                  : 'text-purple-700 dark:text-purple-300'"
+              x-text="Alpine.store('desktop').linkingMode === 'attach'
+                  ? '{{ __('Click a card to attach to it as parent') }}'
+                  : '{{ __('Click a card to link as sibling') }}'">
+        </span>
+        <flux:button size="sm" variant="ghost" wire:click="cancelLinking">{{ __('Cancel') }}</flux:button>
+    </div>
+
     {{-- Canvas container --}}
     <div class="relative flex-1 overflow-auto bg-zinc-100 dark:bg-zinc-800"
          id="desktop-viewport"
@@ -74,7 +92,8 @@
                          entityType: '{{ $card['type'] }}',
                          isOwner: {{ $card['owner_id'] === auth()->id() ? 'true' : 'false' }},
                          isPublic: {{ $card['is_public'] ? 'true' : 'false' }},
-                         mood: '{{ $card['mood'] ?? 'plain' }}'
+                         mood: '{{ $card['mood'] ?? 'plain' }}',
+                         hasParent: {{ !empty($card['parent_id']) ? 'true' : 'false' }}
                      })"
                      class="desktop-card {{ $card['mood'] ? 'mood-' . $card['mood'] : 'mood-plain' }} card-type-{{ $card['type'] }} touch-none select-none">
                     <x-desktop.entity-card :card="$card" />
@@ -123,6 +142,27 @@
                                 @endforeach
                             </div>
                         </div>
+
+                        <div class="my-1 border-t border-zinc-200 dark:border-zinc-700"></div>
+
+                        {{-- Relationship actions --}}
+                        <button x-on:click="attachTo()"
+                                class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
+                            {{ __('Attach to…') }}
+                        </button>
+                        <button x-on:click="linkSibling()"
+                                class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.556a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.343 8.69" /></svg>
+                            {{ __('Link as Sibling…') }}
+                        </button>
+                        <template x-if="hasParent">
+                            <button x-on:click="detach()"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                {{ __('Detach from Parent') }}
+                            </button>
+                        </template>
 
                         <div class="my-1 border-t border-zinc-200 dark:border-zinc-700"></div>
 

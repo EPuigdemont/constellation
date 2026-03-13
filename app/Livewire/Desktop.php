@@ -61,6 +61,14 @@ class Desktop extends Component
 
     public float $viewportCenterY = 2000.0;
 
+    /** Linking mode: 'attach' to attach post-it to parent, 'sibling' to link siblings */
+    public string $linkingMode = '';
+
+    /** The first entity selected for linking */
+    public string $linkingEntityId = '';
+
+    public string $linkingEntityType = '';
+
     public function mount(DesktopService $service): void
     {
         $user = Auth::user();
@@ -148,6 +156,10 @@ class Desktop extends Component
             'owner_id' => $user->id,
             'created_at' => $postit->created_at->toIso8601String(),
             'updated_at' => $postit->updated_at->toIso8601String(),
+            'parent_id' => null,
+            'parent_type' => null,
+            'children_count' => 0,
+            'siblings_count' => 0,
         ];
 
         $this->cards[] = $card;
@@ -351,6 +363,135 @@ class Desktop extends Component
         $this->updateCardInList($entityId, ['mood' => $mood]);
     }
 
+    /**
+     * Start linking mode — waiting for user to select a second entity.
+     */
+    public function startLinking(string $entityId, string $entityType, string $mode): void
+    {
+        $this->linkingMode = $mode;
+        $this->linkingEntityId = $entityId;
+        $this->linkingEntityType = $entityType;
+
+        $this->dispatch('linking-started', mode: $mode, entityId: $entityId);
+    }
+
+    /**
+     * Cancel linking mode.
+     */
+    public function cancelLinking(): void
+    {
+        $this->linkingMode = '';
+        $this->linkingEntityId = '';
+        $this->linkingEntityType = '';
+
+        $this->dispatch('linking-cancelled');
+    }
+
+    /**
+     * Complete linking: attach post-it to parent or create sibling link.
+     */
+    public function completeLinking(DesktopService $service, string $targetEntityId, string $targetEntityType): void
+    {
+        if ($this->linkingMode === '' || $this->linkingEntityId === '') {
+            return;
+        }
+
+        $sourceModel = $this->resolveEntity($this->linkingEntityId, $this->linkingEntityType);
+        $targetModel = $this->resolveEntity($targetEntityId, $targetEntityType);
+
+        if (! $sourceModel || ! $targetModel) {
+            $this->cancelLinking();
+            return;
+        }
+
+        Gate::authorize('update', $sourceModel);
+
+        if ($this->linkingMode === 'attach') {
+            // Attach: source (post-it) becomes child of target (parent)
+            $service->attachToParent(
+                $this->linkingEntityId,
+                $this->linkingEntityType,
+                $targetEntityId,
+                $targetEntityType,
+            );
+
+            $this->updateCardInList($this->linkingEntityId, [
+                'parent_id' => $targetEntityId,
+                'parent_type' => $targetEntityType,
+            ]);
+
+            // Increment children count on target
+            foreach ($this->cards as $i => $card) {
+                if ($card['id'] === $targetEntityId) {
+                    $this->cards[$i]['children_count'] = ($card['children_count'] ?? 0) + 1;
+                    break;
+                }
+            }
+
+            $this->dispatch('card-attached', childId: $this->linkingEntityId, parentId: $targetEntityId);
+        } elseif ($this->linkingMode === 'sibling') {
+            // Don't link entity to itself
+            if ($this->linkingEntityId === $targetEntityId) {
+                $this->cancelLinking();
+                return;
+            }
+
+            $service->linkSiblings(
+                $this->linkingEntityId,
+                $this->linkingEntityType,
+                $targetEntityId,
+                $targetEntityType,
+            );
+
+            // Increment siblings count on both
+            foreach ($this->cards as $i => $card) {
+                if ($card['id'] === $this->linkingEntityId || $card['id'] === $targetEntityId) {
+                    $this->cards[$i]['siblings_count'] = ($card['siblings_count'] ?? 0) + 1;
+                }
+            }
+
+            $this->dispatch('card-linked', entityAId: $this->linkingEntityId, entityBId: $targetEntityId);
+        }
+
+        $this->cancelLinking();
+    }
+
+    /**
+     * Detach a post-it from its parent.
+     */
+    public function detachFromParent(DesktopService $service, string $entityId, string $entityType): void
+    {
+        $model = $this->resolveEntity($entityId, $entityType);
+        if (! $model) {
+            return;
+        }
+
+        Gate::authorize('update', $model);
+
+        // Find current parent before detaching
+        $card = collect($this->cards)->firstWhere('id', $entityId);
+        $parentId = $card['parent_id'] ?? null;
+
+        $service->detachFromParent($entityId, $entityType);
+
+        $this->updateCardInList($entityId, [
+            'parent_id' => null,
+            'parent_type' => null,
+        ]);
+
+        // Decrement children count on former parent
+        if ($parentId) {
+            foreach ($this->cards as $i => $c) {
+                if ($c['id'] === $parentId) {
+                    $this->cards[$i]['children_count'] = max(0, ($c['children_count'] ?? 0) - 1);
+                    break;
+                }
+            }
+        }
+
+        $this->dispatch('card-detached', entityId: $entityId, parentId: $parentId);
+    }
+
     public function togglePublic(string $entityId, string $entityType): void
     {
         $model = $this->resolveEntity($entityId, $entityType);
@@ -434,6 +575,10 @@ class Desktop extends Component
             'owner_id' => $user->id,
             'created_at' => $entity->created_at->toIso8601String(),
             'updated_at' => $entity->updated_at->toIso8601String(),
+            'parent_id' => null,
+            'parent_type' => null,
+            'children_count' => 0,
+            'siblings_count' => 0,
         ];
 
         $this->cards[] = $card;

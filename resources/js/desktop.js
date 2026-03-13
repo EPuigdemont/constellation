@@ -73,6 +73,30 @@ function buildCardInnerHTML(card) {
         }
     }
 
+    // Relationship indicators
+    const parentId = card.parent_id || null;
+    const childrenCount = card.children_count || 0;
+    const siblingsCount = card.siblings_count || 0;
+
+    if (parentId || childrenCount > 0 || siblingsCount > 0) {
+        html += '<div class="desktop-card-relations">';
+        if (parentId) {
+            html += '<span class="desktop-card-relation-badge desktop-card-relation-attached" title="Attached to parent">' +
+                '<svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg></span>';
+        }
+        if (childrenCount > 0) {
+            html += '<span class="desktop-card-relation-badge desktop-card-relation-children" title="' + childrenCount + ' child(ren)">' +
+                '<svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m8.25-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-6A2.25 2.25 0 019.75 18v-2.25m6.75-7.5l-3 3m0 0l-3-3m3 3v-6" /></svg> ' +
+                childrenCount + '</span>';
+        }
+        if (siblingsCount > 0) {
+            html += '<span class="desktop-card-relation-badge desktop-card-relation-siblings" title="' + siblingsCount + ' sibling(s)">' +
+                '<svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.556a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.343 8.69" /></svg> ' +
+                siblingsCount + '</span>';
+        }
+        html += '</div>';
+    }
+
     if (isPublic) {
         html += '<span class="desktop-card-public" title="Public">' +
             '<svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.47.353-2.856.978-4.082" /></svg>' +
@@ -277,7 +301,16 @@ function createCardElement(card, wire) {
         },
     });
 
-    el.addEventListener('mousedown', () => {
+    el.addEventListener('mousedown', (event) => {
+        // If in linking mode, complete the link on click
+        const store = Alpine.store('desktop');
+        if (store.linkingMode && card.id !== store.linkingEntityId) {
+            event.preventDefault();
+            event.stopPropagation();
+            wire.completeLinking(card.id, card.type);
+            return;
+        }
+
         wire.bringToFront(card.id, card.type).then((newZ) => {
             if (newZ) {
                 cardZ = newZ;
@@ -304,6 +337,7 @@ function createCardElement(card, wire) {
                 isOwner: card.is_owner ?? false,
                 isPublic: card.is_public ?? false,
                 mood: card.mood ?? 'plain',
+                hasParent: !!(card.parent_id),
             },
         }));
     });
@@ -321,6 +355,8 @@ document.addEventListener('alpine:init', () => {
         showGrid: false,
         showGuides: false,
         snapToGrid: false,
+        linkingMode: '',
+        linkingEntityId: '',
     });
 
     /**
@@ -398,8 +434,16 @@ document.addEventListener('alpine:init', () => {
                 },
             });
 
-            // Bring to front on mousedown
-            this.$el.addEventListener('mousedown', () => {
+            // Bring to front on mousedown (or complete linking)
+            this.$el.addEventListener('mousedown', (event) => {
+                const store = Alpine.store('desktop');
+                if (store.linkingMode && this.entityId !== store.linkingEntityId) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.$wire.completeLinking(this.entityId, this.entityType);
+                    return;
+                }
+
                 this.$wire.bringToFront(this.entityId, this.entityType).then((newZ) => {
                     if (newZ) {
                         this.cardZ = newZ;
@@ -545,6 +589,51 @@ document.addEventListener('alpine:init', () => {
                 }
             });
 
+            // Listen for linking-started events
+            Livewire.on('linking-started', (data) => {
+                const payload = data[0] ?? data;
+                Alpine.store('desktop').linkingMode = payload.mode;
+                Alpine.store('desktop').linkingEntityId = payload.entityId;
+
+                // Highlight the source card
+                const canvas = document.getElementById('desktop-canvas');
+                if (canvas) {
+                    const sourceEl = canvas.querySelector(`[data-card-id="${payload.entityId}"]`);
+                    if (sourceEl) sourceEl.classList.add('desktop-card-linking-source');
+
+                    // Add linking cursor class to canvas
+                    canvas.classList.add('desktop-canvas-linking');
+                }
+            });
+
+            // Listen for linking-cancelled events
+            Livewire.on('linking-cancelled', () => {
+                this._clearLinkingUI();
+            });
+
+            // Listen for card-attached events
+            Livewire.on('card-attached', (data) => {
+                this._clearLinkingUI();
+                const payload = data[0] ?? data;
+                this._refreshCardIndicators(payload.childId);
+                this._refreshCardIndicators(payload.parentId);
+            });
+
+            // Listen for card-linked events
+            Livewire.on('card-linked', (data) => {
+                this._clearLinkingUI();
+                const payload = data[0] ?? data;
+                this._refreshCardIndicators(payload.entityAId);
+                this._refreshCardIndicators(payload.entityBId);
+            });
+
+            // Listen for card-detached events
+            Livewire.on('card-detached', (data) => {
+                const payload = data[0] ?? data;
+                this._refreshCardIndicators(payload.entityId);
+                if (payload.parentId) this._refreshCardIndicators(payload.parentId);
+            });
+
             // Listen for card-updated events to refresh card content in the canvas
             Livewire.on('card-updated', (data) => {
                 const payload = data[0] ?? data;
@@ -576,6 +665,36 @@ document.addEventListener('alpine:init', () => {
         updateScroll() {
             Alpine.store('desktop').scrollLeft = this.$el.scrollLeft;
             Alpine.store('desktop').scrollTop = this.$el.scrollTop;
+        },
+
+        _clearLinkingUI() {
+            Alpine.store('desktop').linkingMode = '';
+            Alpine.store('desktop').linkingEntityId = '';
+
+            const canvas = document.getElementById('desktop-canvas');
+            if (canvas) {
+                canvas.classList.remove('desktop-canvas-linking');
+                canvas.querySelectorAll('.desktop-card-linking-source').forEach(el => {
+                    el.classList.remove('desktop-card-linking-source');
+                });
+            }
+        },
+
+        _refreshCardIndicators(entityId) {
+            // Re-render the card innerHTML from the Livewire cards array
+            if (!entityId) return;
+            const canvas = document.getElementById('desktop-canvas');
+            if (!canvas) return;
+
+            const el = canvas.querySelector(`[data-card-id="${entityId}"]`);
+            if (!el) return;
+
+            // Get updated card data from the Livewire component
+            const cards = this.$wire.cards || [];
+            const cardData = cards.find(c => c.id === entityId);
+            if (!cardData) return;
+
+            el.innerHTML = buildCardInnerHTML(cardData);
         },
     }));
 
@@ -618,8 +737,16 @@ document.addEventListener('alpine:init', () => {
         isOwner: false,
         isPublic: false,
         currentMood: 'plain',
+        hasParent: false,
 
         openMenu(detail) {
+            // If in linking mode and clicking a card, complete the link
+            const store = Alpine.store('desktop');
+            if (store.linkingMode && detail.entityId && detail.entityId !== store.linkingEntityId) {
+                this.$wire.completeLinking(detail.entityId, detail.entityType);
+                return;
+            }
+
             this.menuX = detail.x;
             this.menuY = detail.y;
             this.entityId = detail.entityId ?? null;
@@ -627,6 +754,7 @@ document.addEventListener('alpine:init', () => {
             this.isOwner = detail.isOwner ?? false;
             this.isPublic = detail.isPublic ?? false;
             this.currentMood = detail.mood ?? 'plain';
+            this.hasParent = detail.hasParent ?? false;
             this.open = true;
         },
 
@@ -658,6 +786,27 @@ document.addEventListener('alpine:init', () => {
         togglePublic() {
             if (this.entityId && this.entityType) {
                 this.$wire.togglePublic(this.entityId, this.entityType);
+            }
+            this.close();
+        },
+
+        attachTo() {
+            if (this.entityId && this.entityType) {
+                this.$wire.startLinking(this.entityId, this.entityType, 'attach');
+            }
+            this.close();
+        },
+
+        linkSibling() {
+            if (this.entityId && this.entityType) {
+                this.$wire.startLinking(this.entityId, this.entityType, 'sibling');
+            }
+            this.close();
+        },
+
+        detach() {
+            if (this.entityId && this.entityType) {
+                this.$wire.detachFromParent(this.entityId, this.entityType);
             }
             this.close();
         },

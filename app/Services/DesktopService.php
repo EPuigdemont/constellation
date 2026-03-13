@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\RelationshipType;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
+use App\Models\EntityRelationship;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
@@ -33,6 +35,9 @@ class DesktopService
             'image' => Image::class,
         ];
 
+        // Pre-load all relationships for efficient lookups
+        $relationships = EntityRelationship::all();
+
         foreach ($entityTypes as $morphType => $modelClass) {
             $entities = $modelClass::query()
                 ->where('user_id', $user->id)
@@ -46,7 +51,7 @@ class DesktopService
                     ->where('entity_type', $morphType)
                     ->first();
 
-                $cards[] = $this->normalizeCard($entity, $morphType, $position);
+                $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
             }
         }
 
@@ -113,9 +118,135 @@ class DesktopService
     }
 
     /**
+     * Create or find a parent-child relationship (post-it attached to a parent entity).
+     */
+    public function attachToParent(string $childId, string $childType, string $parentId, string $parentType): EntityRelationship
+    {
+        // Remove any existing parent relationship for this child
+        $this->detachFromParent($childId, $childType);
+
+        return EntityRelationship::create([
+            'entity_a_id' => $parentId,
+            'entity_a_type' => $parentType,
+            'entity_b_id' => $childId,
+            'entity_b_type' => $childType,
+            'relationship_type' => RelationshipType::ParentChild,
+        ]);
+    }
+
+    /**
+     * Remove parent-child relationship for an entity (detach from parent).
+     */
+    public function detachFromParent(string $childId, string $childType): void
+    {
+        EntityRelationship::query()
+            ->where('entity_b_id', $childId)
+            ->where('entity_b_type', $childType)
+            ->where('relationship_type', RelationshipType::ParentChild)
+            ->delete();
+    }
+
+    /**
+     * Create a sibling relationship between two entities.
+     */
+    public function linkSiblings(string $entityAId, string $entityAType, string $entityBId, string $entityBType): EntityRelationship
+    {
+        // Avoid duplicates
+        $existing = EntityRelationship::query()
+            ->where('relationship_type', RelationshipType::Sibling)
+            ->where(function ($q) use ($entityAId, $entityAType, $entityBId, $entityBType): void {
+                $q->where(function ($q2) use ($entityAId, $entityAType, $entityBId, $entityBType): void {
+                    $q2->where('entity_a_id', $entityAId)
+                        ->where('entity_a_type', $entityAType)
+                        ->where('entity_b_id', $entityBId)
+                        ->where('entity_b_type', $entityBType);
+                })->orWhere(function ($q2) use ($entityAId, $entityAType, $entityBId, $entityBType): void {
+                    $q2->where('entity_a_id', $entityBId)
+                        ->where('entity_a_type', $entityBType)
+                        ->where('entity_b_id', $entityAId)
+                        ->where('entity_b_type', $entityAType);
+                });
+            })
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return EntityRelationship::create([
+            'entity_a_id' => $entityAId,
+            'entity_a_type' => $entityAType,
+            'entity_b_id' => $entityBId,
+            'entity_b_type' => $entityBType,
+            'relationship_type' => RelationshipType::Sibling,
+        ]);
+    }
+
+    /**
+     * Remove a sibling relationship between two entities.
+     */
+    public function unlinkSiblings(string $entityAId, string $entityAType, string $entityBId, string $entityBType): void
+    {
+        EntityRelationship::query()
+            ->where('relationship_type', RelationshipType::Sibling)
+            ->where(function ($q) use ($entityAId, $entityAType, $entityBId, $entityBType): void {
+                $q->where(function ($q2) use ($entityAId, $entityAType, $entityBId, $entityBType): void {
+                    $q2->where('entity_a_id', $entityAId)
+                        ->where('entity_a_type', $entityAType)
+                        ->where('entity_b_id', $entityBId)
+                        ->where('entity_b_type', $entityBType);
+                })->orWhere(function ($q2) use ($entityAId, $entityAType, $entityBId, $entityBType): void {
+                    $q2->where('entity_a_id', $entityBId)
+                        ->where('entity_a_type', $entityBType)
+                        ->where('entity_b_id', $entityAId)
+                        ->where('entity_b_type', $entityAType);
+                });
+            })
+            ->delete();
+    }
+
+    /**
+     * Get relationship counts and parent info for card enrichment.
+     *
+     * @return array{parent_id: string|null, parent_type: string|null, children_count: int, siblings_count: int}
+     */
+    public function getRelationshipData(string $entityId, string $entityType, $relationships): array
+    {
+        // Find parent (this entity is entity_b in a parent_child relationship)
+        $parentRel = $relationships->first(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
+            return $rel->relationship_type === RelationshipType::ParentChild
+                && $rel->entity_b_id === $entityId
+                && $rel->entity_b_type === $entityType;
+        });
+
+        // Count children (this entity is entity_a in parent_child relationships)
+        $childrenCount = $relationships->filter(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
+            return $rel->relationship_type === RelationshipType::ParentChild
+                && $rel->entity_a_id === $entityId
+                && $rel->entity_a_type === $entityType;
+        })->count();
+
+        // Count siblings (this entity appears as either side in sibling relationships)
+        $siblingsCount = $relationships->filter(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
+            return $rel->relationship_type === RelationshipType::Sibling
+                && (
+                    ($rel->entity_a_id === $entityId && $rel->entity_a_type === $entityType)
+                    || ($rel->entity_b_id === $entityId && $rel->entity_b_type === $entityType)
+                );
+        })->count();
+
+        return [
+            'parent_id' => $parentRel?->entity_a_id,
+            'parent_type' => $parentRel?->entity_a_type,
+            'children_count' => $childrenCount,
+            'siblings_count' => $siblingsCount,
+        ];
+    }
+
+    /**
      * Normalize an entity model into a card array for the frontend.
      */
-    private function normalizeCard(object $entity, string $type, ?EntityPosition $position): array
+    private function normalizeCard(object $entity, string $type, ?EntityPosition $position, $relationships = null): array
     {
         $title = match ($type) {
             'diary_entry' => $entity->title ?? '',
@@ -131,6 +262,10 @@ class DesktopService
 
         $mood = $entity->mood?->value ?? null;
 
+        $relData = $relationships
+            ? $this->getRelationshipData($entity->id, $type, $relationships)
+            : ['parent_id' => null, 'parent_type' => null, 'children_count' => 0, 'siblings_count' => 0];
+
         return [
             'id' => $entity->id,
             'type' => $type,
@@ -145,6 +280,10 @@ class DesktopService
             'owner_id' => $entity->user_id,
             'created_at' => $entity->created_at?->toIso8601String(),
             'updated_at' => $entity->updated_at?->toIso8601String(),
+            'parent_id' => $relData['parent_id'],
+            'parent_type' => $relData['parent_type'],
+            'children_count' => $relData['children_count'],
+            'siblings_count' => $relData['siblings_count'],
         ];
     }
 }

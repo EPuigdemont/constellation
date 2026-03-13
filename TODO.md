@@ -88,12 +88,12 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 5 — Post-it System
 
-- [ ] Post-it Livewire component: small draggable card
-- [ ] Post-it can be free-floating on desktop OR attached to a parent entity
+- [x] Post-it Livewire component: small draggable card
+- [x] Post-it can be free-floating on desktop OR attached to a parent entity
 - [ ] When attached: position is relative to parent entity card (x/y stored as percentage of parent dimensions)
-- [ ] Post-it parent-child relationship stored in `entity_relationships` as `parent_child`
-- [ ] Sibling linking UI: select two entities → create `sibling` relationship
-- [ ] Visual indicator on entity cards when they have children or siblings
+- [x] Post-it parent-child relationship stored in `entity_relationships` as `parent_child`
+- [x] Sibling linking UI: select two entities → create `sibling` relationship
+- [x] Visual indicator on entity cards when they have children or siblings
 
 ---
 
