@@ -101,17 +101,13 @@ class Desktop extends Component
     {
         $user = Auth::user();
         $newZ = $service->nextZIndex($user);
-        $service->savePosition($user, $entityId, $entityType, 0, 0, $newZ);
 
-        $position = \App\Models\EntityPosition::query()
+        \App\Models\EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('entity_id', $entityId)
             ->where('entity_type', $entityType)
-            ->first();
-
-        if ($position) {
-            $position->update(['z_index' => $newZ]);
-        }
+            ->where('context', 'desktop')
+            ->update(['z_index' => $newZ]);
 
         $this->maxZIndex = $newZ;
 

@@ -17,6 +17,7 @@ class EntityPosition extends Model
         'user_id',
         'entity_id',
         'entity_type',
+        'context',
         'x',
         'y',
         'z_index',

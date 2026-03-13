@@ -24,11 +24,16 @@ class DesktopService
      *
      * @return array<int, array{id: string, type: string, title: string, preview: string, mood: string|null, color_override: string|null, is_public: bool, x: float, y: float, z_index: int, owner_id: int}>
      */
-    public function loadCards(User $user): array
+    /**
+     * Load all entity cards for a user's desktop.
+     *
+     * @param  array<string, class-string>|null  $entityTypes  Override which entity types to load
+     */
+    public function loadCards(User $user, string $context = 'desktop', ?array $entityTypes = null): array
     {
         $cards = [];
 
-        $entityTypes = [
+        $entityTypes ??= [
             'diary_entry' => DiaryEntry::class,
             'note' => Note::class,
             'postit' => Postit::class,
@@ -54,6 +59,7 @@ class DesktopService
                     ->where('user_id', $user->id)
                     ->where('entity_id', $entity->id)
                     ->where('entity_type', $morphType)
+                    ->where('context', $context)
                     ->first();
 
                 $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
@@ -66,13 +72,14 @@ class DesktopService
     /**
      * Save or update the position of an entity on a user's desktop.
      */
-    public function savePosition(User $user, string $entityId, string $entityType, float $x, float $y, int $zIndex): void
+    public function savePosition(User $user, string $entityId, string $entityType, float $x, float $y, int $zIndex, string $context = 'desktop'): void
     {
         EntityPosition::updateOrCreate(
             [
                 'user_id' => $user->id,
                 'entity_id' => $entityId,
                 'entity_type' => $entityType,
+                'context' => $context,
             ],
             [
                 'x' => $x,
@@ -85,9 +92,11 @@ class DesktopService
     /**
      * Get the next z_index for bringing a card to front.
      */
-    public function nextZIndex(User $user): int
+    public function nextZIndex(User $user, string $context = 'desktop'): int
     {
-        $max = EntityPosition::where('user_id', $user->id)->max('z_index');
+        $max = EntityPosition::where('user_id', $user->id)
+            ->where('context', $context)
+            ->max('z_index');
 
         return ($max ?? 0) + 1;
     }
@@ -96,7 +105,7 @@ class DesktopService
      * Assign a default staggered position for a new entity on the desktop.
      * Places entity near the provided viewport center with a small random offset to avoid stacking.
      */
-    public function assignDefaultPosition(User $user, string $entityId, string $entityType, float $centerX = 2000.0, float $centerY = 2000.0): EntityPosition
+    public function assignDefaultPosition(User $user, string $entityId, string $entityType, float $centerX = 2000.0, float $centerY = 2000.0, string $context = 'desktop'): EntityPosition
     {
         $offsetX = random_int(-80, 80);
         $offsetY = random_int(-60, 60);
@@ -108,21 +117,23 @@ class DesktopService
             'user_id' => $user->id,
             'entity_id' => $entityId,
             'entity_type' => $entityType,
+            'context' => $context,
             'x' => $x,
             'y' => $y,
-            'z_index' => $this->nextZIndex($user),
+            'z_index' => $this->nextZIndex($user, $context),
         ]);
     }
 
     /**
      * Save or update the custom size of an entity on a user's desktop.
      */
-    public function saveSize(User $user, string $entityId, string $entityType, float $width, float $height): void
+    public function saveSize(User $user, string $entityId, string $entityType, float $width, float $height, string $context = 'desktop'): void
     {
         EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('entity_id', $entityId)
             ->where('entity_type', $entityType)
+            ->where('context', $context)
             ->update([
                 'width' => $width,
                 'height' => $height,

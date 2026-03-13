@@ -29,6 +29,7 @@ class User extends Authenticatable
         'password',
         'theme',
         'desktop_zoom',
+        'vision_board_zoom',
     ];
 
     /**
@@ -54,6 +55,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'desktop_zoom' => 'float',
+            'vision_board_zoom' => 'float',
         ];
     }
 

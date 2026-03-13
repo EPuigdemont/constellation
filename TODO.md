@@ -124,12 +124,12 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 7 — Vision Board
 
-- [ ] Vision board view: full-screen grid/canvas
-- [ ] Upload image → stored in private disk → `images` record created
-- [ ] Images are draggable entities on the vision board canvas
-- [ ] Images can be linked to diary entries or notes (`sibling` relationship)
-- [ ] Image mood/color coding same as other entities
-- [ ] Serve images via signed URL route (never direct storage URL)
+- [x] Vision board view: full-screen grid/canvas
+- [x] Upload image → stored in private disk → `images` record created
+- [x] Images are draggable entities on the vision board canvas
+- [x] Images can be linked to diary entries or notes (`sibling` relationship)
+- [x] Image mood/color coding same as other entities
+- [x] Serve images via signed URL route (never direct storage URL)
 
 ---
 

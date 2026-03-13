@@ -380,6 +380,48 @@ select:focus[data-flux-control] {
     opacity: 0.7;
 }
 
+/* ─── Vision Board Cards ─── */
+
+.vb-card {
+    @apply cursor-grab rounded-lg shadow-lg transition-shadow hover:shadow-xl active:cursor-grabbing;
+    position: relative;
+    overflow: hidden;
+    width: 280px;
+    height: 220px;
+}
+
+.vb-card-selected {
+    outline: 2px solid var(--color-blue-400);
+    outline-offset: 1px;
+}
+
+.vb-card-label {
+    @apply absolute bottom-0 left-0 right-0 truncate bg-black/60 px-2 py-1 text-xs text-white;
+}
+
+.vb-card-links {
+    @apply absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full bg-black/50 px-1.5 py-0.5 text-[0.6rem] text-white;
+}
+
+.vb-card::after {
+    content: '';
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+    opacity: 0;
+    transition: opacity 0.15s;
+    background: linear-gradient(135deg, transparent 40%, var(--color-zinc-400) 40%, var(--color-zinc-400) 50%, transparent 50%, transparent 70%, var(--color-zinc-400) 70%, var(--color-zinc-400) 80%, transparent 80%);
+    border-radius: 0 0 4px 0;
+    pointer-events: none;
+}
+
+.vb-card:hover::after {
+    opacity: 0.7;
+}
+
 /* ─── Tiptap Editor ─── */
 
 .tiptap-editor-content {
