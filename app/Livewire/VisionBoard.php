@@ -129,6 +129,11 @@ class VisionBoard extends Component
         Auth::user()->update(['vision_board_zoom' => $zoom]);
     }
 
+    public function updatedImageUpload(): void
+    {
+        $this->uploadImage(app(EditorImageService::class), app(DesktopService::class));
+    }
+
     public function uploadImage(EditorImageService $imageService, DesktopService $service): void
     {
         try {

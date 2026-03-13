@@ -187,6 +187,11 @@ class Canvas extends Component
         $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
     }
 
+    public function updatedImageUpload(): void
+    {
+        $this->uploadImage(app(EditorImageService::class), app(DesktopService::class));
+    }
+
     public function uploadImage(EditorImageService $imageService, DesktopService $service): void
     {
         try {

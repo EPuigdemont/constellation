@@ -9,8 +9,7 @@
                x-ref="vbImageInput"
                accept="image/jpeg,image/png,image/gif,image/webp"
                class="hidden"
-               wire:model="imageUpload"
-               x-on:change="$nextTick(() => $wire.uploadImage())" />
+               wire:model="imageUpload" />
 
         <flux:spacer />
 
