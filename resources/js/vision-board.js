@@ -332,6 +332,45 @@ document.addEventListener('alpine:init', () => {
                 this._createCardElement(card);
             });
 
+            // Listen for card-updated to apply changes to DOM (wire:ignore means Livewire can't re-render)
+            Livewire.on('card-updated', (data) => {
+                const payload = data[0] ?? data;
+                const entityId = payload.entityId;
+                const updates = payload.updates;
+                if (!entityId || !updates) return;
+
+                const canvas = document.getElementById('vb-canvas');
+                if (!canvas) return;
+                const el = canvas.querySelector(`[data-card-id="${entityId}"]`);
+                if (!el) return;
+
+                // Update title bar
+                if ('title' in updates) {
+                    let titleEl = el.querySelector('.vb-card-title');
+                    if (updates.title) {
+                        if (!titleEl) {
+                            titleEl = document.createElement('div');
+                            titleEl.className = 'vb-card-title';
+                            el.insertBefore(titleEl, el.firstChild);
+                        }
+                        titleEl.textContent = updates.title;
+                    } else if (titleEl) {
+                        titleEl.remove();
+                    }
+                }
+
+                // Update mood class
+                if ('mood' in updates) {
+                    el.className = el.className.replace(/mood-\S+/g, '');
+                    el.classList.add(`mood-${updates.mood || 'plain'}`);
+                }
+
+                // Update color override
+                if ('color_override' in updates) {
+                    el.style.backgroundColor = updates.color_override || '';
+                }
+            });
+
             // Listen for card-deleted to remove from canvas
             Livewire.on('card-deleted', (data) => {
                 const payload = data[0] ?? data;
