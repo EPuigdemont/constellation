@@ -4,62 +4,62 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 0 — Project Bootstrap
+## Phase 0 — Project Bootstrap ✅
 
-- [ ] Create Laravel 12 project (`laravel new constellation`)
-- [ ] Configure `.env`: DB (SQLite for local), app name, app URL
-- [ ] Install dependencies: Livewire 3, Alpine.js, Tailwind CSS, Tiptap, interact.js, D3.js
-- [ ] Configure Tailwind with content paths
-- [ ] Set up base layout (`layouts/app.blade.php`) with theme body class hook
-- [ ] Disable user registration routes
-- [ ] Seed two fixed users (you + girlfriend) with hashed passwords
-- [ ] Add `robots.txt` disallowing all
-- [ ] Add login throttle middleware (`throttle:5,1`) to login route
-- [ ] Set up `uuid` primary keys on all models
-- [ ] Configure private storage disk for file uploads
-
----
-
-## Phase 1 — Core Schema & Models
-
-- [ ] Migration: `users` table additions (`theme` string, `desktop_zoom` float)
-- [ ] Migration: `diary_entries` (`id`, `user_id`, `title`, `body` longtext, `mood`, `color_override`, `is_public`, `soft deletes`, `timestamps`)
-- [ ] Migration: `notes` (same structure as diary_entries minus title requirement)
-- [ ] Migration: `postits` (`id`, `user_id`, `body`, `mood`, `color_override`, `is_public`, `timestamps`, `soft deletes`)
-- [ ] Migration: `images` (`id`, `user_id`, `path`, `disk`, `alt`, `is_public`, `timestamps`, `soft deletes`)
-- [ ] Migration: `tags` (`id`, `name`, `user_id` nullable for system tags, `color` nullable)
-- [ ] Migration: `taggables` pivot (polymorphic tag relationships)
-- [ ] Migration: `entity_relationships` (`id`, `entity_a_id`, `entity_a_type`, `entity_b_id`, `entity_b_type`, `relationship_type` enum[`parent_child`,`sibling`], `direction` nullable, `timestamps`)
-- [ ] Migration: `entity_positions` (`id`, `user_id`, `entity_id`, `entity_type`, `x`, `y`, `z_index`, `timestamps`)
-- [ ] Migration: `important_dates` (`id`, `user_id`, `label`, `date`, `recurs_annually` bool, `timestamps`)
-- [ ] Eloquent models for all tables with relationships, soft deletes, UUID casting
-- [ ] Policies for all entity models (owner or is_public check)
-- [ ] Seed default tags (happy, sad, reflective, grateful, anxious, excited, love, memory, goal, dream)
+- [x] Create Laravel 12 project (`laravel new constellation`)
+- [x] Configure `.env`: DB (SQLite for local), app name, app URL
+- [x] Install dependencies: Livewire 3, Alpine.js, Tailwind CSS, Tiptap, interact.js, D3.js
+- [x] Configure Tailwind with content paths
+- [x] Set up base layout (`layouts/app.blade.php`) with theme body class hook
+- [x] Disable user registration routes
+- [x] Seed two fixed users (you + girlfriend) with hashed passwords
+- [x] Add `robots.txt` disallowing all
+- [x] Add login throttle middleware (`throttle:5,1`) to login route
+- [x] Set up `uuid` primary keys on all models
+- [x] Configure private storage disk for file uploads
 
 ---
 
-## Phase 2 — Authentication
+## Phase 1 — Core Schema & Models ✅
 
-- [ ] Customize login view (themed, no registration link)
-- [ ] Confirm throttle is active and tested
-- [ ] Confirm all routes except `/login` are behind `auth` middleware
-- [ ] Basic "welcome back" message on login (uses user's name)
+- [x] Migration: `users` table additions (`theme` string, `desktop_zoom` float)
+- [x] Migration: `diary_entries` (`id`, `user_id`, `title`, `body` longtext, `mood`, `color_override`, `is_public`, `soft deletes`, `timestamps`)
+- [x] Migration: `notes` (same structure as diary_entries minus title requirement)
+- [x] Migration: `postits` (`id`, `user_id`, `body`, `mood`, `color_override`, `is_public`, `timestamps`, `soft deletes`)
+- [x] Migration: `images` (`id`, `user_id`, `path`, `disk`, `alt`, `is_public`, `timestamps`, `soft deletes`)
+- [x] Migration: `tags` (`id`, `name`, `user_id` nullable for system tags, `color` nullable)
+- [x] Migration: `taggables` pivot (polymorphic tag relationships)
+- [x] Migration: `entity_relationships` (`id`, `entity_a_id`, `entity_a_type`, `entity_b_id`, `entity_b_type`, `relationship_type` enum[`parent_child`,`sibling`], `direction` nullable, `timestamps`)
+- [x] Migration: `entity_positions` (`id`, `user_id`, `entity_id`, `entity_type`, `x`, `y`, `z_index`, `timestamps`)
+- [x] Migration: `important_dates` (`id`, `user_id`, `label`, `date`, `recurs_annually` bool, `timestamps`)
+- [x] Eloquent models for all tables with relationships, soft deletes, UUID casting
+- [x] Policies for all entity models (owner or is_public check)
+- [x] Seed default tags (happy, sad, reflective, grateful, anxious, excited, love, memory, goal, dream)
 
 ---
 
-## Phase 3 — Virtual Desktop (Scratchboard)
+## Phase 2 — Authentication ✅
 
-- [ ] Desktop Livewire component: renders all entities as absolutely positioned cards
-- [ ] Load entity positions from `entity_positions` for current user on mount
-- [ ] implement interact.js drag on all entity cards (Alpine.js bridge)
-- [ ] Debounced position save on `dragend` → Livewire → `entity_positions`
-- [ ] Z-index management (bring to front on click/drag)
-- [ ] Desktop zoom in/out (CSS scale on canvas wrapper, persisted to `users.desktop_zoom`)
-- [ ] "New Diary Entry" button → opens editor modal
-- [ ] "New Note" button → opens editor modal
-- [ ] "New Post-it" button → creates post-it card on canvas
-- [ ] Entity cards display: title/preview, mood color, mood class applied
-- [ ] Entity cards have context menu: edit, delete, link, tag, change mood, toggle public/private
+- [x] Customize login view (themed, no registration link)
+- [x] Confirm throttle is active and tested
+- [x] Confirm all routes except `/login` are behind `auth` middleware
+- [x] Basic "welcome back" message on login (uses user's name)
+
+---
+
+## Phase 3 — Virtual Desktop (Scratchboard) ✅
+
+- [x] Desktop Livewire component: renders all entities as absolutely positioned cards
+- [x] Load entity positions from `entity_positions` for current user on mount
+- [x] implement interact.js drag on all entity cards (Alpine.js bridge)
+- [x] Debounced position save on `dragend` → Livewire → `entity_positions`
+- [x] Z-index management (bring to front on click/drag)
+- [x] Desktop zoom in/out (CSS scale on canvas wrapper, persisted to `users.desktop_zoom`)
+- [x] "New Diary Entry" button → opens editor modal
+- [x] "New Note" button → opens editor modal
+- [x] "New Post-it" button → creates post-it card on canvas
+- [x] Entity cards display: title/preview, mood color, mood class applied
+- [x] Entity cards have context menu: edit, delete, link, tag, change mood, toggle public/private
 
 ---
 
