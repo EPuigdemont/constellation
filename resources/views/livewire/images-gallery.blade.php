@@ -1,6 +1,6 @@
 <div class="flex h-screen flex-col overflow-hidden">
     {{-- Toolbar --}}
-    <div class="flex items-center gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="flex items-center gap-3 border-b border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:heading size="lg">{{ __('Images') }}</flux:heading>
 
         <flux:spacer />
@@ -15,7 +15,7 @@
                 {{ __('No images yet. Upload one from the Desktop.') }}
             </div>
         @else
-            <div class="grid grid-cols-2 gap-4 px-6 py-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            <div class="grid grid-cols-2 gap-4 p-0 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 @foreach($images as $image)
                     <div class="group overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900">
                         <div class="aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800">

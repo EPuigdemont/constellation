@@ -1,6 +1,6 @@
 <div class="flex h-screen flex-col overflow-hidden">
     {{-- Toolbar --}}
-    <div class="flex min-w-0 items-center gap-2 overflow-hidden border-b border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="flex min-w-0 items-center gap-2 overflow-hidden border-b border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:button size="sm" icon="plus" x-on:click="$refs.vbImageInput.click()">
             {{ __('Upload Image') }}
         </flux:button>
