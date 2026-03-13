@@ -1,0 +1,68 @@
+/**
+ * Night theme — twinkling star dots
+ */
+
+let animationFrame = null;
+let canvas = null;
+
+const particles = [];
+const MAX_PARTICLES = 25;
+
+function createParticle(width, height) {
+    return {
+        x: Math.random() * width,
+        y: Math.random() * height,
+        size: Math.random() * 2 + 0.5,
+        baseOpacity: Math.random() * 0.4 + 0.2,
+        twinkleSpeed: Math.random() * 0.005 + 0.002,
+        phase: Math.random() * Math.PI * 2,
+    };
+}
+
+function animate(ctx, width, height, time) {
+    ctx.clearRect(0, 0, width, height);
+
+    for (const p of particles) {
+        const opacity = p.baseOpacity + Math.sin(time * p.twinkleSpeed + p.phase) * 0.3;
+        if (opacity <= 0) continue;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(159, 168, 218, ${Math.max(0, opacity)})`;
+        ctx.fill();
+    }
+
+    animationFrame = requestAnimationFrame((t) => animate(ctx, width, height, t));
+}
+
+export function init() {
+    const container = document.querySelector('[data-theme-particles]');
+    if (!container) return;
+
+    canvas = document.createElement('canvas');
+    canvas.classList.add('theme-particles-canvas');
+    container.appendChild(canvas);
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const ctx = canvas.getContext('2d');
+    particles.length = 0;
+    for (let i = 0; i < MAX_PARTICLES; i++) {
+        particles.push(createParticle(canvas.width, canvas.height));
+    }
+
+    animate(ctx, canvas.width, canvas.height, 0);
+}
+
+export function destroy() {
+    if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+    }
+    if (canvas) {
+        canvas.remove();
+        canvas = null;
+    }
+    particles.length = 0;
+}

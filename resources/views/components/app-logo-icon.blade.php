@@ -1,8 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 42" {{ $attributes }}>
-    <path 
-        fill="currentColor" 
-        fill-rule="evenodd" 
-        clip-rule="evenodd"
-        d="M17.2 5.633 8.6.855 0 5.633v26.51l16.2 9 16.2-9v-8.442l7.6-4.223V9.856l-8.6-4.777-8.6 4.777V18.3l-5.6 3.111V5.633ZM38 18.301l-5.6 3.11v-6.157l5.6-3.11V18.3Zm-1.06-7.856-5.54 3.078-5.54-3.079 5.54-3.078 5.54 3.079ZM24.8 18.3v-6.157l5.6 3.111v6.158L24.8 18.3Zm-1 1.732 5.54 3.078-13.14 7.302-5.54-3.078 13.14-7.3v-.002Zm-16.2 7.89 7.6 4.222V38.3L2 30.966V7.92l5.6 3.111v16.892ZM8.6 9.3 3.06 6.222 8.6 3.143l5.54 3.08L8.6 9.3Zm21.8 15.51-13.2 7.334V38.3l13.2-7.334v-6.156ZM9.6 11.034l5.6-3.11v14.6l-5.6 3.11v-14.6Z"
-    />
+@props([
+    'variant' => 'auto',
+])
+
+@php
+    $isMesh = $variant === 'mesh';
+@endphp
+
+@if($isMesh)
+{{-- Mesh gradient variant --}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" {{ $attributes }}>
+    <defs>
+        <linearGradient id="mesh-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:var(--theme-accent, #f9a825)" />
+            <stop offset="100%" style="stop-color:var(--theme-accent-hover, #f57f17)" />
+        </linearGradient>
+    </defs>
+    {{-- Large star (top-left) --}}
+    <path d="M14 4 L16 11 L23 13 L16 15 L14 22 L12 15 L5 13 L12 11 Z" fill="url(#mesh-grad)" />
+    {{-- Medium star (right) --}}
+    <path d="M30 14 L31.5 19 L36 20.5 L31.5 22 L30 27 L28.5 22 L24 20.5 L28.5 19 Z" fill="url(#mesh-grad)" opacity="0.8" />
+    {{-- Small star (bottom-left) --}}
+    <path d="M11 28 L12 31.5 L15.5 32.5 L12 33.5 L11 37 L10 33.5 L6.5 32.5 L10 31.5 Z" fill="url(#mesh-grad)" opacity="0.6" />
+    {{-- Connecting lines --}}
+    <line x1="14" y1="13" x2="30" y2="20.5" stroke="url(#mesh-grad)" stroke-width="0.5" opacity="0.3" />
+    <line x1="14" y1="13" x2="11" y2="32.5" stroke="url(#mesh-grad)" stroke-width="0.5" opacity="0.3" />
+    <line x1="30" y1="20.5" x2="11" y2="32.5" stroke="url(#mesh-grad)" stroke-width="0.5" opacity="0.3" />
 </svg>
+@else
+{{-- Default auto variant (uses currentColor, works in light & dark) --}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" {{ $attributes }}>
+    {{-- Large star (top-left) --}}
+    <path d="M14 4 L16 11 L23 13 L16 15 L14 22 L12 15 L5 13 L12 11 Z" fill="currentColor" />
+    {{-- Medium star (right) --}}
+    <path d="M30 14 L31.5 19 L36 20.5 L31.5 22 L30 27 L28.5 22 L24 20.5 L28.5 19 Z" fill="currentColor" opacity="0.75" />
+    {{-- Small star (bottom-left) --}}
+    <path d="M11 28 L12 31.5 L15.5 32.5 L12 33.5 L11 37 L10 33.5 L6.5 32.5 L10 31.5 Z" fill="currentColor" opacity="0.5" />
+    {{-- Connecting lines --}}
+    <line x1="14" y1="13" x2="30" y2="20.5" stroke="currentColor" stroke-width="0.5" opacity="0.2" />
+    <line x1="14" y1="13" x2="11" y2="32.5" stroke="currentColor" stroke-width="0.5" opacity="0.2" />
+    <line x1="30" y1="20.5" x2="11" y2="32.5" stroke="currentColor" stroke-width="0.5" opacity="0.2" />
+</svg>
+@endif

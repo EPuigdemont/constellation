@@ -45,7 +45,12 @@
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             </div>
         @endif
-        <p class="desktop-card-preview">{{ $card['preview'] ?: __('Empty post-it') }}</p>
+        <p class="desktop-card-preview postit-editable-text"
+           contenteditable="true"
+           x-on:blur="$wire.quickSavePostit('{{ $card['id'] }}', $event.target.innerText)"
+           x-on:keydown.enter.prevent="$event.target.blur()"
+           x-on:mousedown.stop
+           x-on:dblclick.stop>{{ $card['preview'] ?: __('Empty post-it') }}</p>
 
     @elseif($card['type'] === 'image')
         <div class="desktop-card-header">
@@ -54,7 +59,40 @@
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             @endif
         </div>
-        <p class="desktop-card-preview">{{ $card['preview'] ?: __('No description') }}</p>
+        @if(!empty($card['image_url']))
+            <img src="{{ $card['image_url'] }}" alt="{{ $card['preview'] ?: __('Image') }}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />
+        @else
+            <p class="desktop-card-preview">{{ $card['preview'] ?: __('No description') }}</p>
+        @endif
+    @endif
+
+    {{-- Relationship indicators --}}
+    @php
+        $childrenCount = $card['children_count'] ?? 0;
+        $siblingsCount = $card['siblings_count'] ?? 0;
+        $parentId = $card['parent_id'] ?? null;
+    @endphp
+
+    @if($childrenCount > 0 || $siblingsCount > 0 || $parentId)
+        <div class="desktop-card-relations">
+            @if($parentId)
+                <span class="desktop-card-relation-badge desktop-card-relation-attached" title="{{ __('Attached to parent') }}">
+                    <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
+                </span>
+            @endif
+            @if($childrenCount > 0)
+                <span class="desktop-card-relation-badge desktop-card-relation-children" title="{{ trans_choice(':count child|:count children', $childrenCount) }}">
+                    <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m8.25-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-6A2.25 2.25 0 019.75 18v-2.25m6.75-7.5l-3 3m0 0l-3-3m3 3v-6" /></svg>
+                    {{ $childrenCount }}
+                </span>
+            @endif
+            @if($siblingsCount > 0)
+                <span class="desktop-card-relation-badge desktop-card-relation-siblings" title="{{ trans_choice(':count sibling|:count siblings', $siblingsCount) }}">
+                    <svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m9.86-2.556a4.5 4.5 0 00-1.242-7.244l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L4.343 8.69" /></svg>
+                    {{ $siblingsCount }}
+                </span>
+            @endif
+        </div>
     @endif
 
     @if($card['is_public'])

@@ -1,0 +1,34 @@
+/* ─── Theme: Cozy ─── */
+/* Warm browns and tans evoking comfort and warmth */
+
+.theme-cozy {
+    --theme-bg: #faf6f3;
+    --theme-bg-secondary: #efebe9;
+    --theme-sidebar-bg: #efebe9;
+    --theme-sidebar-border: #bcaaa4;
+    --theme-text: #3e2723;
+    --theme-text-muted: #7a5c52;
+    --theme-accent: #795548;
+    --theme-accent-hover: #5d4037;
+    --theme-border: #bcaaa4;
+    --theme-header-bg: #efebe9;
+    --theme-card-glow: rgba(188, 170, 164, 0.4);
+    /* Hearth with flames */
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600' preserveAspectRatio='none'%3E%3Crect x='430' y='480' width='340' height='120' rx='6' fill='%23795548' opacity='0.15'/%3E%3Crect x='460' y='460' width='280' height='30' rx='4' fill='%23a1887f' opacity='0.12'/%3E%3Crect x='470' y='430' width='35' height='40' rx='3' fill='%238d6e63' opacity='0.1'/%3E%3Crect x='690' y='430' width='35' height='40' rx='3' fill='%238d6e63' opacity='0.1'/%3E%3Cpath d='M560 460 Q575 360,600 400 Q620 320,630 370 Q650 280,640 460Z' fill='%23ff8f00' opacity='0.12'/%3E%3Cpath d='M575 460 Q585 380,605 410 Q615 350,610 460Z' fill='%23ff6f00' opacity='0.1'/%3E%3Cpath d='M585 460 Q590 400,600 430 Q608 380,605 460Z' fill='%23ffab00' opacity='0.08'/%3E%3C/svg%3E");
+}
+
+.dark.theme-cozy,
+.dark .theme-cozy {
+    --theme-bg: #1a1210;
+    --theme-bg-secondary: #251c18;
+    --theme-sidebar-bg: #1e1512;
+    --theme-sidebar-border: #3e2723;
+    --theme-text: #bcaaa4;
+    --theme-text-muted: #8a7a72;
+    --theme-accent: #795548;
+    --theme-accent-hover: #8d6e63;
+    --theme-border: #3e2723;
+    --theme-header-bg: #1e1512;
+    --theme-card-glow: rgba(121, 85, 72, 0.2);
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600' preserveAspectRatio='none'%3E%3Crect x='430' y='480' width='340' height='120' rx='6' fill='%233e2723' opacity='0.3'/%3E%3Crect x='460' y='460' width='280' height='30' rx='4' fill='%234e342e' opacity='0.25'/%3E%3Cpath d='M560 460 Q575 360,600 400 Q620 320,630 370 Q650 280,640 460Z' fill='%23ff8f00' opacity='0.08'/%3E%3Cpath d='M575 460 Q585 380,605 410 Q615 350,610 460Z' fill='%23ff6f00' opacity='0.06'/%3E%3C/svg%3E");
+}

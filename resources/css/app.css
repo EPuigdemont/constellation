@@ -1,6 +1,16 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
 
+/* ─── Theme Imports ─── */
+@import './themes/spring.css';
+@import './themes/summer.css';
+@import './themes/autumn.css';
+@import './themes/winter.css';
+@import './themes/love.css';
+@import './themes/breeze.css';
+@import './themes/night.css';
+@import './themes/cozy.css';
+
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
@@ -86,6 +96,11 @@ select:focus[data-flux-control] {
     --card-badge-text: var(--color-zinc-300);
 }
 
+.desktop-card-selected {
+    outline: 2px solid var(--color-blue-400);
+    outline-offset: 1px;
+}
+
 .desktop-card-inner {
     @apply relative flex flex-col gap-1;
 }
@@ -117,6 +132,61 @@ select:focus[data-flux-control] {
     @apply absolute right-0 top-0 opacity-50;
 }
 
+/* ─── Relationship Indicators ─── */
+
+.desktop-card-relations {
+    @apply mt-1 flex flex-wrap items-center gap-1;
+}
+
+.desktop-card-relation-badge {
+    @apply inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.6rem] font-medium;
+}
+
+.desktop-card-relation-attached {
+    background: var(--color-zinc-200);
+    color: var(--color-zinc-600);
+}
+
+.dark .desktop-card-relation-attached {
+    background: var(--color-zinc-700);
+    color: var(--color-zinc-300);
+}
+
+.desktop-card-relation-children {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.dark .desktop-card-relation-children {
+    background: #1e3a5f;
+    color: #93c5fd;
+}
+
+.desktop-card-relation-siblings {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.dark .desktop-card-relation-siblings {
+    background: #2e1065;
+    color: #c4b5fd;
+}
+
+/* ─── Linking Mode ─── */
+
+.desktop-canvas-linking {
+    cursor: crosshair !important;
+}
+
+.desktop-canvas-linking [data-card-id] {
+    cursor: pointer !important;
+}
+
+.desktop-card-linking-source {
+    outline: 2px dashed #3b82f6;
+    outline-offset: 3px;
+}
+
 /* ─── Card Type Sizing ─── */
 
 .card-type-postit {
@@ -134,6 +204,20 @@ select:focus[data-flux-control] {
 
 /* ─── Mood Variants ─── */
 
+.mood-spring {
+    --card-bg: #e8f5e9;
+    --card-border: #a5d6a7;
+    --card-badge-bg: #a5d6a7;
+    --card-badge-text: #1b5e20;
+}
+
+.dark .mood-spring {
+    --card-bg: #142014;
+    --card-border: #1b5e20;
+    --card-badge-bg: #1b5e20;
+    --card-badge-text: #a5d6a7;
+}
+
 .mood-summer {
     --card-bg: #fff8e1;
     --card-border: #ffe082;
@@ -146,6 +230,34 @@ select:focus[data-flux-control] {
     --card-border: #6d4c00;
     --card-badge-bg: #6d4c00;
     --card-badge-text: #ffe082;
+}
+
+.mood-autumn {
+    --card-bg: #fff3e0;
+    --card-border: #ffab40;
+    --card-badge-bg: #ffab40;
+    --card-badge-text: #4e2700;
+}
+
+.dark .mood-autumn {
+    --card-bg: #2a1800;
+    --card-border: #4e2700;
+    --card-badge-bg: #4e2700;
+    --card-badge-text: #ffab40;
+}
+
+.mood-winter {
+    --card-bg: #e3f2fd;
+    --card-border: #90caf9;
+    --card-badge-bg: #90caf9;
+    --card-badge-text: #0d47a1;
+}
+
+.dark .mood-winter {
+    --card-bg: #0d2137;
+    --card-border: #0d47a1;
+    --card-badge-bg: #0d47a1;
+    --card-badge-text: #90caf9;
 }
 
 .mood-love {
@@ -214,10 +326,653 @@ select:focus[data-flux-control] {
 
 /* ─── Mood Dots (context menu) ─── */
 
+.mood-dot-spring { background-color: #a5d6a7; }
 .mood-dot-summer { background-color: #ffe082; }
+.mood-dot-autumn { background-color: #ffab40; }
+.mood-dot-winter { background-color: #90caf9; }
 .mood-dot-love { background-color: #f48fb1; }
 .mood-dot-breeze { background-color: #80deea; }
 .mood-dot-night { background-color: #9fa8da; }
 .mood-dot-cozy { background-color: #bcaaa4; }
 .mood-dot-plain { background-color: var(--color-zinc-400); }
 .mood-dot-custom { background-color: var(--color-zinc-400); }
+
+/* ─── Desktop Grid & Guide Lines ─── */
+
+.desktop-grid-bg {
+    background-image:
+        linear-gradient(to right, var(--color-zinc-300) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--color-zinc-300) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.dark .desktop-grid-bg {
+    background-image:
+        linear-gradient(to right, var(--color-zinc-700) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--color-zinc-700) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.desktop-guide-line {
+    position: absolute;
+    background-color: #3b82f6;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.dark .desktop-guide-line {
+    background-color: #60a5fa;
+}
+
+/* ─── Desktop Editor Modal (mood preview) ─── */
+
+.desktop-editor-modal {
+    background: var(--card-bg, var(--theme-bg, var(--color-zinc-50)));
+    border-radius: 0.5rem;
+    padding: 1px;
+    transition: background-color 0.3s ease;
+}
+
+.dark .desktop-editor-modal {
+    background: var(--card-bg, var(--theme-bg, var(--color-zinc-800)));
+}
+
+/* ─── Trashcan Drop Zone ─── */
+
+.desktop-trashcan {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1rem;
+    border: 2px dashed var(--color-zinc-400);
+    border-radius: 0.75rem;
+    color: var(--color-zinc-400);
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+
+.desktop-trashcan:hover {
+    opacity: 0.7;
+}
+
+.desktop-trashcan-active {
+    border-color: #ef4444;
+    color: #ef4444;
+    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.dark .desktop-trashcan-active {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ─── Card Resize Grip ─── */
+
+.desktop-card {
+    position: relative;
+}
+
+.desktop-card::after {
+    content: '';
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, transparent 50%, var(--card-border, var(--color-zinc-300)) 50%);
+    opacity: 0.4;
+    border-radius: 0 0 4px 0;
+    pointer-events: none;
+}
+
+.desktop-card:hover::after {
+    opacity: 0.7;
+}
+
+/* ─── Vision Board Cards ─── */
+
+.vb-card {
+    @apply cursor-grab rounded-lg shadow-lg transition-shadow hover:shadow-xl active:cursor-grabbing;
+    position: relative;
+    overflow: hidden;
+    width: 280px;
+    height: 220px;
+    display: flex;
+    flex-direction: column;
+}
+
+.vb-card-selected {
+    outline: 2px solid var(--color-blue-400);
+    outline-offset: 1px;
+}
+
+.vb-card-title {
+    @apply shrink-0 truncate bg-black/70 px-2 py-1 text-xs font-semibold text-white;
+}
+
+.vb-card-img {
+    @apply flex-1 min-h-0 w-full object-cover;
+}
+
+.vb-card-label {
+    @apply absolute bottom-0 left-0 right-0 truncate bg-black/60 px-2 py-1 text-xs text-white;
+}
+
+.vb-card-links {
+    @apply absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full bg-black/50 px-1.5 py-0.5 text-[0.6rem] text-white;
+}
+
+.vb-card::after {
+    content: '';
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+    opacity: 0;
+    transition: opacity 0.15s;
+    background: linear-gradient(135deg, transparent 40%, var(--color-zinc-400) 40%, var(--color-zinc-400) 50%, transparent 50%, transparent 70%, var(--color-zinc-400) 70%, var(--color-zinc-400) 80%, transparent 80%);
+    border-radius: 0 0 4px 0;
+    pointer-events: none;
+}
+
+.vb-card:hover::after {
+    opacity: 0.7;
+}
+
+/* ─── Tiptap Editor ─── */
+
+.tiptap-editor-content {
+    --editor-text: var(--color-zinc-800);
+    --editor-muted: var(--color-zinc-400);
+    --editor-border: var(--color-zinc-200);
+    color: var(--editor-text);
+}
+
+.dark .tiptap-editor-content {
+    --editor-text: var(--color-zinc-200);
+    --editor-muted: var(--color-zinc-500);
+    --editor-border: var(--color-zinc-600);
+}
+
+.tiptap-editor-content .ProseMirror {
+    outline: none;
+    min-height: 10rem;
+}
+
+.tiptap-editor-content .ProseMirror strong {
+    font-weight: 700;
+}
+
+.tiptap-editor-content .ProseMirror em {
+    font-style: italic;
+}
+
+.tiptap-editor-content .ProseMirror u {
+    text-decoration: underline;
+}
+
+.tiptap-editor-content .ProseMirror s {
+    text-decoration: line-through;
+}
+
+.tiptap-editor-content .ProseMirror > * + * {
+    margin-top: 0.75em;
+}
+
+.tiptap-editor-content .ProseMirror h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.tiptap-editor-content .ProseMirror h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.tiptap-editor-content .ProseMirror h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.tiptap-editor-content .ProseMirror ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+}
+
+.tiptap-editor-content .ProseMirror ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+}
+
+.tiptap-editor-content .ProseMirror li > p {
+    margin: 0;
+}
+
+.tiptap-editor-content .ProseMirror blockquote {
+    border-left: 3px solid var(--editor-border);
+    padding-left: 1em;
+    opacity: 0.85;
+    font-style: italic;
+}
+
+.tiptap-editor-content .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    margin: 0.5em 0;
+}
+
+.tiptap-editor-content .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: var(--editor-muted);
+    pointer-events: none;
+    height: 0;
+}
+
+/* ─── Post-it Inline Editing ─── */
+
+.postit-editable-text {
+    cursor: text;
+    outline: none;
+    min-height: 1.2em;
+}
+
+.postit-editable-text:focus {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+}
+
+.dark .postit-editable-text:focus {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* ─── Diary Notebook on Desktop ─── */
+
+.diary-notebook {
+    --notebook-bg: #fffdf5;
+    --notebook-border: #d4c9a8;
+    --notebook-spine: #c4b896;
+    --notebook-text: var(--color-zinc-700);
+    border: 2px solid var(--notebook-border);
+    background: var(--notebook-bg);
+    border-radius: 4px 12px 12px 4px;
+    box-shadow: -3px 0 0 0 var(--notebook-spine), -5px 0 0 0 var(--notebook-border);
+    color: var(--notebook-text);
+    cursor: grab;
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.dark .diary-notebook {
+    --notebook-bg: #2a2520;
+    --notebook-border: #5a4e3a;
+    --notebook-spine: #4a3f2e;
+    --notebook-text: var(--color-zinc-300);
+}
+
+.diary-notebook:hover {
+    box-shadow: -3px 0 0 0 var(--notebook-spine), -5px 0 0 0 var(--notebook-border), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.diary-notebook-closed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    min-height: 120px;
+}
+
+.diary-notebook-closed-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.diary-notebook-closed-count {
+    font-size: 0.65rem;
+    opacity: 0.6;
+}
+
+/* Open state */
+.diary-notebook-open {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.diary-notebook.is-open .diary-notebook-closed {
+    display: none;
+}
+
+.diary-notebook.is-open .diary-notebook-open {
+    display: flex;
+}
+
+.diary-notebook.is-open {
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Notebook spread pages */
+.diary-notebook-spread {
+    display: flex;
+    gap: 1px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.diary-notebook-page {
+    flex: 1;
+    padding: 0.75rem;
+    overflow-y: auto;
+    border-right: 1px dashed var(--notebook-border);
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 1.4rem,
+        var(--notebook-border) 1.4rem,
+        var(--notebook-border) calc(1.4rem + 1px)
+    );
+    background-position-y: 0.5rem;
+}
+
+.diary-notebook-page:last-child {
+    border-right: none;
+}
+
+.diary-notebook-page-date {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.5;
+    margin-bottom: 0.25rem;
+}
+
+.diary-notebook-page-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    line-height: 1.4rem;
+}
+
+.diary-notebook-page-body {
+    font-size: 0.7rem;
+    line-height: 1.4rem;
+    opacity: 0.8;
+}
+
+.diary-notebook-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.5rem;
+    border-top: 1px solid var(--notebook-border);
+    font-size: 0.6rem;
+    opacity: 0.6;
+}
+
+.diary-notebook-nav button {
+    cursor: pointer;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+.diary-notebook-nav button:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.dark .diary-notebook-nav button:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Open animation */
+@keyframes notebook-open {
+    from {
+        transform: scaleX(0.5);
+        opacity: 0.7;
+    }
+    to {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+.diary-notebook.is-open {
+    animation: notebook-open 0.3s ease-out;
+}
+
+/* ─── Theme Background Scene ─── */
+
+[data-theme-scene] {
+    background-image: var(--theme-scene, none);
+    background-size: 100% 45vh;
+    background-repeat: no-repeat;
+    background-position: bottom center;
+}
+
+/* ─── Diary Page Navigation ─── */
+
+.diary-spread:hover .diary-page-arrow {
+    opacity: 1;
+}
+
+.diary-pages {
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.diary-turn-left {
+    animation: diary-page-turn-left 0.4s ease;
+}
+
+.diary-turn-right {
+    animation: diary-page-turn-right 0.4s ease;
+}
+
+@keyframes diary-page-turn-left {
+    0% { transform: translateX(0); opacity: 1; }
+    40% { transform: translateX(3%); opacity: 0.6; }
+    60% { transform: translateX(-2%); opacity: 0.8; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes diary-page-turn-right {
+    0% { transform: translateX(0); opacity: 1; }
+    40% { transform: translateX(-3%); opacity: 0.6; }
+    60% { transform: translateX(2%); opacity: 0.8; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+/* ─── Diary Entry Themed ─── */
+
+.diary-entry-themed {
+    position: relative;
+    overflow: visible;
+    transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+    background: color-mix(in srgb, var(--card-bg, var(--theme-bg, white)) 75%, transparent) !important;
+}
+
+.diary-entry-themed:hover,
+.diary-entry-themed:focus-within,
+.diary-entry-themed.is-editing {
+    background: var(--card-bg, var(--theme-bg, white)) !important;
+    border-color: var(--theme-accent, var(--card-border)) !important;
+    box-shadow: 0 0 16px var(--theme-card-glow, transparent), 0 0 4px var(--theme-accent, transparent);
+}
+
+.diary-entry-themed::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: inset 0 0 20px var(--theme-card-glow, transparent);
+    z-index: 1;
+}
+
+/* ─── Diary Notebook Lines Effect ─── */
+
+.diary-entry-title {
+    border-bottom: 2px solid var(--theme-border, #d4d4d4);
+    padding-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+
+.diary-entry-body {
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent calc(2lh - 1px),
+        var(--theme-border, #e5e5e5) calc(2lh - 1px),
+        var(--theme-border, #e5e5e5) 2lh
+    );
+    background-position-y: 0;
+}
+
+.dark .diary-entry-body {
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent calc(2lh - 1px),
+        color-mix(in srgb, var(--theme-border, #404040) 50%, transparent) calc(2lh - 1px),
+        color-mix(in srgb, var(--theme-border, #404040) 50%, transparent) 2lh
+    );
+}
+
+/* ─── Diary Glitter / Particle Effect ─── */
+
+.diary-entry-glitter {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 2;
+    border-radius: inherit;
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+}
+
+.diary-entry-themed:hover .diary-entry-glitter,
+.diary-entry-themed:focus-within .diary-entry-glitter {
+    opacity: 1;
+}
+
+/* ─── Theme Card Animations ─── */
+
+@media (prefers-reduced-motion: no-preference) {
+    .theme-spring .desktop-card,
+    .theme-spring .vb-card,
+    .theme-spring .diary-entry-themed {
+        animation: theme-float 4.5s ease-in-out infinite;
+    }
+
+    .theme-summer .desktop-card,
+    .theme-summer .vb-card,
+    .theme-summer .diary-entry-themed {
+        animation: theme-warm-glow 3.5s ease-in-out infinite;
+    }
+
+    .theme-autumn .desktop-card,
+    .theme-autumn .vb-card,
+    .theme-autumn .diary-entry-themed {
+        animation: theme-warm-glow 4s ease-in-out infinite;
+    }
+
+    .theme-winter .desktop-card,
+    .theme-winter .vb-card,
+    .theme-winter .diary-entry-themed {
+        animation: theme-shimmer 5s ease-in-out infinite;
+    }
+
+    .theme-love .desktop-card,
+    .theme-love .vb-card,
+    .theme-love .diary-entry-themed {
+        animation: theme-heartbeat 3s ease-in-out infinite;
+    }
+
+    .theme-breeze .desktop-card,
+    .theme-breeze .vb-card,
+    .theme-breeze .diary-entry-themed {
+        animation: theme-float 4s ease-in-out infinite;
+    }
+
+    .theme-night .desktop-card,
+    .theme-night .vb-card,
+    .theme-night .diary-entry-themed {
+        animation: theme-shimmer 4s ease-in-out infinite;
+    }
+
+    .theme-cozy .desktop-card,
+    .theme-cozy .vb-card,
+    .theme-cozy .diary-entry-themed {
+        animation: theme-flicker 5s ease-in-out infinite;
+    }
+}
+
+@keyframes theme-heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.008); }
+}
+
+@keyframes theme-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+}
+
+@keyframes theme-warm-glow {
+    0%, 100% { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 0 0 rgba(255,200,50,0); }
+    50% { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 0 12px var(--theme-card-glow, rgba(255,200,50,0.15)); }
+}
+
+@keyframes theme-shimmer {
+    0%, 100% { border-color: var(--card-border); }
+    50% { border-color: var(--theme-accent, var(--card-border)); }
+}
+
+@keyframes theme-flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.96; }
+}
+
+/* ─── Global Button & Card Flourishes ─── */
+
+@media (prefers-reduced-motion: no-preference) {
+    .desktop-card:hover,
+    .vb-card:hover {
+        transform: translateY(-1px);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    [data-flux-button]:hover {
+        transform: translateY(-1px);
+        transition: transform 0.15s ease;
+    }
+}
+
+/* ─── Theme Particles Canvas ─── */
+
+.theme-particles-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+}

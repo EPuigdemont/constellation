@@ -17,9 +17,12 @@ class EntityPosition extends Model
         'user_id',
         'entity_id',
         'entity_type',
+        'context',
         'x',
         'y',
         'z_index',
+        'width',
+        'height',
     ];
 
     protected function casts(): array
@@ -28,6 +31,8 @@ class EntityPosition extends Model
             'x' => 'float',
             'y' => 'float',
             'z_index' => 'integer',
+            'width' => 'float',
+            'height' => 'float',
         ];
     }
 

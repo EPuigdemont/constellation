@@ -3,24 +3,64 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800 theme-{{ auth()->user()?->theme ?? 'summer' }}">
-        <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <body data-theme-scene class="min-h-screen bg-[var(--theme-bg,#fff)] dark:bg-[var(--theme-bg,theme(colors.zinc.800))] theme-{{ auth()->user()?->theme ?? 'summer' }}">
+        <flux:sidebar sticky collapsible class="border-e bg-[var(--theme-sidebar-bg,theme(colors.zinc.50))] border-[var(--theme-sidebar-border,theme(colors.zinc.200))] dark:border-[var(--theme-sidebar-border,theme(colors.zinc.700))] dark:bg-[var(--theme-sidebar-bg,theme(colors.zinc.900))]">
             <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
+                <x-app-logo :sidebar="true" href="{{ route('canvas') }}" wire:navigate />
+                <x-theme-icon />
                 <flux:sidebar.collapse />
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard') }}
+                {{-- Expanded: full sidebar items with labels --}}
+                <flux:sidebar.group :heading="__('Platform')" class="grid in-data-flux-sidebar-collapsed-desktop:hidden">
+                    <flux:sidebar.item icon="book-open" :href="route('diary')" :current="request()->routeIs('diary')" wire:navigate>
+                        {{ __('Diary') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="squares-2x2" :href="route('canvas')" :current="request()->routeIs('canvas')" wire:navigate>
+                        {{ __('Canvas') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="eye" :href="route('vision-board')" :current="request()->routeIs('vision-board')" wire:navigate>
+                        {{ __('Vision Board') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="photo" :href="route('images')" :current="request()->routeIs('images')" wire:navigate>
+                        {{ __('Images') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                {{-- Collapsed: icon-only navigation with tooltips --}}
+                <div class="not-in-data-flux-sidebar-collapsed-desktop:hidden flex flex-col items-center gap-1 pt-2">
+                    <flux:tooltip :content="__('Diary')" position="right">
+                        <a href="{{ route('diary') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('diary'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('diary')])>
+                            <flux:icon name="book-open" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Canvas')" position="right">
+                        <a href="{{ route('canvas') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('canvas'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('canvas')])>
+                            <flux:icon name="squares-2x2" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Vision Board')" position="right">
+                        <a href="{{ route('vision-board') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('vision-board'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('vision-board')])>
+                            <flux:icon name="eye" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Images')" position="right">
+                        <a href="{{ route('images') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('images'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('images')])>
+                            <flux:icon name="photo" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                </div>
             </flux:sidebar.nav>
 
             <flux:spacer />
 
             <flux:sidebar.nav>
+                <x-theme-switcher />
             </flux:sidebar.nav>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
@@ -33,19 +73,32 @@
             <flux:spacer />
 
             <flux:dropdown position="top" align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                    icon-trailing="chevron-down"
-                />
+                @if(auth()->user()->avatarUrl())
+                    <button class="flex items-center gap-1">
+                        <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}"
+                             class="h-8 w-8 rounded-full object-cover" />
+                        <flux:icon name="chevron-down" variant="micro" class="size-4 text-zinc-400" />
+                    </button>
+                @else
+                    <flux:profile
+                        :initials="auth()->user()->initials()"
+                        icon-trailing="chevron-down"
+                    />
+                @endif
 
                 <flux:menu>
                     <flux:menu.radio.group>
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar
-                                    :name="auth()->user()->name"
-                                    :initials="auth()->user()->initials()"
-                                />
+                                @if(auth()->user()->avatarUrl())
+                                    <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}"
+                                         class="h-8 w-8 rounded-full object-cover" />
+                                @else
+                                    <flux:avatar
+                                        :name="auth()->user()->name"
+                                        :initials="auth()->user()->initials()"
+                                    />
+                                @endif
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
                                     <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
@@ -80,6 +133,9 @@
                 </flux:menu>
             </flux:dropdown>
         </flux:header>
+
+        {{-- Theme particle overlay --}}
+        <div data-theme-particles class="pointer-events-none fixed inset-0 z-0 opacity-30"></div>
 
         {{ $slot }}
 

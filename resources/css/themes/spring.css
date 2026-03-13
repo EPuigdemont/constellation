@@ -1,0 +1,34 @@
+/* ─── Theme: Spring ─── */
+/* Fresh greens and pastels evoking new growth and blossoms */
+
+.theme-spring {
+    --theme-bg: #f1f8e9;
+    --theme-bg-secondary: #e8f5e9;
+    --theme-sidebar-bg: #e8f5e9;
+    --theme-sidebar-border: #a5d6a7;
+    --theme-text: #1b5e20;
+    --theme-text-muted: #558b2f;
+    --theme-accent: #66bb6a;
+    --theme-accent-hover: #43a047;
+    --theme-border: #a5d6a7;
+    --theme-header-bg: #e8f5e9;
+    --theme-card-glow: rgba(165, 214, 167, 0.4);
+    /* Rolling hills with blossoming tree and clouds */
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600' preserveAspectRatio='none'%3E%3Cellipse cx='350' cy='620' rx='600' ry='280' fill='%2366bb6a' opacity='0.35'/%3E%3Cellipse cx='650' cy='650' rx='800' ry='320' fill='%23a5d6a7' opacity='0.45'/%3E%3Cellipse cx='180' cy='100' rx='70' ry='28' fill='%23fff' opacity='0.3'/%3E%3Cellipse cx='225' cy='90' rx='50' ry='22' fill='%23fff' opacity='0.25'/%3E%3Cellipse cx='145' cy='96' rx='40' ry='20' fill='%23fff' opacity='0.2'/%3E%3Cellipse cx='880' cy='75' rx='60' ry='25' fill='%23fff' opacity='0.25'/%3E%3Cellipse cx='920' cy='68' rx='45' ry='20' fill='%23fff' opacity='0.2'/%3E%3Cellipse cx='550' cy='120' rx='50' ry='20' fill='%23fff' opacity='0.2'/%3E%3Crect x='590' y='280' width='16' height='170' rx='3' fill='%23795548' opacity='0.45'/%3E%3Cline x1='598' y1='330' x2='558' y2='278' stroke='%23795548' stroke-width='6' opacity='0.35' stroke-linecap='round'/%3E%3Cline x1='598' y1='310' x2='640' y2='262' stroke='%23795548' stroke-width='6' opacity='0.35' stroke-linecap='round'/%3E%3Cline x1='598' y1='355' x2='572' y2='318' stroke='%23795548' stroke-width='4' opacity='0.3' stroke-linecap='round'/%3E%3Cellipse cx='598' cy='238' rx='88' ry='68' fill='%2381c784' opacity='0.4'/%3E%3Cellipse cx='552' cy='260' rx='62' ry='52' fill='%23f8bbd0' opacity='0.35'/%3E%3Cellipse cx='644' cy='252' rx='58' ry='48' fill='%23f48fb1' opacity='0.3'/%3E%3Cellipse cx='598' cy='208' rx='52' ry='42' fill='%23c8e6c9' opacity='0.35'/%3E%3Ccircle cx='520' cy='400' r='4' fill='%23f8bbd0' opacity='0.4'/%3E%3Ccircle cx='700' cy='380' r='3' fill='%23f48fb1' opacity='0.35'/%3E%3Ccircle cx='450' cy='420' r='3.5' fill='%23fff' opacity='0.3'/%3E%3Ccircle cx='760' cy='410' r='3' fill='%23f8bbd0' opacity='0.3'/%3E%3Ccircle cx='630' cy='430' r='2.5' fill='%23c8e6c9' opacity='0.35'/%3E%3C/svg%3E");
+}
+
+.dark.theme-spring,
+.dark .theme-spring {
+    --theme-bg: #0d1a0d;
+    --theme-bg-secondary: #142014;
+    --theme-sidebar-bg: #0f170f;
+    --theme-sidebar-border: #1b5e20;
+    --theme-text: #a5d6a7;
+    --theme-text-muted: #6d9b6f;
+    --theme-accent: #66bb6a;
+    --theme-accent-hover: #81c784;
+    --theme-border: #1b5e20;
+    --theme-header-bg: #0f170f;
+    --theme-card-glow: rgba(102, 187, 106, 0.2);
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600' preserveAspectRatio='none'%3E%3Cellipse cx='350' cy='620' rx='600' ry='280' fill='%23143a14' opacity='0.35'/%3E%3Cellipse cx='650' cy='650' rx='800' ry='320' fill='%231b5e20' opacity='0.4'/%3E%3Cellipse cx='180' cy='100' rx='70' ry='28' fill='%23a5d6a7' opacity='0.08'/%3E%3Cellipse cx='225' cy='90' rx='50' ry='22' fill='%23a5d6a7' opacity='0.06'/%3E%3Cellipse cx='880' cy='75' rx='60' ry='25' fill='%23a5d6a7' opacity='0.07'/%3E%3Cellipse cx='920' cy='68' rx='45' ry='20' fill='%23a5d6a7' opacity='0.05'/%3E%3Crect x='590' y='280' width='16' height='170' rx='3' fill='%234e342e' opacity='0.35'/%3E%3Cline x1='598' y1='330' x2='558' y2='278' stroke='%234e342e' stroke-width='6' opacity='0.25' stroke-linecap='round'/%3E%3Cline x1='598' y1='310' x2='640' y2='262' stroke='%234e342e' stroke-width='6' opacity='0.25' stroke-linecap='round'/%3E%3Cline x1='598' y1='355' x2='572' y2='318' stroke='%234e342e' stroke-width='4' opacity='0.2' stroke-linecap='round'/%3E%3Cellipse cx='598' cy='238' rx='88' ry='68' fill='%232e7d32' opacity='0.25'/%3E%3Cellipse cx='552' cy='260' rx='62' ry='52' fill='%23880e4f' opacity='0.18'/%3E%3Cellipse cx='644' cy='252' rx='58' ry='48' fill='%23ad1457' opacity='0.15'/%3E%3Cellipse cx='598' cy='208' rx='52' ry='42' fill='%231b5e20' opacity='0.2'/%3E%3C/svg%3E");
+}

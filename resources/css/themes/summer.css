@@ -1,0 +1,34 @@
+/* ─── Theme: Summer ─── */
+/* Warm yellows and golds evoking sunny days */
+
+.theme-summer {
+    --theme-bg: #fffdf5;
+    --theme-bg-secondary: #fff8e1;
+    --theme-sidebar-bg: #fff8e1;
+    --theme-sidebar-border: #ffe082;
+    --theme-text: #4a3800;
+    --theme-text-muted: #8d7440;
+    --theme-accent: #f9a825;
+    --theme-accent-hover: #f57f17;
+    --theme-border: #ffe082;
+    --theme-header-bg: #fff8e1;
+    --theme-card-glow: rgba(255, 224, 130, 0.4);
+    /* Rolling hills with lush tree and clouds — warm summer day */
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600' preserveAspectRatio='none'%3E%3Cellipse cx='350' cy='620' rx='600' ry='280' fill='%23ffd54f' opacity='0.3'/%3E%3Cellipse cx='650' cy='650' rx='800' ry='320' fill='%23ffe082' opacity='0.4'/%3E%3Cellipse cx='200' cy='95' rx='65' ry='26' fill='%23fff' opacity='0.25'/%3E%3Cellipse cx='240' cy='87' rx='45' ry='20' fill='%23fff' opacity='0.2'/%3E%3Cellipse cx='850' cy='110' rx='55' ry='22' fill='%23fff' opacity='0.2'/%3E%3Cellipse cx='890' cy='104' rx='40' ry='18' fill='%23fff' opacity='0.15'/%3E%3Crect x='590' y='280' width='16' height='170' rx='3' fill='%23a1887f' opacity='0.45'/%3E%3Cline x1='598' y1='330' x2='558' y2='278' stroke='%23a1887f' stroke-width='6' opacity='0.35' stroke-linecap='round'/%3E%3Cline x1='598' y1='310' x2='640' y2='262' stroke='%23a1887f' stroke-width='6' opacity='0.35' stroke-linecap='round'/%3E%3Cline x1='598' y1='355' x2='572' y2='318' stroke='%23a1887f' stroke-width='4' opacity='0.3' stroke-linecap='round'/%3E%3Cellipse cx='598' cy='235' rx='92' ry='72' fill='%234caf50' opacity='0.4'/%3E%3Cellipse cx='548' cy='258' rx='65' ry='55' fill='%2366bb6a' opacity='0.35'/%3E%3Cellipse cx='648' cy='250' rx='62' ry='52' fill='%2343a047' opacity='0.35'/%3E%3Cellipse cx='598' cy='205' rx='55' ry='45' fill='%2381c784' opacity='0.3'/%3E%3C/svg%3E");
+}
+
+.dark.theme-summer,
+.dark .theme-summer {
+    --theme-bg: #1a1400;
+    --theme-bg-secondary: #2a2000;
+    --theme-sidebar-bg: #1f1a00;
+    --theme-sidebar-border: #4a3800;
+    --theme-text: #ffe082;
+    --theme-text-muted: #bfa650;
+    --theme-accent: #f9a825;
+    --theme-accent-hover: #ffca28;
+    --theme-border: #4a3800;
+    --theme-header-bg: #1f1a00;
+    --theme-card-glow: rgba(249, 168, 37, 0.2);
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 600' preserveAspectRatio='none'%3E%3Cellipse cx='350' cy='620' rx='600' ry='280' fill='%233a2c00' opacity='0.35'/%3E%3Cellipse cx='650' cy='650' rx='800' ry='320' fill='%234a3800' opacity='0.4'/%3E%3Cellipse cx='200' cy='95' rx='65' ry='26' fill='%23ffe082' opacity='0.06'/%3E%3Cellipse cx='240' cy='87' rx='45' ry='20' fill='%23ffe082' opacity='0.05'/%3E%3Cellipse cx='850' cy='110' rx='55' ry='22' fill='%23ffe082' opacity='0.05'/%3E%3Crect x='590' y='280' width='16' height='170' rx='3' fill='%235d4037' opacity='0.35'/%3E%3Cline x1='598' y1='330' x2='558' y2='278' stroke='%235d4037' stroke-width='6' opacity='0.25' stroke-linecap='round'/%3E%3Cline x1='598' y1='310' x2='640' y2='262' stroke='%235d4037' stroke-width='6' opacity='0.25' stroke-linecap='round'/%3E%3Cline x1='598' y1='355' x2='572' y2='318' stroke='%235d4037' stroke-width='4' opacity='0.2' stroke-linecap='round'/%3E%3Cellipse cx='598' cy='235' rx='92' ry='72' fill='%232e7d32' opacity='0.25'/%3E%3Cellipse cx='548' cy='258' rx='65' ry='55' fill='%231b5e20' opacity='0.2'/%3E%3Cellipse cx='648' cy='250' rx='62' ry='52' fill='%23388e3c' opacity='0.2'/%3E%3Cellipse cx='598' cy='205' rx='55' ry='45' fill='%232e7d32' opacity='0.18'/%3E%3C/svg%3E");
+}

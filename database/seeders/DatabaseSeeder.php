@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ['email' => env('SEED_USER1_EMAIL', 'enric@example.com')],
             [
                 'name' => env('SEED_USER1_NAME', 'Enric'),
+                'username' => env('SEED_USER1_USERNAME', 'enric'),
                 'password' => env('SEED_USER1_PASSWORD', 'password'),
                 'email_verified_at' => now(),
             ],
@@ -30,6 +31,7 @@ class DatabaseSeeder extends Seeder
             ['email' => env('SEED_USER2_EMAIL', 'partner@example.com')],
             [
                 'name' => env('SEED_USER2_NAME', 'Partner'),
+                'username' => env('SEED_USER2_USERNAME', 'partner'),
                 'password' => env('SEED_USER2_PASSWORD', 'password'),
                 'email_verified_at' => now(),
             ],

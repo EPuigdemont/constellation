@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Mood;
 use App\Models\Concerns\HasEntityDefaults;
 use Database\Factories\ImageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,12 +23,16 @@ class Image extends Model
         'path',
         'disk',
         'alt',
+        'title',
+        'mood',
+        'color_override',
         'is_public',
     ];
 
     protected function casts(): array
     {
         return [
+            'mood' => Mood::class,
             'is_public' => 'boolean',
         ];
     }
