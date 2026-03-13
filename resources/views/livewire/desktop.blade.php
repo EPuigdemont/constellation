@@ -15,15 +15,24 @@
 
         {{-- Canvas view toggles --}}
         <div x-data="desktopToggles" class="flex items-center gap-1">
-            <flux:button size="sm" x-on:click="toggleGrid()" :variant="showGrid ? 'filled' : 'ghost'" title="{{ __('Show as Grid') }}">
+            <button type="button" x-on:click="toggleGrid()"
+                    :class="showGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                    title="{{ __('Show as Grid') }}">
                 <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" /></svg>
-            </flux:button>
-            <flux:button size="sm" x-on:click="toggleGuides()" :variant="showGuides ? 'filled' : 'ghost'" title="{{ __('Show Guide Lines') }}">
+            </button>
+            <button type="button" x-on:click="toggleGuides()"
+                    :class="showGuides ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                    title="{{ __('Show Guide Lines') }}">
                 <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
-            </flux:button>
-            <flux:button size="sm" x-on:click="toggleSnap()" :variant="snapToGrid ? 'filled' : 'ghost'" title="{{ __('Snap to Grid') }}">
+            </button>
+            <button type="button" x-on:click="toggleSnap()"
+                    :class="snapToGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                    title="{{ __('Snap to Grid') }}">
                 <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
-            </flux:button>
+            </button>
 
             <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
 
