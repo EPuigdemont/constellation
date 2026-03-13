@@ -189,44 +189,67 @@ class Canvas extends Component
 
     public function uploadImage(EditorImageService $imageService, DesktopService $service): void
     {
-        if (! $this->imageUpload) {
-            return;
+        try {
+            \Illuminate\Support\Facades\Log::info('[Canvas] uploadImage called', [
+                'hasFile' => $this->imageUpload !== null,
+                'fileClass' => $this->imageUpload ? get_class($this->imageUpload) : null,
+                'fileName' => $this->imageUpload?->getClientOriginalName(),
+                'fileSize' => $this->imageUpload?->getSize(),
+                'fileMime' => $this->imageUpload?->getMimeType(),
+            ]);
+
+            if (! $this->imageUpload) {
+                \Illuminate\Support\Facades\Log::warning('[Canvas] uploadImage: imageUpload is null, aborting');
+
+                return;
+            }
+
+            $user = Auth::user();
+            $image = $imageService->store($user, $this->imageUpload);
+            \Illuminate\Support\Facades\Log::info('[Canvas] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
+
+            $position = $service->assignDefaultPosition($user, $image->id, 'image');
+            \Illuminate\Support\Facades\Log::info('[Canvas] Position assigned', ['positionId' => $position->id, 'x' => $position->x, 'y' => $position->y]);
+
+            $card = [
+                'id' => $image->id,
+                'type' => 'image',
+                'title' => $image->alt ?? '',
+                'preview' => $image->alt ?? '',
+                'mood' => null,
+                'color_override' => null,
+                'is_public' => false,
+                'x' => $position->x,
+                'y' => $position->y,
+                'z_index' => $position->z_index,
+                'owner_id' => $user->id,
+                'created_at' => $image->created_at->toIso8601String(),
+                'updated_at' => $image->updated_at->toIso8601String(),
+                'parent_id' => null,
+                'parent_type' => null,
+                'children_count' => 0,
+                'siblings_count' => 0,
+                'width' => null,
+                'height' => null,
+                'tag_ids' => [],
+                'image_url' => route('images.serve', $image),
+            ];
+
+            $this->cards[] = $card;
+            $this->maxZIndex = $position->z_index;
+            $this->imageUpload = null;
+
+            $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
+            \Illuminate\Support\Facades\Log::info('[Canvas] uploadImage completed successfully', ['cardId' => $card['id']]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('[Canvas] uploadImage failed', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile() . ':' . $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            throw $e;
         }
-
-        $user = Auth::user();
-        $image = $imageService->store($user, $this->imageUpload);
-
-        $position = $service->assignDefaultPosition($user, $image->id, 'image');
-
-        $card = [
-            'id' => $image->id,
-            'type' => 'image',
-            'title' => $image->alt ?? '',
-            'preview' => $image->alt ?? '',
-            'mood' => null,
-            'color_override' => null,
-            'is_public' => false,
-            'x' => $position->x,
-            'y' => $position->y,
-            'z_index' => $position->z_index,
-            'owner_id' => $user->id,
-            'created_at' => $image->created_at->toIso8601String(),
-            'updated_at' => $image->updated_at->toIso8601String(),
-            'parent_id' => null,
-            'parent_type' => null,
-            'children_count' => 0,
-            'siblings_count' => 0,
-            'width' => null,
-            'height' => null,
-            'tag_ids' => [],
-            'image_url' => route('images.serve', $image),
-        ];
-
-        $this->cards[] = $card;
-        $this->maxZIndex = $position->z_index;
-        $this->imageUpload = null;
-
-        $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
     }
 
     public function saveEditor(DesktopService $service): void
