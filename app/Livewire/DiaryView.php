@@ -17,7 +17,7 @@ use Livewire\Component;
 #[Title('Diary')]
 class DiaryView extends Component
 {
-    public string $displayMode = 'scroll';
+    public string $displayMode = 'paginated';
 
     public int $currentPage = 1;
 
@@ -35,9 +35,23 @@ class DiaryView extends Component
 
     public string $newBody = '';
 
+    public string $search = '';
+
+    public function mount(): void
+    {
+        $this->displayMode = Auth::user()->diary_display_mode ?? 'paginated';
+    }
+
     public function toggleDisplayMode(): void
     {
         $this->displayMode = $this->displayMode === 'scroll' ? 'paginated' : 'scroll';
+        $this->currentPage = 1;
+
+        Auth::user()->update(['diary_display_mode' => $this->displayMode]);
+    }
+
+    public function updatedSearch(): void
+    {
         $this->currentPage = 1;
     }
 
@@ -120,7 +134,7 @@ class DiaryView extends Component
             'user_id' => $user->id,
             'title' => $this->newTitle,
             'body' => $this->newBody,
-            'mood' => Mood::Plain,
+            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
             'is_public' => false,
         ]);
 
@@ -134,6 +148,13 @@ class DiaryView extends Component
         $query = DiaryEntry::query()
             ->where('user_id', $user->id)
             ->orderByDesc('created_at');
+
+        if ($this->search !== '') {
+            $query->where(function ($q) {
+                $q->where('title', 'like', '%' . $this->search . '%')
+                  ->orWhere('body', 'like', '%' . $this->search . '%');
+            });
+        }
 
         if ($this->displayMode === 'paginated') {
             $entries = $query->get();
@@ -162,7 +183,16 @@ class DiaryView extends Component
 
     private function getTotalPages(): int
     {
-        $total = DiaryEntry::where('user_id', Auth::id())->count();
+        $query = DiaryEntry::where('user_id', Auth::id());
+
+        if ($this->search !== '') {
+            $query->where(function ($q) {
+                $q->where('title', 'like', '%' . $this->search . '%')
+                  ->orWhere('body', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        $total = $query->count();
 
         return (int) max(1, ceil($total / $this->entriesPerSpread));
     }

@@ -17,7 +17,8 @@
         @else
             <div class="grid grid-cols-2 gap-4 p-0 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 @foreach($images as $image)
-                    <div class="group overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900">
+                    <div class="group cursor-pointer overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900"
+                         x-on:dblclick="window.open('{{ $image['url'] }}', '_blank')">
                         <div class="aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                             <img src="{{ $image['url'] }}"
                                  alt="{{ $image['alt'] }}"

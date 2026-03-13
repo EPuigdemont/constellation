@@ -5,6 +5,20 @@
 
         <flux:spacer />
 
+        {{-- Search --}}
+        <div class="relative w-36 lg:w-52">
+            <input type="text"
+                   wire:model.live.debounce.300ms="search"
+                   placeholder="{{ __('Search entries...') }}"
+                   class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200" />
+            @if($search)
+                <button wire:click="$set('search', '')"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
+                    <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            @endif
+        </div>
+
         <flux:button size="sm" icon="plus" wire:click="openNewEntry">
             {{ __('New Entry') }}
         </flux:button>
@@ -32,14 +46,15 @@
 
     {{-- Content --}}
     @if($displayMode === 'paginated')
-        {{-- Paginated notebook spread — flex-1 fills remaining height, no scroll --}}
+        {{-- Paginated notebook spread --}}
         <div class="flex flex-1 flex-col overflow-hidden bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]">
             <div class="mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-4 overflow-hidden px-0">
                 @forelse($entries as $entry)
-                    <div class="flex flex-1 flex-col overflow-y-auto rounded-lg border border-zinc-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-900"
+                    @php $moodClass = $entry->mood ? 'mood-' . $entry->mood->value : ''; @endphp
+                    <div class="diary-entry-themed {{ $moodClass }} flex flex-1 flex-col overflow-y-auto rounded-lg border p-6 shadow-md"
+                         style="background: var(--card-bg, var(--theme-bg, white)); border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
                         @if($editingEntryId === $entry->id)
-                            {{-- Editing mode --}}
                             <div class="flex flex-1 flex-col gap-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
                                 <flux:textarea wire:model="editBody" placeholder="{{ __('Write...') }}" class="flex-1" rows="10" />
@@ -49,7 +64,6 @@
                                 </div>
                             </div>
                         @else
-                            {{-- Read mode --}}
                             <div class="mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
                                     {{ $entry->created_at?->format('l, j F Y') }}
@@ -71,12 +85,15 @@
                     </div>
                 @empty
                     <div class="flex flex-1 items-center justify-center text-zinc-400">
-                        {{ __('No diary entries yet.') }}
+                        @if($search)
+                            {{ __('No entries match your search.') }}
+                        @else
+                            {{ __('No diary entries yet.') }}
+                        @endif
                     </div>
                 @endforelse
             </div>
 
-            {{-- Pagination controls — anchored to bottom --}}
             @if($totalPages > 1)
                 <div class="flex shrink-0 items-center justify-center gap-4 border-t border-zinc-200 bg-zinc-50 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900">
                     <flux:button size="sm" wire:click="previousPage" :disabled="$currentPage <= 1" icon="chevron-left">
@@ -92,14 +109,15 @@
             @endif
         </div>
     @else
-        {{-- Infinite scroll mode --}}
+        {{-- Scroll mode --}}
         <div class="flex-1 overflow-y-auto bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]">
             <div class="mx-auto max-w-3xl space-y-4 px-0 py-0">
                 @forelse($allEntries as $entry)
-                    <div class="diary-entry rounded-lg border border-zinc-200 bg-white p-6 shadow-md dark:border-zinc-700 dark:bg-zinc-900 {{ $entry->mood ? 'mood-' . $entry->mood->value : '' }}"
+                    @php $moodClass = $entry->mood ? 'mood-' . $entry->mood->value : ''; @endphp
+                    <div class="diary-entry-themed {{ $moodClass }} rounded-lg border p-6 shadow-md"
+                         style="background: var(--card-bg, var(--theme-bg, white)); border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
                         @if($editingEntryId === $entry->id)
-                            {{-- Editing mode --}}
                             <div class="space-y-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
                                 <flux:textarea wire:model="editBody" placeholder="{{ __('Write...') }}" rows="6" />
@@ -109,13 +127,12 @@
                                 </div>
                             </div>
                         @else
-                            {{-- Read mode --}}
                             <div class="mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
                                     {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
                                 </span>
                                 @if($entry->mood)
-                                    <span class="desktop-card-badge">
+                                    <span class="desktop-card-badge mood-{{ $entry->mood->value }}">
                                         {{ ucfirst($entry->mood->value) }}
                                     </span>
                                 @endif
@@ -131,7 +148,11 @@
                     </div>
                 @empty
                     <div class="flex items-center justify-center py-20 text-zinc-400">
-                        {{ __('No diary entries yet. Click "+ New Entry" to create one.') }}
+                        @if($search)
+                            {{ __('No entries match your search.') }}
+                        @else
+                            {{ __('No diary entries yet. Click "+ New Entry" to create one.') }}
+                        @endif
                     </div>
                 @endforelse
             </div>

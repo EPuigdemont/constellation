@@ -33,6 +33,7 @@ class User extends Authenticatable
         'avatar_disk',
         'desktop_zoom',
         'vision_board_zoom',
+        'diary_display_mode',
         'first_login_at',
     ];
 

@@ -711,31 +711,54 @@ select:focus[data-flux-control] {
     animation: notebook-open 0.3s ease-out;
 }
 
+/* ─── Diary Entry Themed ─── */
+
+.diary-entry-themed {
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.diary-entry-themed::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: inset 0 0 20px var(--theme-card-glow, transparent);
+    z-index: 1;
+}
+
 /* ─── Theme Card Animations ─── */
 
 @media (prefers-reduced-motion: no-preference) {
     .theme-love .desktop-card,
-    .theme-love .vb-card {
+    .theme-love .vb-card,
+    .theme-love .diary-entry-themed {
         animation: theme-heartbeat 3s ease-in-out infinite;
     }
 
     .theme-breeze .desktop-card,
-    .theme-breeze .vb-card {
+    .theme-breeze .vb-card,
+    .theme-breeze .diary-entry-themed {
         animation: theme-float 4s ease-in-out infinite;
     }
 
     .theme-summer .desktop-card,
-    .theme-summer .vb-card {
+    .theme-summer .vb-card,
+    .theme-summer .diary-entry-themed {
         animation: theme-warm-glow 3.5s ease-in-out infinite;
     }
 
     .theme-night .desktop-card,
-    .theme-night .vb-card {
+    .theme-night .vb-card,
+    .theme-night .diary-entry-themed {
         animation: theme-shimmer 4s ease-in-out infinite;
     }
 
     .theme-cozy .desktop-card,
-    .theme-cozy .vb-card {
+    .theme-cozy .vb-card,
+    .theme-cozy .diary-entry-themed {
         animation: theme-flicker 5s ease-in-out infinite;
     }
 }

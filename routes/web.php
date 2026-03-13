@@ -11,7 +11,7 @@ use App\Livewire\VisionBoard;
 use App\Livewire\Welcome;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+Route::redirect('/', '/login')->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('loading', LoadingScreen::class)->name('loading');
