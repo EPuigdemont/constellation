@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,11 +14,22 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::firstOrCreate(
+            ['email' => env('SEED_USER1_EMAIL', 'enric@example.com')],
+            [
+                'name' => env('SEED_USER1_NAME', 'Enric'),
+                'password' => env('SEED_USER1_PASSWORD', 'password'),
+                'email_verified_at' => now(),
+            ],
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::firstOrCreate(
+            ['email' => env('SEED_USER2_EMAIL', 'partner@example.com')],
+            [
+                'name' => env('SEED_USER2_NAME', 'Partner'),
+                'password' => env('SEED_USER2_PASSWORD', 'password'),
+                'email_verified_at' => now(),
+            ],
+        );
     }
 }
