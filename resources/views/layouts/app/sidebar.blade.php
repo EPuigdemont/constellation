@@ -13,11 +13,11 @@
 
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="squares-2x2" :href="route('canvas')" :current="request()->routeIs('canvas')" wire:navigate>
-                        {{ __('Canvas') }}
-                    </flux:sidebar.item>
                     <flux:sidebar.item icon="book-open" :href="route('diary')" :current="request()->routeIs('diary')" wire:navigate>
                         {{ __('Diary') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="squares-2x2" :href="route('canvas')" :current="request()->routeIs('canvas')" wire:navigate>
+                        {{ __('Canvas') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="eye" :href="route('vision-board')" :current="request()->routeIs('vision-board')" wire:navigate>
                         {{ __('Vision Board') }}
