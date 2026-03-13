@@ -25,11 +25,15 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'theme',
+        'avatar_path',
+        'avatar_disk',
         'desktop_zoom',
         'vision_board_zoom',
+        'first_login_at',
     ];
 
     /**
@@ -53,6 +57,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'first_login_at' => 'datetime',
             'password' => 'hashed',
             'desktop_zoom' => 'float',
             'vision_board_zoom' => 'float',
@@ -62,6 +67,18 @@ class User extends Authenticatable
     /**
      * Get the user's initials
      */
+    /**
+     * Get the URL to the user's avatar.
+     */
+    public function avatarUrl(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        return route('avatar.serve', $this);
+    }
+
     public function initials(): string
     {
         return Str::of($this->name)

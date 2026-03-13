@@ -1,6 +1,13 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
 
+/* ─── Theme Imports ─── */
+@import './themes/summer.css';
+@import './themes/love.css';
+@import './themes/breeze.css';
+@import './themes/night.css';
+@import './themes/cozy.css';
+
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../vendor/livewire/flux-pro/stubs/**/*.blade.php';
@@ -702,4 +709,84 @@ select:focus[data-flux-control] {
 
 .diary-notebook.is-open {
     animation: notebook-open 0.3s ease-out;
+}
+
+/* ─── Theme Card Animations ─── */
+
+@media (prefers-reduced-motion: no-preference) {
+    .theme-love .desktop-card,
+    .theme-love .vb-card {
+        animation: theme-heartbeat 3s ease-in-out infinite;
+    }
+
+    .theme-breeze .desktop-card,
+    .theme-breeze .vb-card {
+        animation: theme-float 4s ease-in-out infinite;
+    }
+
+    .theme-summer .desktop-card,
+    .theme-summer .vb-card {
+        animation: theme-warm-glow 3.5s ease-in-out infinite;
+    }
+
+    .theme-night .desktop-card,
+    .theme-night .vb-card {
+        animation: theme-shimmer 4s ease-in-out infinite;
+    }
+
+    .theme-cozy .desktop-card,
+    .theme-cozy .vb-card {
+        animation: theme-flicker 5s ease-in-out infinite;
+    }
+}
+
+@keyframes theme-heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.008); }
+}
+
+@keyframes theme-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+}
+
+@keyframes theme-warm-glow {
+    0%, 100% { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 0 0 rgba(255,200,50,0); }
+    50% { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 0 12px var(--theme-card-glow, rgba(255,200,50,0.15)); }
+}
+
+@keyframes theme-shimmer {
+    0%, 100% { border-color: var(--card-border); }
+    50% { border-color: var(--theme-accent, var(--card-border)); }
+}
+
+@keyframes theme-flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.96; }
+}
+
+/* ─── Global Button & Card Flourishes ─── */
+
+@media (prefers-reduced-motion: no-preference) {
+    .desktop-card:hover,
+    .vb-card:hover {
+        transform: translateY(-1px);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    [data-flux-button]:hover {
+        transform: translateY(-1px);
+        transition: transform 0.15s ease;
+    }
+}
+
+/* ─── Theme Particles Canvas ─── */
+
+.theme-particles-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
 }

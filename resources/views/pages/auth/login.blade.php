@@ -1,6 +1,20 @@
 <x-layouts::auth :title="__('Log in')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Welcome to Constellation')" :description="__('Sign in to continue')" />
+        <x-auth-header :title="__('Welcome to Constellation')" />
+
+        <div x-data="{
+                greeting: '',
+                init() {
+                    const hour = new Date().getHours();
+                    if (hour >= 5 && hour < 12) this.greeting = '{{ __('Good morning') }}';
+                    else if (hour >= 12 && hour < 17) this.greeting = '{{ __('Good afternoon') }}';
+                    else if (hour >= 17 && hour < 21) this.greeting = '{{ __('Good evening') }}';
+                    else this.greeting = '{{ __('Good night') }}';
+                }
+             }"
+             class="text-center text-sm text-zinc-500 dark:text-zinc-400">
+            <span x-text="greeting + ' ✨'"></span>
+        </div>
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
@@ -8,16 +22,16 @@
         <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
             @csrf
 
-            <!-- Email Address -->
+            <!-- Username -->
             <flux:input
-                name="email"
-                :label="__('Email address')"
-                :value="old('email')"
-                type="email"
+                name="username"
+                :label="__('Username')"
+                :value="old('username')"
+                type="text"
                 required
                 autofocus
-                autocomplete="email"
-                placeholder="email@example.com"
+                autocomplete="username"
+                placeholder="your-username"
             />
 
             <!-- Password -->

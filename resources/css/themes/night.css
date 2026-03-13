@@ -1,0 +1,31 @@
+/* ─── Theme: Night ─── */
+/* Deep indigos and purples evoking starry nights */
+
+.theme-night {
+    --theme-bg: #f0f0fa;
+    --theme-bg-secondary: #e8eaf6;
+    --theme-sidebar-bg: #e8eaf6;
+    --theme-sidebar-border: #9fa8da;
+    --theme-text: #1a1a4e;
+    --theme-text-muted: #5c5c8a;
+    --theme-accent: #3f51b5;
+    --theme-accent-hover: #303f9f;
+    --theme-border: #9fa8da;
+    --theme-header-bg: #e8eaf6;
+    --theme-card-glow: rgba(159, 168, 218, 0.4);
+}
+
+.dark.theme-night,
+.dark .theme-night {
+    --theme-bg: #0a0a1a;
+    --theme-bg-secondary: #101030;
+    --theme-sidebar-bg: #0d0d22;
+    --theme-sidebar-border: #1a1a4e;
+    --theme-text: #9fa8da;
+    --theme-text-muted: #7078aa;
+    --theme-accent: #3f51b5;
+    --theme-accent-hover: #5c6bc0;
+    --theme-border: #1a1a4e;
+    --theme-header-bg: #0d0d22;
+    --theme-card-glow: rgba(63, 81, 181, 0.2);
+}

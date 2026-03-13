@@ -1,0 +1,31 @@
+/* ─── Theme: Cozy ─── */
+/* Warm browns and tans evoking comfort and warmth */
+
+.theme-cozy {
+    --theme-bg: #faf6f3;
+    --theme-bg-secondary: #efebe9;
+    --theme-sidebar-bg: #efebe9;
+    --theme-sidebar-border: #bcaaa4;
+    --theme-text: #3e2723;
+    --theme-text-muted: #7a5c52;
+    --theme-accent: #795548;
+    --theme-accent-hover: #5d4037;
+    --theme-border: #bcaaa4;
+    --theme-header-bg: #efebe9;
+    --theme-card-glow: rgba(188, 170, 164, 0.4);
+}
+
+.dark.theme-cozy,
+.dark .theme-cozy {
+    --theme-bg: #1a1210;
+    --theme-bg-secondary: #251c18;
+    --theme-sidebar-bg: #1e1512;
+    --theme-sidebar-border: #3e2723;
+    --theme-text: #bcaaa4;
+    --theme-text-muted: #8a7a72;
+    --theme-accent: #795548;
+    --theme-accent-hover: #8d6e63;
+    --theme-border: #3e2723;
+    --theme-header-bg: #1e1512;
+    --theme-card-glow: rgba(121, 85, 72, 0.2);
+}

@@ -112,7 +112,7 @@
     {{-- Canvas --}}
     <div x-data="visionBoardViewport"
          x-on:scroll.passive="updateScroll()"
-         class="flex-1 overflow-auto bg-zinc-900/50 dark:bg-zinc-950/60"
+         class="flex-1 overflow-auto bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.950/.6))]"
          style="cursor: grab;">
 
         <div wire:ignore

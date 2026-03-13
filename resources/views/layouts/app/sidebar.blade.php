@@ -3,10 +3,13 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800 theme-{{ auth()->user()?->theme ?? 'summer' }}">
-        <flux:sidebar sticky collapsible class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('canvas') }}" wire:navigate />
+    <body class="min-h-screen bg-[var(--theme-bg,#fff)] dark:bg-[var(--theme-bg,theme(colors.zinc.800))] theme-{{ auth()->user()?->theme ?? 'summer' }}">
+        <flux:sidebar sticky collapsible class="border-e bg-[var(--theme-sidebar-bg,theme(colors.zinc.50))] border-[var(--theme-sidebar-border,theme(colors.zinc.200))] dark:border-[var(--theme-sidebar-border,theme(colors.zinc.700))] dark:bg-[var(--theme-sidebar-bg,theme(colors.zinc.900))]">
+            <flux:sidebar.header data-theme-particles>
+                <div class="flex items-center gap-2">
+                    <x-app-logo :sidebar="true" href="{{ route('canvas') }}" wire:navigate />
+                    <x-theme-icon />
+                </div>
                 <flux:sidebar.collapse />
             </flux:sidebar.header>
 
@@ -30,6 +33,7 @@
             <flux:spacer />
 
             <flux:sidebar.nav>
+                <x-theme-switcher />
             </flux:sidebar.nav>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
@@ -42,19 +46,32 @@
             <flux:spacer />
 
             <flux:dropdown position="top" align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                    icon-trailing="chevron-down"
-                />
+                @if(auth()->user()->avatarUrl())
+                    <button class="flex items-center gap-1">
+                        <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}"
+                             class="h-8 w-8 rounded-full object-cover" />
+                        <flux:icon name="chevron-down" variant="micro" class="size-4 text-zinc-400" />
+                    </button>
+                @else
+                    <flux:profile
+                        :initials="auth()->user()->initials()"
+                        icon-trailing="chevron-down"
+                    />
+                @endif
 
                 <flux:menu>
                     <flux:menu.radio.group>
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar
-                                    :name="auth()->user()->name"
-                                    :initials="auth()->user()->initials()"
-                                />
+                                @if(auth()->user()->avatarUrl())
+                                    <img src="{{ auth()->user()->avatarUrl() }}" alt="{{ auth()->user()->name }}"
+                                         class="h-8 w-8 rounded-full object-cover" />
+                                @else
+                                    <flux:avatar
+                                        :name="auth()->user()->name"
+                                        :initials="auth()->user()->initials()"
+                                    />
+                                @endif
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
                                     <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>

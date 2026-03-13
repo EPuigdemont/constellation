@@ -13,10 +13,17 @@ class LoginResponse implements LoginResponseContract
     public function toResponse($request): Response
     {
         /** @var Request $request */
-        $name = $request->user()?->name ?? '';
+        $user = $request->user();
+        $name = $user?->name ?? '';
 
         session()->flash('status', __('Welcome back, :name!', ['name' => $name]));
 
-        return redirect()->intended(config('fortify.home'));
+        // First login → welcome page
+        if (! $user?->first_login_at) {
+            return redirect()->route('welcome.show');
+        }
+
+        // Subsequent logins → loading screen
+        return redirect()->route('loading');
     }
 }

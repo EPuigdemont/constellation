@@ -1,0 +1,31 @@
+/* ─── Theme: Summer ─── */
+/* Warm yellows and golds evoking sunny days */
+
+.theme-summer {
+    --theme-bg: #fffdf5;
+    --theme-bg-secondary: #fff8e1;
+    --theme-sidebar-bg: #fff8e1;
+    --theme-sidebar-border: #ffe082;
+    --theme-text: #4a3800;
+    --theme-text-muted: #8d7440;
+    --theme-accent: #f9a825;
+    --theme-accent-hover: #f57f17;
+    --theme-border: #ffe082;
+    --theme-header-bg: #fff8e1;
+    --theme-card-glow: rgba(255, 224, 130, 0.4);
+}
+
+.dark.theme-summer,
+.dark .theme-summer {
+    --theme-bg: #1a1400;
+    --theme-bg-secondary: #2a2000;
+    --theme-sidebar-bg: #1f1a00;
+    --theme-sidebar-border: #4a3800;
+    --theme-text: #ffe082;
+    --theme-text-muted: #bfa650;
+    --theme-accent: #f9a825;
+    --theme-accent-hover: #ffca28;
+    --theme-border: #4a3800;
+    --theme-header-bg: #1f1a00;
+    --theme-card-glow: rgba(249, 168, 37, 0.2);
+}

@@ -135,28 +135,37 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 8 — Theming System
 
-- [ ] Define CSS custom properties for theme system (colors, fonts, border styles, animation classes)
-- [ ] Implement base themes: `summer`, `love`, `breeze`, `night`, `cozy`
-- [ ] Each theme has a distinct color palette and mood (e.g. `love` is pink/red with a heartbeat animation, `breeze` is light blue with a floating animation)"
-- [ ] Add small visual elements for each theme (e.g. `summer` has a sun icon on the header, `night` has a moon icon)
-- [ ] Each theme: one CSS file in `/resources/css/themes/`, one JS animation file
-- [ ] Body class swap on theme change (Livewire → update `users.theme` → Alpine swaps class without reload)
-- [ ] Theme switcher UI (accessible from settings or persistent toolbar)
-- [ ] Mood CSS classes: `mood-summer`, `mood-cozy`, `mood-love`, `mood-night`, `mood-plain`, `mood-custom`
-- [ ] Color override: custom hex input applied as inline CSS var on entity card
-- [ ] Add user avatar image upload in settings, displayed in header and login page (stored in `images` with a special tag or relationship to user)
-- [ ] Display user avatar in sidebar/header with a small mood indicator dot (colored according to current mood/theme)
-- [ ] Add subtle theme-based animations to entity cards (e.g. `love` theme has a gentle heartbeat animation, `breeze` has a slow floating animation)
-- [ ] Add a "welcome" page on first login with a cute welcome text
-- [ ] Add a cute "loading" page with a cute text (randomly selected from a defined list) on login
-- [ ] Rework the user system to use a username (not email) and password to login, remove email field and authentication via email, update login form accordingly
-- [ ] Beautify the login page with a nice background, the user's avatar in the center, and a cute welcome message that changes based on the time of day (e.g. "Good morning, sunshine!" for morning, "Good evening, star!" for night)
-- [ ] Ensure nothing in the app looks like a typical CRUD app, add small design flourishes and animations to make it feel more personal and less like a generic admin panel (e.g. animated buttons, hover effects, smooth transitions between views)
+- [x] Define CSS custom properties for theme system (colors, fonts, border styles, animation classes)
+- [x] Implement base themes: `summer`, `love`, `breeze`, `night`, `cozy`
+- [x] Each theme has a distinct color palette and mood (e.g. `love` is pink/red with a heartbeat animation, `breeze` is light blue with a floating animation)"
+- [x] Add small visual elements for each theme (e.g. `summer` has a sun icon on the header, `night` has a moon icon)
+- [x] Each theme: one CSS file in `/resources/css/themes/`, one JS animation file
+- [x] Body class swap on theme change (Livewire → update `users.theme` → Alpine swaps class without reload)
+- [x] Theme switcher UI (accessible from settings or persistent toolbar)
+- [x] Mood CSS classes: `mood-summer`, `mood-cozy`, `mood-love`, `mood-night`, `mood-plain`, `mood-custom`
+- [x] Color override: custom hex input applied as inline CSS var on entity card
+- [x] Add user avatar image upload in settings, displayed in header and login page (stored in `images` with a special tag or relationship to user)
+- [x] Display user avatar in sidebar/header with a small mood indicator dot (colored according to current mood/theme)
+- [x] Add subtle theme-based animations to entity cards (e.g. `love` theme has a gentle heartbeat animation, `breeze` has a slow floating animation)
+- [x] Add a "welcome" page on first login with a cute welcome text
+- [x] Add a cute "loading" page with a cute text (randomly selected from a defined list) on login
+- [x] Rework the user system to use a username (not email) and password to login, remove email field and authentication via email, update login form accordingly
+- [x] Beautify the login page with a nice background, the user's avatar in the center, and a cute welcome message that changes based on the time of day (e.g. "Good morning, sunshine!" for morning, "Good evening, star!" for night)
+- [x] Ensure nothing in the app looks like a typical CRUD app, add small design flourishes and animations to make it feel more personal and less like a generic admin panel (e.g. animated buttons, hover effects, smooth transitions between views)
+
+---
+
+## Phase 8.5 — Calendar View
+
+- [ ] Calendar view: monthly calendar grid showing days with entries/notes/post-its as dots
+- [ ] Click day → list of entries/notes/post-its for that day, with
+- [ ] Filter by month, year, tag, entity type
 
 ---
 
 ## Phase 9 — Constellation View
 
+- [ ] Fully animated, with a "starry night" background and twinkling stars (CSS animation) and a gentle parallax effect when moving the mouse
 - [ ] `ConstellationService`: compute proximity scores for all entity pairs (tags, type, relationships, date)
 - [ ] JSON endpoint `/api/constellation` returning nodes + edges + scores (auth required)
 - [ ] D3.js force-directed graph in `/resources/js/constellation.js`
@@ -170,9 +179,22 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
+## Phase 9.5 — Translations
+
+- [ ] Add Laravel localization support
+- [ ] Create `en` and `es` translation files for all UI text
+- [ ] Add language switcher in settings (saves to `users.language`)
+- [ ] Ensure all UI text is translatable via `__('text.key')`
+
+---
+
 ## Phase 10 — Reminders & Emotional Features
 
 - [ ] Important dates CRUD (anniversaries, birthdays, custom)
+- [ ] Allow user to input their birthday, name day and other special days in the important dates section, with an option to make them recurring annually
+- [ ] Show birthday, name day, special days, etc in the calendar view with a special icon
+- [ ] Add a "Reminders" entity type that can be created in the Canvas, diary and calendar views, with a date field. When the date is reached, show it as an important date and also show a notification on the desktop view
+- [ ] Show reminders in the calendar view with a special icon, and allow filtering by reminders in the constellation view
 - [ ] Daily check: Laravel scheduler (`php artisan schedule:run`) checks for today's important dates
 - [ ] In-app notification/banner shown on login if a date matches today
 - [ ] "Sad entry" detection: if entry is tagged `sad` on save, query for a past entry tagged `happy`/`grateful` from ~1 week, 1 month, or 1 year ago and surface it as a gentle reminder

@@ -1,0 +1,31 @@
+/* ─── Theme: Breeze ─── */
+/* Light blues and teals evoking calm skies and water */
+
+.theme-breeze {
+    --theme-bg: #f0fafa;
+    --theme-bg-secondary: #e0f7fa;
+    --theme-sidebar-bg: #e0f7fa;
+    --theme-sidebar-border: #80deea;
+    --theme-text: #003840;
+    --theme-text-muted: #40808a;
+    --theme-accent: #00acc1;
+    --theme-accent-hover: #00838f;
+    --theme-border: #80deea;
+    --theme-header-bg: #e0f7fa;
+    --theme-card-glow: rgba(128, 222, 234, 0.4);
+}
+
+.dark.theme-breeze,
+.dark .theme-breeze {
+    --theme-bg: #001518;
+    --theme-bg-secondary: #002025;
+    --theme-sidebar-bg: #00181d;
+    --theme-sidebar-border: #003840;
+    --theme-text: #80deea;
+    --theme-text-muted: #50a0aa;
+    --theme-accent: #00acc1;
+    --theme-accent-hover: #26c6da;
+    --theme-border: #003840;
+    --theme-header-bg: #00181d;
+    --theme-card-glow: rgba(0, 172, 193, 0.2);
+}

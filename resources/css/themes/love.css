@@ -1,0 +1,31 @@
+/* ─── Theme: Love ─── */
+/* Pinks and reds evoking warmth and affection */
+
+.theme-love {
+    --theme-bg: #fff5f7;
+    --theme-bg-secondary: #fce4ec;
+    --theme-sidebar-bg: #fce4ec;
+    --theme-sidebar-border: #f48fb1;
+    --theme-text: #5c1a2a;
+    --theme-text-muted: #9c4060;
+    --theme-accent: #e91e63;
+    --theme-accent-hover: #c2185b;
+    --theme-border: #f48fb1;
+    --theme-header-bg: #fce4ec;
+    --theme-card-glow: rgba(244, 143, 177, 0.4);
+}
+
+.dark.theme-love,
+.dark .theme-love {
+    --theme-bg: #1a0810;
+    --theme-bg-secondary: #2a1020;
+    --theme-sidebar-bg: #1f0a15;
+    --theme-sidebar-border: #5c1a2a;
+    --theme-text: #f48fb1;
+    --theme-text-muted: #c06080;
+    --theme-accent: #e91e63;
+    --theme-accent-hover: #f06292;
+    --theme-border: #5c1a2a;
+    --theme-header-bg: #1f0a15;
+    --theme-card-glow: rgba(233, 30, 99, 0.2);
+}
