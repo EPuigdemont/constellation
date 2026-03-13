@@ -444,6 +444,9 @@ document.addEventListener('alpine:init', () => {
                         if (Alpine.store('desktop').snapToGrid) {
                             this.$el.style.left = snapToGrid(this.cardX) + 'px';
                             this.$el.style.top = snapToGrid(this.cardY) + 'px';
+                        } else {
+                            this.$el.style.left = this.cardX + 'px';
+                            this.$el.style.top = this.cardY + 'px';
                         }
 
                         showGuideLines(this.$el);
@@ -716,6 +719,45 @@ document.addEventListener('alpine:init', () => {
                 }
             });
 
+            // Make diary notebook draggable and resizable
+            this.$nextTick(() => {
+                const notebook = document.querySelector('.diary-notebook');
+                if (notebook) {
+                    let nbX = parseFloat(notebook.style.left) || 100;
+                    let nbY = parseFloat(notebook.style.top) || 100;
+
+                    interact(notebook).draggable({
+                        inertia: false,
+                        modifiers: [
+                            interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }),
+                        ],
+                        listeners: {
+                            move: (event) => {
+                                const zoom = Alpine.store('desktop').zoom || 1;
+                                nbX += event.dx / zoom;
+                                nbY += event.dy / zoom;
+                                notebook.style.left = nbX + 'px';
+                                notebook.style.top = nbY + 'px';
+                            },
+                        },
+                    }).resizable({
+                        edges: { right: true, bottom: true },
+                        modifiers: [
+                            interact.modifiers.restrictSize({
+                                min: { width: 180, height: 140 },
+                                max: { width: 800, height: 600 },
+                            }),
+                        ],
+                        listeners: {
+                            move: (event) => {
+                                notebook.style.width = event.rect.width + 'px';
+                                notebook.style.height = event.rect.height + 'px';
+                            },
+                        },
+                    });
+                }
+            });
+
             // Trashcan drop zone
             const trashcan = document.getElementById('desktop-trashcan');
             if (trashcan) {
@@ -927,11 +969,75 @@ document.addEventListener('alpine:init', () => {
     }));
 
     /**
+     * diaryNotebook — special diary notebook card on the desktop canvas
+     */
+    Alpine.data('diaryNotebook', () => ({
+        isOpen: false,
+        currentPage: 0,
+        entriesPerSpread: 2,
+
+        get diaryEntries() {
+            const cards = this.$wire?.cards || [];
+            return cards
+                .filter(c => c.type === 'diary_entry')
+                .sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+        },
+
+        get totalPages() {
+            return Math.max(1, Math.ceil(this.diaryEntries.length / this.entriesPerSpread));
+        },
+
+        get currentEntries() {
+            const start = this.currentPage * this.entriesPerSpread;
+            return this.diaryEntries.slice(start, start + this.entriesPerSpread);
+        },
+
+        toggle() {
+            this.isOpen = !this.isOpen;
+            if (this.isOpen) {
+                this.currentPage = 0;
+            }
+        },
+
+        nextPage() {
+            if (this.currentPage < this.totalPages - 1) {
+                this.currentPage++;
+            }
+        },
+
+        prevPage() {
+            if (this.currentPage > 0) {
+                this.currentPage--;
+            }
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        },
+
+        stripHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html || '';
+            return tmp.textContent || tmp.innerText || '';
+        },
+    }));
+
+    /**
      * desktopSearch — client-side card filtering by text and tag
      */
     Alpine.data('desktopSearch', () => ({
         searchQuery: '',
         activeTagFilter: null,
+        activeTypeFilter: null,
+        typeFilters: [
+            { value: null, label: 'All' },
+            { value: 'diary_entry', label: 'Diary' },
+            { value: 'note', label: 'Notes' },
+            { value: 'postit', label: 'Post-its' },
+            { value: 'image', label: 'Images' },
+        ],
 
         filterCards() {
             const canvas = document.getElementById('desktop-canvas');
@@ -940,6 +1046,7 @@ document.addEventListener('alpine:init', () => {
             const cards = this.$wire.cards || [];
             const query = this.searchQuery.toLowerCase().trim();
             const tagFilter = this.activeTagFilter;
+            const typeFilter = this.activeTypeFilter;
 
             canvas.querySelectorAll('[data-card-id]').forEach(el => {
                 const cardId = el.getAttribute('data-card-id');
@@ -948,7 +1055,11 @@ document.addEventListener('alpine:init', () => {
 
                 let visible = true;
 
-                if (query) {
+                if (typeFilter) {
+                    visible = el.getAttribute('data-card-type') === typeFilter;
+                }
+
+                if (visible && query) {
                     const title = (cardData.title || '').toLowerCase();
                     const preview = (cardData.preview || '').toLowerCase();
                     visible = title.includes(query) || preview.includes(query);
@@ -963,6 +1074,11 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
+        filterByType(type) {
+            this.activeTypeFilter = type;
+            this.filterCards();
+        },
+
         filterByTag(tagId) {
             this.activeTagFilter = tagId;
             this.filterCards();
@@ -971,6 +1087,7 @@ document.addEventListener('alpine:init', () => {
         clearFilters() {
             this.searchQuery = '';
             this.activeTagFilter = null;
+            this.activeTypeFilter = null;
             this.filterCards();
         },
     }));

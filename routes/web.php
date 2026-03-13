@@ -2,12 +2,16 @@
 
 use App\Http\Controllers\ImageServeController;
 use App\Livewire\Desktop;
+use App\Livewire\DiaryView;
+use App\Livewire\ImagesGallery;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', Desktop::class)->name('dashboard');
+    Route::get('diary', DiaryView::class)->name('diary');
+    Route::get('images', ImagesGallery::class)->name('images');
 });
 
 Route::middleware(['auth'])->group(function () {
