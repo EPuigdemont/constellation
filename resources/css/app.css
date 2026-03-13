@@ -304,6 +304,77 @@ select:focus[data-flux-control] {
     background-color: #60a5fa;
 }
 
+/* ─── Desktop Editor Modal (mood preview) ─── */
+
+.desktop-editor-modal {
+    background: var(--card-bg, var(--color-zinc-50));
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    transition: background-color 0.3s ease;
+}
+
+.dark .desktop-editor-modal {
+    background: var(--card-bg, var(--color-zinc-800));
+}
+
+/* ─── Trashcan Drop Zone ─── */
+
+.desktop-trashcan {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1rem;
+    border: 2px dashed var(--color-zinc-400);
+    border-radius: 0.75rem;
+    color: var(--color-zinc-400);
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+
+.desktop-trashcan:hover {
+    opacity: 0.7;
+}
+
+.desktop-trashcan-active {
+    border-color: #ef4444;
+    color: #ef4444;
+    opacity: 1;
+    transform: scale(1.1);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.dark .desktop-trashcan-active {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* ─── Card Resize Grip ─── */
+
+.desktop-card {
+    position: relative;
+}
+
+.desktop-card::after {
+    content: '';
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, transparent 50%, var(--card-border, var(--color-zinc-300)) 50%);
+    opacity: 0.4;
+    border-radius: 0 0 4px 0;
+    pointer-events: none;
+}
+
+.desktop-card:hover::after {
+    opacity: 0.7;
+}
+
 /* ─── Tiptap Editor ─── */
 
 .tiptap-editor-content {

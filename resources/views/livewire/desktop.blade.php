@@ -13,6 +13,56 @@
 
         <flux:spacer />
 
+        {{-- Search & Filter --}}
+        <div x-data="desktopSearch" class="flex items-center gap-2">
+            <div class="relative">
+                <input type="text"
+                       x-model="searchQuery"
+                       x-on:input.debounce.250ms="filterCards()"
+                       placeholder="{{ __('Search cards...') }}"
+                       class="w-40 rounded-lg border border-zinc-200 bg-white px-3 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                <button x-show="searchQuery !== '' || activeTagFilter !== null"
+                        x-on:click="clearFilters()"
+                        x-cloak
+                        type="button"
+                        class="absolute inset-y-0 right-1 flex items-center px-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        title="{{ __('Clear filters') }}">
+                    <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div class="relative" x-data="{ tagFilterOpen: false }">
+                <button type="button"
+                        x-on:click="tagFilterOpen = !tagFilterOpen"
+                        :class="activeTagFilter ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                        title="{{ __('Filter by Tag') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
+                </button>
+                <div x-show="tagFilterOpen"
+                     x-on:click.away="tagFilterOpen = false"
+                     x-cloak
+                     class="absolute right-0 z-50 mt-1 max-h-48 w-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                    <button type="button"
+                            x-on:click="filterByTag(null); tagFilterOpen = false"
+                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            :class="!activeTagFilter ? 'font-semibold' : ''">
+                        {{ __('All Tags') }}
+                    </button>
+                    @foreach($filterAvailableTags as $tag)
+                        <button type="button"
+                                x-on:click="filterByTag('{{ $tag['id'] }}'); tagFilterOpen = false"
+                                class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                :class="activeTagFilter === '{{ $tag['id'] }}' ? 'font-semibold' : ''">
+                            {{ $tag['name'] }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
+
         {{-- Canvas view toggles --}}
         <div x-data="desktopToggles" class="flex items-center gap-1">
             <button type="button" x-on:click="toggleGrid()"
@@ -91,9 +141,10 @@
             @foreach($cards as $index => $card)
                 <div wire:key="card-{{ $card['id'] }}"
                      data-card-id="{{ $card['id'] }}"
+                     data-card-type="{{ $card['type'] }}"
                      x-data="desktopCard({{ Js::from(array_merge($card, ['is_owner' => $card['owner_id'] === auth()->id()])) }})"
                      x-init="initDrag()"
-                     :style="'position: absolute; left: ' + cardX + 'px; top: ' + cardY + 'px; z-index: ' + cardZ + ';'"
+                     :style="'position: absolute; left: ' + cardX + 'px; top: ' + cardY + 'px; z-index: ' + cardZ + ';{{ $card['color_override'] ? ' background-color: ' . $card['color_override'] . ';' : '' }}{{ $card['width'] ? ' width: ' . $card['width'] . 'px;' : '' }}{{ $card['height'] ? ' height: ' . $card['height'] . 'px;' : '' }}'"
                      x-on:contextmenu.prevent.stop="$dispatch('desktop-context', {
                          x: $event.clientX,
                          y: $event.clientY,
@@ -109,6 +160,13 @@
                 </div>
             @endforeach
         </div>
+    </div>
+
+    {{-- Trashcan Drop Zone --}}
+    <div id="desktop-trashcan"
+         class="desktop-trashcan">
+        <svg class="size-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+        <span class="text-xs">{{ __('Drop to delete') }}</span>
     </div>
 
     {{-- Context Menu --}}
@@ -199,10 +257,19 @@
 
     {{-- Editor Modal --}}
     <flux:modal wire:model="showEditorModal" class="w-full max-w-3xl">
-        <div class="space-y-4" x-data="tiptapEditor" x-on:keydown.escape.window="syncToWire()">
+        <div class="desktop-editor-modal space-y-4" x-data="tiptapEditor" x-on:keydown.escape.window="syncToWire()"
+             :class="'mood-' + ($wire.editorMood || 'plain')"
+             :style="$wire.editorColorOverride ? 'background-color: ' + $wire.editorColorOverride : ''"
+             x-effect="
+                 if ($wire.editingEntityId && $wire.editorMood) {
+                     window.dispatchEvent(new CustomEvent('mood-preview', {
+                         detail: { entityId: $wire.editingEntityId, mood: $wire.editorMood, colorOverride: $wire.editorColorOverride }
+                     }));
+                 }
+             ">
             <flux:heading size="lg">
                 <span x-text="$wire.editingEntityId ? '{{ __('Edit') }}' : '{{ __('New') }}'"></span>
-                <span x-text="$wire.editorMode === 'diary' ? '{{ __('Diary Entry') }}' : '{{ __('Note') }}'"></span>
+                <span x-text="$wire.editorMode === 'diary' ? '{{ __('Diary Entry') }}' : ($wire.editorMode === 'postit' ? '{{ __('Post-it') }}' : '{{ __('Note') }}')"></span>
             </flux:heading>
 
             @if($editorMode === 'diary' || $editorMode === 'note')
@@ -254,7 +321,7 @@
                 {{-- Mood --}}
                 <flux:field>
                     <flux:label>{{ __('Mood') }}</flux:label>
-                    <flux:select wire:model="editorMood">
+                    <flux:select wire:model.live="editorMood">
                         @foreach(\App\Enums\Mood::cases() as $mood)
                             <flux:select.option value="{{ $mood->value }}">{{ ucfirst($mood->value) }}</flux:select.option>
                         @endforeach

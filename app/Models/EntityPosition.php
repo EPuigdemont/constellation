@@ -20,6 +20,8 @@ class EntityPosition extends Model
         'x',
         'y',
         'z_index',
+        'width',
+        'height',
     ];
 
     protected function casts(): array
@@ -28,6 +30,8 @@ class EntityPosition extends Model
             'x' => 'float',
             'y' => 'float',
             'z_index' => 'integer',
+            'width' => 'float',
+            'height' => 'float',
         ];
     }
 

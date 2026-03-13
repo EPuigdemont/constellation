@@ -63,7 +63,7 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 4 — Rich Text Editor (Diary & Notes)
+## Phase 4 — Rich Text Editor (Diary & Notes) ✅
 
 - [x] Integrate Tiptap in Livewire modal
 - [x] Enable extensions: bold, italic, underline, headings, bullet list, ordered list, blockquote, image upload, paste from clipboard (Word/PDF paste support via Tiptap extensions)
@@ -75,7 +75,7 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 4.5 — Virtual Desktop (Scratchboard) Improvements
+## Phase 4.5 — Virtual Desktop (Scratchboard) Improvements ✅
 
 - [x] Add a "show as grid" toggle for desktop view (entities snap to a grid layout)
 - [x] Add a "show guide lines" toggle that shows alignment guides when dragging entities
@@ -97,14 +97,14 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 5.5 — Small improvements
+## Phase 5.5 — Small improvements ✅
 
-- [ ] When changing the "theme" of an entity while editing, immediately show the changed mood color on the editor modal background and entity card (without needing to save)
-- [ ] The custom colors are not working properly, they don't show in the entity card background
-- [ ] Make post-its deletable (currently they can only be deleted by deleting the parent entity, which is not ideal)
-- [ ] Add a "trashcan" box in the bottom left corner of the desktop where users can drag entities to delete them (with confirmation prompt)
-- [ ] Enable resizing elements (the right side and bottom right corner of the entity show a different cursor and allow resizing the entity), make changes to the schema if necessary to support this (e.g. add width/height to `entity_positions` or create a new `entity_dimensions` table)
-- [ ] Allow filtering the displayed elements on the desktop by tag, add a search box in the menu bar to filter entities by title/content (client-side filtering on the loaded entities, no need for a new endpoint)
+- [x] When changing the "theme" of an entity while editing, immediately show the changed mood color on the editor modal background and entity card (without needing to save)
+- [x] The custom colors are not working properly, they don't show in the entity card background
+- [x] Make post-its deletable (currently they can only be deleted by deleting the parent entity, which is not ideal)
+- [x] Add a "trashcan" box in the bottom left corner of the desktop where users can drag entities to delete them (with confirmation prompt)
+- [x] Enable resizing elements (the right side and bottom right corner of the entity show a different cursor and allow resizing the entity), make changes to the schema if necessary to support this (e.g. add width/height to `entity_positions` or create a new `entity_dimensions` table)
+- [x] Allow filtering the displayed elements on the desktop by tag, add a search box in the menu bar to filter entities by title/content (client-side filtering on the loaded entities, no need for a new endpoint)
 
 ---
 

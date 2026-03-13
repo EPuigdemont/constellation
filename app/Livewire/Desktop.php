@@ -69,12 +69,24 @@ class Desktop extends Component
 
     public string $linkingEntityType = '';
 
+    /** @var array<int, string> */
+    public array $filterTags = [];
+
+    /** @var array<int, array{id: string, name: string}> */
+    public array $filterAvailableTags = [];
+
     public function mount(DesktopService $service): void
     {
         $user = Auth::user();
         $this->zoom = $user->desktop_zoom ?? 1.0;
         $this->cards = $service->loadCards($user);
         $this->maxZIndex = $service->nextZIndex($user) - 1;
+
+        $this->filterAvailableTags = Tag::forUser($user->id)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Tag $tag): array => ['id' => $tag->id, 'name' => $tag->name])
+            ->all();
     }
 
     public function savePosition(DesktopService $service, string $entityId, string $entityType, float $x, float $y, int $zIndex): void
@@ -101,6 +113,13 @@ class Desktop extends Component
         $this->maxZIndex = $newZ;
 
         return $newZ;
+    }
+
+    public function saveSize(DesktopService $service, string $entityId, string $entityType, float $width, float $height): void
+    {
+        $service->saveSize(Auth::user(), $entityId, $entityType, $width, $height);
+
+        $this->updateCardInList($entityId, ['width' => $width, 'height' => $height]);
     }
 
     public function saveZoom(DesktopService $service, float $zoom): void
@@ -160,6 +179,9 @@ class Desktop extends Component
             'parent_type' => null,
             'children_count' => 0,
             'siblings_count' => 0,
+            'width' => null,
+            'height' => null,
+            'tag_ids' => [],
         ];
 
         $this->cards[] = $card;
@@ -579,6 +601,9 @@ class Desktop extends Component
             'parent_type' => null,
             'children_count' => 0,
             'siblings_count' => 0,
+            'width' => null,
+            'height' => null,
+            'tag_ids' => $this->editorTagIds,
         ];
 
         $this->cards[] = $card;
@@ -622,6 +647,7 @@ class Desktop extends Component
             'preview' => \Illuminate\Support\Str::limit(strip_tags($this->editorBody), 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
+            'tag_ids' => $this->editorTagIds,
         ];
 
         $this->updateCardInList($this->editingEntityId, $updates);

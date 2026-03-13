@@ -245,6 +245,13 @@ function createCardElement(card, wire) {
     const mood = card.mood || 'plain';
     el.className = `desktop-card mood-${mood} card-type-${card.type} touch-none select-none`;
 
+    if (card.color_override) {
+        el.style.backgroundColor = card.color_override;
+    }
+
+    if (card.width) el.style.width = card.width + 'px';
+    if (card.height) el.style.height = card.height + 'px';
+
     el.innerHTML = buildCardInnerHTML(card);
 
     // Set up interact.js drag
@@ -296,6 +303,30 @@ function createCardElement(card, wire) {
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => {
                     wire.savePosition(card.id, card.type, Math.round(cardX), Math.round(cardY), cardZ);
+                }, 300);
+            },
+        },
+    });
+
+    // Resizable from right edge and bottom-right corner
+    let resizeDebounce = null;
+    interact(el).resizable({
+        edges: { right: true, bottom: true },
+        modifiers: [
+            interact.modifiers.restrictSize({
+                min: { width: 120, height: 60 },
+                max: { width: 600, height: 800 },
+            }),
+        ],
+        listeners: {
+            move: (event) => {
+                el.style.width = event.rect.width + 'px';
+                el.style.height = event.rect.height + 'px';
+            },
+            end: (event) => {
+                clearTimeout(resizeDebounce);
+                resizeDebounce = setTimeout(() => {
+                    wire.saveSize(card.id, card.type, Math.round(event.rect.width), Math.round(event.rect.height));
                 }, 300);
             },
         },
@@ -457,6 +488,30 @@ document.addEventListener('alpine:init', () => {
                     this.$wire.openEditModal(this.entityId, this.entityType);
                 }
             });
+
+            // Resizable from right edge and bottom-right corner
+            interact(this.$el).resizable({
+                edges: { right: true, bottom: true },
+                modifiers: [
+                    interact.modifiers.restrictSize({
+                        min: { width: 120, height: 60 },
+                        max: { width: 600, height: 800 },
+                    }),
+                ],
+                listeners: {
+                    move: (event) => {
+                        this.$el.style.width = event.rect.width + 'px';
+                        this.$el.style.height = event.rect.height + 'px';
+                    },
+                    end: (event) => {
+                        this._debouncedSaveSize(event.rect.width, event.rect.height);
+                    },
+                },
+            });
+
+            // Apply initial width/height from card data
+            if (card.width) this.$el.style.width = card.width + 'px';
+            if (card.height) this.$el.style.height = card.height + 'px';
         },
 
         _debouncedSave() {
@@ -469,6 +524,14 @@ document.addEventListener('alpine:init', () => {
                     Math.round(this.cardY),
                     this.cardZ,
                 );
+            }, 300);
+        },
+
+        _resizeTimer: null,
+        _debouncedSaveSize(width, height) {
+            clearTimeout(this._resizeTimer);
+            this._resizeTimer = setTimeout(() => {
+                this.$wire.saveSize(this.entityId, this.entityType, Math.round(width), Math.round(height));
             }, 300);
         },
 
@@ -634,6 +697,50 @@ document.addEventListener('alpine:init', () => {
                 if (payload.parentId) this._refreshCardIndicators(payload.parentId);
             });
 
+            // Live mood preview: update canvas card when mood changes in editor
+            window.addEventListener('mood-preview', (e) => {
+                const { entityId, mood, colorOverride } = e.detail;
+                if (!entityId) return;
+
+                const canvas = document.getElementById('desktop-canvas');
+                if (!canvas) return;
+
+                const el = canvas.querySelector(`[data-card-id="${entityId}"]`);
+                if (!el) return;
+
+                el.className = el.className.replace(/mood-\S+/, `mood-${mood || 'plain'}`);
+                if (colorOverride) {
+                    el.style.backgroundColor = colorOverride;
+                } else {
+                    el.style.backgroundColor = '';
+                }
+            });
+
+            // Trashcan drop zone
+            const trashcan = document.getElementById('desktop-trashcan');
+            if (trashcan) {
+                const wire = this.$wire;
+                interact(trashcan).dropzone({
+                    accept: '[data-card-id]',
+                    overlap: 0.25,
+                    ondragenter: () => {
+                        trashcan.classList.add('desktop-trashcan-active');
+                    },
+                    ondragleave: () => {
+                        trashcan.classList.remove('desktop-trashcan-active');
+                    },
+                    ondrop: (event) => {
+                        trashcan.classList.remove('desktop-trashcan-active');
+                        const draggedEl = event.relatedTarget;
+                        const entityId = draggedEl.getAttribute('data-card-id');
+                        const entityType = draggedEl.getAttribute('data-card-type');
+                        if (entityId && entityType && confirm('Delete this card?')) {
+                            wire.deleteEntity(entityId, entityType);
+                        }
+                    },
+                });
+            }
+
             // Listen for card-updated events to refresh card content in the canvas
             Livewire.on('card-updated', (data) => {
                 const payload = data[0] ?? data;
@@ -658,6 +765,13 @@ document.addEventListener('alpine:init', () => {
                 };
 
                 el.className = el.className.replace(/mood-\S+/, `mood-${card.mood}`);
+
+                if (updates.color_override) {
+                    el.style.backgroundColor = updates.color_override;
+                } else if (updates.color_override === null) {
+                    el.style.backgroundColor = '';
+                }
+
                 el.innerHTML = buildCardInnerHTML(card);
             });
         },
@@ -809,6 +923,55 @@ document.addEventListener('alpine:init', () => {
                 this.$wire.detachFromParent(this.entityId, this.entityType);
             }
             this.close();
+        },
+    }));
+
+    /**
+     * desktopSearch — client-side card filtering by text and tag
+     */
+    Alpine.data('desktopSearch', () => ({
+        searchQuery: '',
+        activeTagFilter: null,
+
+        filterCards() {
+            const canvas = document.getElementById('desktop-canvas');
+            if (!canvas) return;
+
+            const cards = this.$wire.cards || [];
+            const query = this.searchQuery.toLowerCase().trim();
+            const tagFilter = this.activeTagFilter;
+
+            canvas.querySelectorAll('[data-card-id]').forEach(el => {
+                const cardId = el.getAttribute('data-card-id');
+                const cardData = cards.find(c => c.id === cardId);
+                if (!cardData) return;
+
+                let visible = true;
+
+                if (query) {
+                    const title = (cardData.title || '').toLowerCase();
+                    const preview = (cardData.preview || '').toLowerCase();
+                    visible = title.includes(query) || preview.includes(query);
+                }
+
+                if (visible && tagFilter) {
+                    const tagIds = cardData.tag_ids || [];
+                    visible = tagIds.includes(tagFilter);
+                }
+
+                el.style.display = visible ? '' : 'none';
+            });
+        },
+
+        filterByTag(tagId) {
+            this.activeTagFilter = tagId;
+            this.filterCards();
+        },
+
+        clearFilters() {
+            this.searchQuery = '';
+            this.activeTagFilter = null;
+            this.filterCards();
         },
     }));
 

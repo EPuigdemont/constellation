@@ -39,10 +39,15 @@ class DesktopService
         $relationships = EntityRelationship::all();
 
         foreach ($entityTypes as $morphType => $modelClass) {
-            $entities = $modelClass::query()
+            $query = $modelClass::query()
                 ->where('user_id', $user->id)
-                ->orWhere('is_public', true)
-                ->get();
+                ->orWhere('is_public', true);
+
+            if (method_exists($modelClass, 'tags')) {
+                $query->with('tags');
+            }
+
+            $entities = $query->get();
 
             foreach ($entities as $entity) {
                 $position = EntityPosition::query()
@@ -107,6 +112,21 @@ class DesktopService
             'y' => $y,
             'z_index' => $this->nextZIndex($user),
         ]);
+    }
+
+    /**
+     * Save or update the custom size of an entity on a user's desktop.
+     */
+    public function saveSize(User $user, string $entityId, string $entityType, float $width, float $height): void
+    {
+        EntityPosition::query()
+            ->where('user_id', $user->id)
+            ->where('entity_id', $entityId)
+            ->where('entity_type', $entityType)
+            ->update([
+                'width' => $width,
+                'height' => $height,
+            ]);
     }
 
     /**
@@ -266,6 +286,10 @@ class DesktopService
             ? $this->getRelationshipData($entity->id, $type, $relationships)
             : ['parent_id' => null, 'parent_type' => null, 'children_count' => 0, 'siblings_count' => 0];
 
+        $tagIds = method_exists($entity, 'tags') && $entity->relationLoaded('tags')
+            ? $entity->tags->pluck('id')->all()
+            : [];
+
         return [
             'id' => $entity->id,
             'type' => $type,
@@ -277,6 +301,8 @@ class DesktopService
             'x' => $position?->x ?? 0.0,
             'y' => $position?->y ?? 0.0,
             'z_index' => $position?->z_index ?? 0,
+            'width' => $position?->width,
+            'height' => $position?->height,
             'owner_id' => $entity->user_id,
             'created_at' => $entity->created_at?->toIso8601String(),
             'updated_at' => $entity->updated_at?->toIso8601String(),
@@ -284,6 +310,7 @@ class DesktopService
             'parent_type' => $relData['parent_type'],
             'children_count' => $relData['children_count'],
             'siblings_count' => $relData['siblings_count'],
+            'tag_ids' => $tagIds,
         ];
     }
 }
