@@ -783,11 +783,20 @@ document.addEventListener('alpine:init', () => {
                 if (confirm('Delete this entity?')) {
                     this.$wire.deleteEntity(cardId, cardType);
 
+                    // Immediately remove the card from the DOM
+                    const canvas = document.getElementById('desktop-canvas');
+                    if (canvas) {
+                        const el = canvas.querySelector(`[data-card-id="${cardId}"]`);
+                        if (el) {
+                            interact(el).unset();
+                            el.remove();
+                        }
+                    }
+
                     // Clear selection
                     dStore.selectedCardId = '';
                     dStore.selectedCardType = '';
                     dStore.selectedCardIsOwner = false;
-                    document.querySelectorAll('.desktop-card.desktop-card-selected').forEach(el => el.classList.remove('desktop-card-selected'));
                 }
             });
 

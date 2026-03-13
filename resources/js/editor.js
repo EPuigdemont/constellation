@@ -16,7 +16,17 @@ document.addEventListener('alpine:init', () => {
         editor: null,
         _autosaveTimer: null,
 
-        init() {
+        _createEditor() {
+            if (this.editor) {
+                this.editor.destroy();
+                this.editor = null;
+            }
+
+            // Clear the element so ProseMirror can re-attach cleanly
+            if (this.$refs.editorElement) {
+                this.$refs.editorElement.innerHTML = '';
+            }
+
             this.editor = new Editor({
                 element: this.$refs.editorElement,
                 extensions: [
@@ -46,10 +56,22 @@ document.addEventListener('alpine:init', () => {
                     }
                 },
             });
+        },
 
-            // Watch for content changes from Livewire (e.g. opening edit modal)
+        init() {
+            // Delay initial creation until the modal is visible
+            this.$nextTick(() => {
+                this._createEditor();
+            });
+
+            // Re-create editor when content changes from Livewire (e.g. opening edit modal)
             this.$watch('$wire.editorBody', (value) => {
-                if (this.editor && value !== this.editor.getHTML()) {
+                if (!this.editor || !this.editor.view?.dom?.isConnected) {
+                    // Editor was destroyed or disconnected, recreate it
+                    this.$nextTick(() => this._createEditor());
+                    return;
+                }
+                if (value !== this.editor.getHTML()) {
                     this.editor.commands.setContent(value || '', false);
                 }
             });

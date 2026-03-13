@@ -47,8 +47,29 @@
     {{-- Content --}}
     @if($displayMode === 'paginated')
         {{-- Paginated notebook spread --}}
-        <div class="flex flex-1 flex-col overflow-hidden bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]">
-            <div class="mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-4 overflow-hidden px-0">
+        <div class="diary-spread relative flex flex-1 flex-col overflow-hidden bg-[var(--theme-bg-secondary,theme(colors.zinc.100))] dark:bg-[var(--theme-bg-secondary,theme(colors.zinc.800))]"
+             x-data="{ turning: false, direction: '' }"
+             x-on:page-turn.window="turning = true; direction = $event.detail.direction; setTimeout(() => turning = false, 400)">
+            {{-- Left edge arrow --}}
+            @if($currentPage > 1)
+                <button wire:click="previousPage"
+                        x-on:click="$dispatch('page-turn', { direction: 'left' })"
+                        class="diary-page-arrow diary-page-arrow-left group absolute left-0 top-1/2 z-10 flex h-16 w-8 -translate-y-1/2 items-center justify-center rounded-r-lg bg-black/5 opacity-0 transition-all hover:w-10 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10">
+                    <svg class="size-5 text-zinc-500 transition-transform group-hover:-translate-x-0.5 dark:text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                </button>
+            @endif
+
+            {{-- Right edge arrow --}}
+            @if($currentPage < $totalPages)
+                <button wire:click="nextPage"
+                        x-on:click="$dispatch('page-turn', { direction: 'right' })"
+                        class="diary-page-arrow diary-page-arrow-right group absolute right-0 top-1/2 z-10 flex h-16 w-8 -translate-y-1/2 items-center justify-center rounded-l-lg bg-black/5 opacity-0 transition-all hover:w-10 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10">
+                    <svg class="size-5 text-zinc-500 transition-transform group-hover:translate-x-0.5 dark:text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                </button>
+            @endif
+
+            <div class="diary-pages mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-4 overflow-hidden px-0"
+                 :class="{ 'diary-turn-left': turning && direction === 'left', 'diary-turn-right': turning && direction === 'right' }">
                 @forelse($entries as $entry)
                     @php $moodClass = $entry->mood ? 'mood-' . $entry->mood->value : ''; @endphp
                     <div class="diary-entry-themed {{ $moodClass }} flex flex-1 flex-col overflow-y-auto rounded-lg border p-6 shadow-md"
@@ -66,13 +87,17 @@
                         @else
                             <div class="mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
-                                    {{ $entry->created_at?->format('l, j F Y') }}
+                                    {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
                                 </span>
-                                @if($entry->mood)
-                                    <span class="desktop-card-badge mood-{{ $entry->mood->value }}">
-                                        {{ ucfirst($entry->mood->value) }}
-                                    </span>
-                                @endif
+                                <div class="flex items-center gap-2">
+                                    @if($entry->mood)
+                                        <flux:select size="sm" class="!w-24 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
+                                            @foreach(\App\Enums\Mood::cases() as $mood)
+                                                <option value="{{ $mood->value }}" @selected($entry->mood === $mood)>{{ ucfirst($mood->value) }}</option>
+                                            @endforeach
+                                        </flux:select>
+                                    @endif
+                                </div>
                             </div>
                             @if($entry->title)
                                 <h2 class="mb-2 text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ $entry->title }}</h2>
@@ -95,7 +120,7 @@
             </div>
 
             @if($totalPages > 1)
-                <div class="flex shrink-0 items-center justify-center gap-4 border-t border-zinc-200 bg-zinc-50 px-2 py-1 dark:border-zinc-700 dark:bg-zinc-900">
+                <div class="flex shrink-0 items-center justify-center gap-4 border-t border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
                     <flux:button size="sm" wire:click="previousPage" :disabled="$currentPage <= 1" icon="chevron-left">
                         {{ __('Previous') }}
                     </flux:button>
@@ -131,11 +156,15 @@
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
                                     {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
                                 </span>
-                                @if($entry->mood)
-                                    <span class="desktop-card-badge mood-{{ $entry->mood->value }}">
-                                        {{ ucfirst($entry->mood->value) }}
-                                    </span>
-                                @endif
+                                <div class="flex items-center gap-2">
+                                    @if($entry->mood)
+                                        <flux:select size="sm" class="!w-24 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
+                                            @foreach(\App\Enums\Mood::cases() as $mood)
+                                                <option value="{{ $mood->value }}" @selected($entry->mood === $mood)>{{ ucfirst($mood->value) }}</option>
+                                            @endforeach
+                                        </flux:select>
+                                    @endif
+                                </div>
                             </div>
                             @if($entry->title)
                                 <h2 class="mb-2 text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ $entry->title }}</h2>

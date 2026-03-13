@@ -126,6 +126,21 @@ class DiaryView extends Component
         $this->newBody = '';
     }
 
+    public function changeMood(string $entryId, string $mood): void
+    {
+        $entry = DiaryEntry::find($entryId);
+        if (! $entry) {
+            return;
+        }
+
+        Gate::authorize('update', $entry);
+
+        $moodEnum = Mood::tryFrom($mood);
+        if ($moodEnum) {
+            $entry->update(['mood' => $moodEnum]);
+        }
+    }
+
     public function createEntry(): void
     {
         $user = Auth::user();

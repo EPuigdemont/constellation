@@ -13,6 +13,8 @@
     --theme-border: #ffe082;
     --theme-header-bg: #fff8e1;
     --theme-card-glow: rgba(255, 224, 130, 0.4);
+    /* Rolling hill with tree silhouette — warm summer day */
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'%3E%3Cellipse cx='600' cy='260' rx='700' ry='120' fill='%23ffe082' opacity='0.35'/%3E%3Cellipse cx='300' cy='270' rx='400' ry='100' fill='%23ffd54f' opacity='0.25'/%3E%3Crect x='540' y='120' width='8' height='60' rx='2' fill='%23a1887f' opacity='0.3'/%3E%3Cellipse cx='544' cy='110' rx='28' ry='24' fill='%234caf50' opacity='0.25'/%3E%3Cellipse cx='530' cy='118' rx='18' ry='16' fill='%2366bb6a' opacity='0.2'/%3E%3Ccircle cx='900' cy='40' r='30' fill='%23f9a825' opacity='0.15'/%3E%3C/svg%3E");
 }
 
 .dark.theme-summer,
@@ -28,4 +30,5 @@
     --theme-border: #4a3800;
     --theme-header-bg: #1f1a00;
     --theme-card-glow: rgba(249, 168, 37, 0.2);
+    --theme-scene: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 200' preserveAspectRatio='none'%3E%3Cellipse cx='600' cy='260' rx='700' ry='120' fill='%234a3800' opacity='0.4'/%3E%3Cellipse cx='300' cy='270' rx='400' ry='100' fill='%233a2c00' opacity='0.3'/%3E%3Crect x='540' y='120' width='8' height='60' rx='2' fill='%235d4037' opacity='0.3'/%3E%3Cellipse cx='544' cy='110' rx='28' ry='24' fill='%232e7d32' opacity='0.2'/%3E%3Ccircle cx='900' cy='40' r='30' fill='%23f9a825' opacity='0.1'/%3E%3C/svg%3E");
 }

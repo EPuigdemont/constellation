@@ -321,7 +321,7 @@ select:focus[data-flux-control] {
 .desktop-editor-modal {
     background: var(--card-bg, var(--theme-bg, var(--color-zinc-50)));
     border-radius: 0.5rem;
-    padding: 0.5rem;
+    padding: 1px;
     transition: background-color 0.3s ease;
 }
 
@@ -709,6 +709,56 @@ select:focus[data-flux-control] {
 
 .diary-notebook.is-open {
     animation: notebook-open 0.3s ease-out;
+}
+
+/* ─── Theme Background Scene ─── */
+
+[data-theme-scene]::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background-image: var(--theme-scene, none);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.7;
+}
+
+/* ─── Diary Page Navigation ─── */
+
+.diary-spread:hover .diary-page-arrow {
+    opacity: 1;
+}
+
+.diary-pages {
+    transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.diary-turn-left {
+    animation: diary-page-turn-left 0.4s ease;
+}
+
+.diary-turn-right {
+    animation: diary-page-turn-right 0.4s ease;
+}
+
+@keyframes diary-page-turn-left {
+    0% { transform: translateX(0); opacity: 1; }
+    40% { transform: translateX(3%); opacity: 0.6; }
+    60% { transform: translateX(-2%); opacity: 0.8; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes diary-page-turn-right {
+    0% { transform: translateX(0); opacity: 1; }
+    40% { transform: translateX(-3%); opacity: 0.6; }
+    60% { transform: translateX(2%); opacity: 0.8; }
+    100% { transform: translateX(0); opacity: 1; }
 }
 
 /* ─── Diary Entry Themed ─── */
