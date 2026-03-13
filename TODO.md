@@ -108,7 +108,21 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 6 — Vision Board
+## Phase 6 — Diary View
+
+- [ ] Add a "Diary" link to the sidebar, when viewing this mode, the page displays the diary, showing multiples of 2 (default 2) pages, with pagination OR infinite scroll (default infinite scroll, show pagination buttons in the center bottom to enable going to paginate mode)
+- [ ] Move the "trashcan" to the bottom right of the viewport
+- [ ] Overhaul the "diary" display. Add a new desktop entity called "Diary" which will contain the diary entries inside. 
+- [ ] The Diary display looks like a notebook, closed at first, it can be double clicked to open (show an animation like a book opening). It can display multiples of 2 diary entries. It paginates. It can be resized.
+- [ ] Resize behavior is a bit inconsistent, with elements resetting their size or position. To avoid desync between front and backend, buffer the position of elements in the front end and then sync it up to the backend (front-end has higher authority) to avoid desync bugs
+- [ ] In desktop view, allow a quick-filter to show the diary, diary entries, notes or post-its only
+- [ ] Add the missing + Image to the top controls bar to upload images
+- [ ] Add an "Images" link to the sidebar, display the images the user has uploaded in a grid, with filename, date and associated entities (diary, note)
+- [ ] The rich text editor is still not working correctly, with no bold, italics, underscored, H, etc. applying to the text - this might be a CSS issue. Ensure the editor works correctly.
+
+---
+
+## Phase 7 — Vision Board
 
 - [ ] Vision board view: full-screen grid/canvas
 - [ ] Upload image → stored in private disk → `images` record created
@@ -119,7 +133,7 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 7 — Theming System
+## Phase 8 — Theming System
 
 - [ ] Define CSS custom properties for theme system (colors, fonts, border styles, animation classes)
 - [ ] Implement base themes: `summer`, `love`, `breeze`, `night`, `cozy`
@@ -136,7 +150,7 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 8 — Constellation View
+## Phase 9 — Constellation View
 
 - [ ] `ConstellationService`: compute proximity scores for all entity pairs (tags, type, relationships, date)
 - [ ] JSON endpoint `/api/constellation` returning nodes + edges + scores (auth required)
@@ -151,7 +165,7 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 9 — Reminders & Emotional Features
+## Phase 10 — Reminders & Emotional Features
 
 - [ ] Important dates CRUD (anniversaries, birthdays, custom)
 - [ ] Daily check: Laravel scheduler (`php artisan schedule:run`) checks for today's important dates
@@ -160,7 +174,7 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 10 — Deployment
+## Phase 11 — Deployment
 
 - [ ] Provision Hetzner CAX11 VPS (Ubuntu 24 LTS)
 - [ ] Install: PHP 8.5, Composer, MySQL 8, Nginx, Node.js, Certbot
@@ -178,7 +192,7 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 11 — Polish & QA
+## Phase 12 — Polish & QA
 
 - [ ] Responsive check: desktop view on tablet/mobile (degraded but usable)
 - [ ] Error states on all forms
