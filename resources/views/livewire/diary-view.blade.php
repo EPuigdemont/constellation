@@ -72,11 +72,12 @@
                  :class="{ 'diary-turn-left': turning && direction === 'left', 'diary-turn-right': turning && direction === 'right' }">
                 @forelse($entries as $entry)
                     @php $moodClass = $entry->mood ? 'mood-' . $entry->mood->value : ''; @endphp
-                    <div class="diary-entry-themed {{ $moodClass }} flex flex-1 flex-col overflow-y-auto rounded-lg border p-6 shadow-md"
-                         style="background: var(--card-bg, var(--theme-bg, white)); border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
+                    <div class="diary-entry-themed {{ $moodClass }} {{ $editingEntryId === $entry->id ? 'is-editing' : '' }} flex flex-1 flex-col rounded-lg border p-6 shadow-md"
+                         style="border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
+                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
                         @if($editingEntryId === $entry->id)
-                            <div class="flex flex-1 flex-col gap-3">
+                            <div class="relative z-[3] flex flex-1 flex-col gap-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
                                 <flux:textarea wire:model="editBody" placeholder="{{ __('Write...') }}" class="flex-1" rows="10" />
                                 <div class="flex items-center gap-2">
@@ -85,7 +86,7 @@
                                 </div>
                             </div>
                         @else
-                            <div class="mb-3 flex items-center justify-between">
+                            <div class="relative z-[3] mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
                                     {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
                                 </span>
@@ -100,12 +101,14 @@
                                 </div>
                             </div>
                             @if($entry->title)
-                                <h2 class="mb-2 text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ $entry->title }}</h2>
+                                <h2 class="diary-entry-title relative z-[3] text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ $entry->title }}</h2>
                             @endif
-                            <div class="tiptap-editor-content prose prose-sm max-w-none flex-1 text-zinc-700 dark:text-zinc-300">
-                                {!! $entry->body !!}
+                            <div class="diary-entry-body relative z-[3] flex-1 overflow-y-auto">
+                                <div class="tiptap-editor-content prose prose-sm max-w-none text-zinc-700 dark:text-zinc-300">
+                                    {!! $entry->body !!}
+                                </div>
                             </div>
-                            <p class="mt-3 text-[0.65rem] italic text-zinc-400">{{ __('Double-click to edit') }}</p>
+                            <p class="relative z-[3] mt-3 text-[0.65rem] italic text-zinc-400">{{ __('Double-click to edit') }}</p>
                         @endif
                     </div>
                 @empty
@@ -139,11 +142,12 @@
             <div class="mx-auto max-w-3xl space-y-4 px-0 py-0">
                 @forelse($allEntries as $entry)
                     @php $moodClass = $entry->mood ? 'mood-' . $entry->mood->value : ''; @endphp
-                    <div class="diary-entry-themed {{ $moodClass }} rounded-lg border p-6 shadow-md"
-                         style="background: var(--card-bg, var(--theme-bg, white)); border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
+                    <div class="diary-entry-themed {{ $moodClass }} {{ $editingEntryId === $entry->id ? 'is-editing' : '' }} rounded-lg border p-6 shadow-md"
+                         style="border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
+                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
                         @if($editingEntryId === $entry->id)
-                            <div class="space-y-3">
+                            <div class="relative z-[3] space-y-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
                                 <flux:textarea wire:model="editBody" placeholder="{{ __('Write...') }}" rows="6" />
                                 <div class="flex items-center gap-2">
@@ -152,7 +156,7 @@
                                 </div>
                             </div>
                         @else
-                            <div class="mb-3 flex items-center justify-between">
+                            <div class="relative z-[3] mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
                                     {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
                                 </span>
@@ -167,12 +171,14 @@
                                 </div>
                             </div>
                             @if($entry->title)
-                                <h2 class="mb-2 text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ $entry->title }}</h2>
+                                <h2 class="diary-entry-title relative z-[3] text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ $entry->title }}</h2>
                             @endif
-                            <div class="tiptap-editor-content prose prose-sm max-w-none text-zinc-700 dark:text-zinc-300">
-                                {!! $entry->body !!}
+                            <div class="diary-entry-body relative z-[3]">
+                                <div class="tiptap-editor-content prose prose-sm max-w-none text-zinc-700 dark:text-zinc-300">
+                                    {!! $entry->body !!}
+                                </div>
                             </div>
-                            <p class="mt-3 text-[0.65rem] italic text-zinc-400">{{ __('Double-click to edit') }}</p>
+                            <p class="relative z-[3] mt-3 text-[0.65rem] italic text-zinc-400">{{ __('Double-click to edit') }}</p>
                         @endif
                     </div>
                 @empty
