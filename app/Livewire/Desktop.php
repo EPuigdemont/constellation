@@ -8,18 +8,23 @@ use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Tag;
 use App\Services\DesktopService;
+use App\Services\EditorImageService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
 #[Title('Desktop')]
 class Desktop extends Component
 {
+    use WithFileUploads;
+
     public float $zoom = 1.0;
 
     /** @var array<int, array<string, mixed>> */
@@ -38,6 +43,23 @@ class Desktop extends Component
     public string $editorBody = '';
 
     public string $editorMood = 'plain';
+
+    public ?string $editorColorOverride = null;
+
+    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    public $editorImage = null;
+
+    /** @var array<int, string> */
+    public array $editorTagIds = [];
+
+    public string $tagSearch = '';
+
+    /** @var array<int, array{id: string, name: string, color: string|null}> */
+    public array $availableTags = [];
+
+    public float $viewportCenterX = 2000.0;
+
+    public float $viewportCenterY = 2000.0;
 
     public function mount(DesktopService $service): void
     {
@@ -58,7 +80,6 @@ class Desktop extends Component
         $newZ = $service->nextZIndex($user);
         $service->savePosition($user, $entityId, $entityType, 0, 0, $newZ);
 
-        // Update the position without resetting x/y — the frontend has current coords
         $position = \App\Models\EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('entity_id', $entityId)
@@ -80,16 +101,13 @@ class Desktop extends Component
         $service->saveZoom(Auth::user(), $zoom);
     }
 
-    public float $viewportCenterX = 2000.0;
-
-    public float $viewportCenterY = 2000.0;
-
     public function openDiaryModal(float $centerX = 2000.0, float $centerY = 2000.0): void
     {
         $this->resetEditor();
         $this->editorMode = 'diary';
         $this->viewportCenterX = $centerX;
         $this->viewportCenterY = $centerY;
+        $this->loadTagsForEditor();
         $this->showEditorModal = true;
     }
 
@@ -99,6 +117,7 @@ class Desktop extends Component
         $this->editorMode = 'note';
         $this->viewportCenterX = $centerX;
         $this->viewportCenterY = $centerY;
+        $this->loadTagsForEditor();
         $this->showEditorModal = true;
     }
 
@@ -115,7 +134,7 @@ class Desktop extends Component
 
         $position = $service->assignDefaultPosition($user, $postit->id, 'postit', $centerX, $centerY);
 
-        $this->cards[] = [
+        $card = [
             'id' => $postit->id,
             'type' => 'postit',
             'title' => '',
@@ -131,7 +150,10 @@ class Desktop extends Component
             'updated_at' => $postit->updated_at->toIso8601String(),
         ];
 
+        $this->cards[] = $card;
         $this->maxZIndex = $position->z_index;
+
+        $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
     }
 
     public function saveEditor(DesktopService $service): void
@@ -164,7 +186,116 @@ class Desktop extends Component
         $this->editorTitle = $model->title ?? '';
         $this->editorBody = $model->body ?? '';
         $this->editorMood = $model->mood?->value ?? 'plain';
+        $this->editorColorOverride = $model->color_override ?? null;
+        $this->loadTagsForEditor($model);
         $this->showEditorModal = true;
+    }
+
+    public function uploadEditorImage(EditorImageService $service): void
+    {
+        if (! $this->editorImage) {
+            return;
+        }
+
+        $user = Auth::user();
+        $image = $service->store($user, $this->editorImage);
+        $url = route('images.serve', $image);
+
+        $this->editorImage = null;
+
+        $this->dispatch('editor-image-uploaded', url: $url);
+    }
+
+    public function autosaveEditor(): void
+    {
+        if ($this->editingEntityId === '') {
+            return;
+        }
+
+        $card = collect($this->cards)->firstWhere('id', $this->editingEntityId);
+        if (! $card) {
+            return;
+        }
+
+        $model = $this->resolveEntity($this->editingEntityId, $card['type']);
+        if (! $model) {
+            return;
+        }
+
+        Gate::authorize('update', $model);
+
+        $mood = Mood::tryFrom($this->editorMood) ?? Mood::Plain;
+        $data = ['body' => $this->editorBody, 'mood' => $mood, 'color_override' => $this->editorColorOverride];
+
+        if (in_array($card['type'], ['diary_entry', 'note'], true)) {
+            $data['title'] = $this->editorTitle;
+        }
+
+        $model->update($data);
+
+        if (method_exists($model, 'tags')) {
+            $model->tags()->sync($this->editorTagIds);
+        }
+
+        $this->updateCardInList($this->editingEntityId, [
+            'title' => $this->editorTitle,
+            'preview' => \Illuminate\Support\Str::limit(strip_tags($this->editorBody), 120),
+            'mood' => $mood->value,
+            'color_override' => $this->editorColorOverride,
+        ]);
+    }
+
+    public function loadTagsForEditor(?object $model = null): void
+    {
+        $user = Auth::user();
+        $this->availableTags = Tag::forUser($user->id)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Tag $tag): array => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+                'color' => $tag->color,
+            ])
+            ->all();
+
+        if ($model && method_exists($model, 'tags')) {
+            $this->editorTagIds = $model->tags()->pluck('tags.id')->all();
+        }
+    }
+
+    public function toggleTag(string $tagId): void
+    {
+        if (in_array($tagId, $this->editorTagIds, true)) {
+            $this->editorTagIds = array_values(array_filter(
+                $this->editorTagIds,
+                fn (string $id): bool => $id !== $tagId,
+            ));
+        } else {
+            $this->editorTagIds[] = $tagId;
+        }
+    }
+
+    public function createTagInline(string $name): void
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return;
+        }
+
+        $user = Auth::user();
+        $tag = Tag::create([
+            'name' => $name,
+            'user_id' => $user->id,
+        ]);
+
+        $this->availableTags[] = [
+            'id' => $tag->id,
+            'name' => $tag->name,
+            'color' => $tag->color,
+        ];
+
+        $this->editorTagIds[] = $tag->id;
+        $this->tagSearch = '';
     }
 
     public function deleteEntity(string $entityId, string $entityType): void
@@ -181,6 +312,8 @@ class Desktop extends Component
         $this->cards = array_values(
             array_filter($this->cards, fn (array $card): bool => $card['id'] !== $entityId),
         );
+
+        $this->dispatch('card-deleted', entityId: $entityId);
     }
 
     public function changeMood(string $entityId, string $entityType, string $mood): void
@@ -227,6 +360,11 @@ class Desktop extends Component
         $this->editorTitle = '';
         $this->editorBody = '';
         $this->editorMood = 'plain';
+        $this->editorColorOverride = null;
+        $this->editorImage = null;
+        $this->editorTagIds = [];
+        $this->tagSearch = '';
+        $this->availableTags = [];
     }
 
     private function resolveEntity(string $entityId, string $entityType): ?object
@@ -243,35 +381,36 @@ class Desktop extends Component
 
     private function createNewEntity(object $user, Mood $mood, DesktopService $service): void
     {
+        $data = [
+            'user_id' => $user->id,
+            'title' => $this->editorTitle,
+            'body' => $this->editorBody,
+            'mood' => $mood,
+            'color_override' => $this->editorColorOverride,
+            'is_public' => false,
+        ];
+
         if ($this->editorMode === 'diary') {
-            $entity = DiaryEntry::create([
-                'user_id' => $user->id,
-                'title' => $this->editorTitle,
-                'body' => $this->editorBody,
-                'mood' => $mood,
-                'is_public' => false,
-            ]);
+            $entity = DiaryEntry::create($data);
             $type = 'diary_entry';
         } else {
-            $entity = Note::create([
-                'user_id' => $user->id,
-                'title' => $this->editorTitle,
-                'body' => $this->editorBody,
-                'mood' => $mood,
-                'is_public' => false,
-            ]);
+            $entity = Note::create($data);
             $type = 'note';
+        }
+
+        if (method_exists($entity, 'tags') && ! empty($this->editorTagIds)) {
+            $entity->tags()->sync($this->editorTagIds);
         }
 
         $position = $service->assignDefaultPosition($user, $entity->id, $type, $this->viewportCenterX, $this->viewportCenterY);
 
-        $this->cards[] = [
+        $card = [
             'id' => $entity->id,
             'type' => $type,
             'title' => $entity->title ?? '',
-            'preview' => \Illuminate\Support\Str::limit($entity->body ?? '', 120),
+            'preview' => \Illuminate\Support\Str::limit(strip_tags($entity->body ?? ''), 120),
             'mood' => $mood->value,
-            'color_override' => null,
+            'color_override' => $this->editorColorOverride,
             'is_public' => false,
             'x' => $position->x,
             'y' => $position->y,
@@ -281,7 +420,10 @@ class Desktop extends Component
             'updated_at' => $entity->updated_at->toIso8601String(),
         ];
 
+        $this->cards[] = $card;
         $this->maxZIndex = $position->z_index;
+
+        $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
     }
 
     private function updateExistingEntity(object $user, Mood $mood): void
@@ -298,7 +440,11 @@ class Desktop extends Component
 
         Gate::authorize('update', $model);
 
-        $data = ['body' => $this->editorBody, 'mood' => $mood];
+        $data = [
+            'body' => $this->editorBody,
+            'mood' => $mood,
+            'color_override' => $this->editorColorOverride,
+        ];
 
         if (in_array($card['type'], ['diary_entry', 'note'], true)) {
             $data['title'] = $this->editorTitle;
@@ -306,11 +452,20 @@ class Desktop extends Component
 
         $model->update($data);
 
-        $this->updateCardInList($this->editingEntityId, [
+        if (method_exists($model, 'tags')) {
+            $model->tags()->sync($this->editorTagIds);
+        }
+
+        $updates = [
             'title' => $this->editorTitle,
-            'preview' => \Illuminate\Support\Str::limit($this->editorBody, 120),
+            'preview' => \Illuminate\Support\Str::limit(strip_tags($this->editorBody), 120),
             'mood' => $mood->value,
-        ]);
+            'color_override' => $this->editorColorOverride,
+        ];
+
+        $this->updateCardInList($this->editingEntityId, $updates);
+
+        $this->dispatch('card-updated', entityId: $this->editingEntityId, updates: $updates);
     }
 
     private function updateCardInList(string $entityId, array $updates): void

@@ -65,13 +65,24 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 4 — Rich Text Editor (Diary & Notes)
 
-- [ ] Integrate Tiptap in Livewire modal
-- [ ] Enable extensions: bold, italic, underline, headings, bullet list, ordered list, blockquote, image upload, paste from clipboard (Word/PDF paste support via Tiptap extensions)
-- [ ] Image upload in editor: stores to private disk, serves via signed URL
-- [ ] Save on close / autosave with debounce
-- [ ] Mood selector in editor toolbar
-- [ ] Color override picker in editor toolbar
-- [ ] Tag selector in editor toolbar (multi-select, create new inline)
+- [x] Integrate Tiptap in Livewire modal
+- [x] Enable extensions: bold, italic, underline, headings, bullet list, ordered list, blockquote, image upload, paste from clipboard (Word/PDF paste support via Tiptap extensions)
+- [x] Image upload in editor: stores to private disk, serves via signed URL
+- [x] Save on close / autosave with debounce
+- [x] Mood selector in editor toolbar
+- [x] Color override picker in editor toolbar
+- [x] Tag selector in editor toolbar (multi-select, create new inline)
+
+---
+
+## Phase 4.5 — Virtual Desktop (Scratchboard) Improvements
+
+- [ ] Add a "show as grid" toggle for desktop view (entities snap to a grid layout)
+- [ ] Add a "show guide lines" toggle that shows alignment guides when dragging entities
+- [ ] Implement "snap to grid" option when dragging entities (configurable in settings)
+- [ ] Add a "center canvas" button that resets all entity positions to a centered layout
+- [ ] Add a "perfect canvas zoom" button that sets the zoom level to fit all entities within the viewport, calculating the optimal scale factor based on the bounding box of all entity positions
+- [ ] Add a "delete" button for entities when opening their edit modal, with confirmation prompt
 
 ---
 

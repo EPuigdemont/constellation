@@ -125,7 +125,7 @@ class DesktopService
         };
 
         $preview = match ($type) {
-            'diary_entry', 'note', 'postit' => Str::limit($entity->body ?? '', 120),
+            'diary_entry', 'note', 'postit' => Str::limit(strip_tags($entity->body ?? ''), 120),
             'image' => $entity->alt ?? '',
         };
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ImageServeController;
 use App\Livewire\Desktop;
 use Illuminate\Support\Facades\Route;
 
@@ -10,7 +11,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    // All future entity routes will be registered here
+    Route::get('images/{image}', ImageServeController::class)->name('images.serve');
 });
 
 require __DIR__.'/settings.php';

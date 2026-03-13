@@ -66,6 +66,10 @@ Directives for Claude Code working on this project.
 
 When in doubt about what to build next, refer to `TODO.md`. Do not jump ahead to lower-priority items unless explicitly instructed.
 
+## Build Rules
+
+- Do not run `npm` commands (`npm install`, `npm run build`, `npm run dev`, etc.). The user manages frontend builds separately.
+
 ## Commit Style
 
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `chore:`, `docs:`
