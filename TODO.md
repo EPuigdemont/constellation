@@ -97,6 +97,17 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
+## Phase 5.5 — Small improvements
+
+- [ ] When changing the "theme" of an entity while editing, immediately show the changed mood color on the editor modal background and entity card (without needing to save)
+- [ ] The custom colors are not working properly, they don't show in the entity card background
+- [ ] Make post-its deletable (currently they can only be deleted by deleting the parent entity, which is not ideal)
+- [ ] Add a "trashcan" box in the bottom left corner of the desktop where users can drag entities to delete them (with confirmation prompt)
+- [ ] Enable resizing elements (the right side and bottom right corner of the entity show a different cursor and allow resizing the entity), make changes to the schema if necessary to support this (e.g. add width/height to `entity_positions` or create a new `entity_dimensions` table)
+- [ ] Allow filtering the displayed elements on the desktop by tag, add a search box in the menu bar to filter entities by title/content (client-side filtering on the loaded entities, no need for a new endpoint)
+
+---
+
 ## Phase 6 — Vision Board
 
 - [ ] Vision board view: full-screen grid/canvas
