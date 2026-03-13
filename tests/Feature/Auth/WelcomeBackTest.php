@@ -17,7 +17,7 @@ class WelcomeBackTest extends TestCase
         $user = User::factory()->create(['name' => 'Enric']);
 
         $response = $this->post(route('login.store'), [
-            'email' => $user->email,
+            'username' => $user->username,
             'password' => 'password',
         ]);
 
@@ -29,7 +29,7 @@ class WelcomeBackTest extends TestCase
         $response = $this->get(route('login'));
 
         $response->assertSee('Welcome to Constellation');
-        $response->assertSee('Sign in to continue');
+        $response->assertSee('Log in');
         $response->assertDontSee('Don&#039;t have an account?');
     }
 }
