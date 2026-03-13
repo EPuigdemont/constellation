@@ -143,16 +143,6 @@ document.addEventListener('alpine:init', () => {
         init() {
             this.updateScroll();
 
-            // Upload center calculation
-            window.addEventListener('vb-upload-at-center', () => {
-                const viewport = this.$el;
-                const zoom = Alpine.store('visionBoard').zoom || 1;
-                const centerX = Math.round((viewport.scrollLeft + viewport.clientWidth / 2) / zoom);
-                const centerY = Math.round((viewport.scrollTop + viewport.clientHeight / 2) / zoom);
-                this.$wire.set('viewportCenterX', centerX);
-                this.$wire.set('viewportCenterY', centerY);
-            });
-
             // Trashcan drop zone
             const trashcan = document.getElementById('vb-trashcan');
             if (trashcan) {
@@ -225,11 +215,154 @@ document.addEventListener('alpine:init', () => {
                 const el = canvas.querySelector(`[data-card-id="${entityId}"]`);
                 if (el) el.remove();
             });
+
+            // Export vision board as PNG
+            window.addEventListener('vb-export', () => {
+                this._exportAsPng();
+            });
+        },
+
+        async _exportAsPng() {
+            const canvas = document.getElementById('vb-canvas');
+            if (!canvas) return;
+
+            const cards = canvas.querySelectorAll('[data-card-id]');
+            if (cards.length === 0) return;
+
+            // Compute bounding box
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            cards.forEach(el => {
+                if (el.style.display === 'none') return;
+                const x = parseFloat(el.style.left) || 0;
+                const y = parseFloat(el.style.top) || 0;
+                const w = el.offsetWidth || 280;
+                const h = el.offsetHeight || 220;
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x + w > maxX) maxX = x + w;
+                if (y + h > maxY) maxY = y + h;
+            });
+
+            const PADDING = 20;
+            minX -= PADDING;
+            minY -= PADDING;
+            const width = (maxX - minX) + PADDING * 2;
+            const height = (maxY - minY) + PADDING * 2;
+
+            const offscreen = document.createElement('canvas');
+            offscreen.width = width;
+            offscreen.height = height;
+            const ctx = offscreen.getContext('2d');
+
+            // Fill background
+            ctx.fillStyle = '#18181b'; // zinc-900
+            ctx.fillRect(0, 0, width, height);
+
+            // Load and draw each card
+            const drawPromises = [];
+            cards.forEach(el => {
+                if (el.style.display === 'none') return;
+                const x = (parseFloat(el.style.left) || 0) - minX;
+                const y = (parseFloat(el.style.top) || 0) - minY;
+                const w = el.offsetWidth || 280;
+                const h = el.offsetHeight || 220;
+
+                const img = el.querySelector('img');
+                const titleEl = el.querySelector('.vb-card-title');
+                const titleText = titleEl ? titleEl.textContent.trim() : '';
+                const titleHeight = titleText ? 24 : 0;
+
+                if (img && img.src) {
+                    const promise = new Promise((resolve) => {
+                        const image = new Image();
+                        image.crossOrigin = 'anonymous';
+                        image.onload = () => {
+                            // Draw rounded rect clip
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.roundRect(x, y, w, h, 8);
+                            ctx.clip();
+
+                            // Draw title bar if present
+                            if (titleText) {
+                                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                                ctx.fillRect(x, y, w, titleHeight);
+                                ctx.fillStyle = '#ffffff';
+                                ctx.font = 'bold 11px sans-serif';
+                                ctx.fillText(titleText, x + 8, y + 16, w - 16);
+                            }
+
+                            // Draw image below title
+                            ctx.drawImage(image, x, y + titleHeight, w, h - titleHeight);
+
+                            // Redraw title on top of image (since image may cover it)
+                            if (titleText) {
+                                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                                ctx.fillRect(x, y, w, titleHeight);
+                                ctx.fillStyle = '#ffffff';
+                                ctx.font = 'bold 11px sans-serif';
+                                ctx.fillText(titleText, x + 8, y + 16, w - 16);
+                            }
+
+                            ctx.restore();
+                            resolve();
+                        };
+                        image.onerror = () => {
+                            // Draw placeholder
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.roundRect(x, y, w, h, 8);
+                            ctx.clip();
+                            ctx.fillStyle = '#3f3f46';
+                            ctx.fillRect(x, y, w, h);
+                            ctx.restore();
+                            resolve();
+                        };
+                        image.src = img.src;
+                    });
+                    drawPromises.push(promise);
+                } else {
+                    // Placeholder card
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.roundRect(x, y, w, h, 8);
+                    ctx.clip();
+                    ctx.fillStyle = '#3f3f46';
+                    ctx.fillRect(x, y, w, h);
+                    ctx.restore();
+                }
+            });
+
+            await Promise.all(drawPromises);
+
+            // Download
+            offscreen.toBlob((blob) => {
+                if (!blob) return;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'vision-board.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
         },
 
         updateScroll() {
-            Alpine.store('visionBoard').scrollLeft = this.$el.scrollLeft;
-            Alpine.store('visionBoard').scrollTop = this.$el.scrollTop;
+            const store = Alpine.store('visionBoard');
+            store.scrollLeft = this.$el.scrollLeft;
+            store.scrollTop = this.$el.scrollTop;
+
+            // Sync viewport center to Livewire so uploads appear where the user is looking
+            clearTimeout(this._scrollSyncTimer);
+            this._scrollSyncTimer = setTimeout(() => {
+                const zoom = store.zoom || 1;
+                const centerX = Math.round((this.$el.scrollLeft + this.$el.clientWidth / 2) / zoom);
+                const centerY = Math.round((this.$el.scrollTop + this.$el.clientHeight / 2) / zoom);
+                this.$wire.set('viewportCenterX', centerX, false);
+                this.$wire.set('viewportCenterY', centerY, false);
+            }, 200);
         },
 
         _createCardElement(card) {
@@ -253,17 +386,21 @@ document.addEventListener('alpine:init', () => {
                 el.style.backgroundColor = card.color_override;
             }
 
+            let html = '';
+
+            if (card.title) {
+                html += `<div class="vb-card-title">${card.title}</div>`;
+            }
+
             if (card.image_url) {
-                el.innerHTML = `<img src="${card.image_url}" alt="${card.title || ''}" class="size-full rounded-lg object-cover" loading="lazy" />`;
+                html += `<img src="${card.image_url}" alt="${card.preview || ''}" class="vb-card-img" loading="lazy" />`;
             } else {
-                el.innerHTML = `<div class="flex size-full items-center justify-center rounded-lg bg-zinc-200 text-zinc-400 dark:bg-zinc-700">
+                html += `<div class="flex flex-1 items-center justify-center rounded-b-lg bg-zinc-200 text-zinc-400 dark:bg-zinc-700">
                     <svg class="size-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
                 </div>`;
             }
 
-            if (card.title) {
-                el.innerHTML += `<div class="vb-card-label">${card.title}</div>`;
-            }
+            el.innerHTML = html;
 
             canvas.appendChild(el);
 

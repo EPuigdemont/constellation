@@ -46,6 +46,8 @@ class VisionBoard extends Component
 
     public string $editorAlt = '';
 
+    public string $editorTitle = '';
+
     public string $editorMood = 'plain';
 
     public ?string $editorColorOverride = null;
@@ -216,6 +218,7 @@ class VisionBoard extends Component
         Gate::authorize('update', $image);
 
         $this->editingImageId = $image->id;
+        $this->editorTitle = $image->title ?? '';
         $this->editorAlt = $image->alt ?? '';
         $this->editorMood = $image->mood?->value ?? 'plain';
         $this->editorColorOverride = $image->color_override;
@@ -247,6 +250,7 @@ class VisionBoard extends Component
         }
 
         $image->update([
+            'title' => $this->editorTitle,
             'alt' => $this->editorAlt,
             'mood' => $mood,
             'color_override' => $this->editorColorOverride,
@@ -255,7 +259,7 @@ class VisionBoard extends Component
         $image->tags()->sync($this->editorTagIds);
 
         $this->updateCardInList($image->id, [
-            'title' => $this->editorAlt,
+            'title' => $this->editorTitle,
             'preview' => $this->editorAlt,
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
@@ -263,7 +267,7 @@ class VisionBoard extends Component
         ]);
 
         $this->dispatch('card-updated', entityId: $image->id, updates: [
-            'title' => $this->editorAlt,
+            'title' => $this->editorTitle,
             'preview' => $this->editorAlt,
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
@@ -455,6 +459,7 @@ class VisionBoard extends Component
     private function resetEditor(): void
     {
         $this->editingImageId = '';
+        $this->editorTitle = '';
         $this->editorAlt = '';
         $this->editorMood = 'plain';
         $this->editorColorOverride = null;

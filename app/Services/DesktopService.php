@@ -283,7 +283,7 @@ class DesktopService
             'diary_entry' => $entity->title ?? '',
             'note' => $entity->title ?? '',
             'postit' => '',
-            'image' => $entity->alt ?? '',
+            'image' => $entity->title ?? $entity->alt ?? '',
         };
 
         $preview = match ($type) {

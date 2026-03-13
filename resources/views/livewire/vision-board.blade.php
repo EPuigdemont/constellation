@@ -4,6 +4,9 @@
         <flux:button size="sm" icon="plus" x-on:click="$refs.vbImageInput.click()">
             {{ __('Upload Image') }}
         </flux:button>
+        <flux:button size="sm" icon="arrow-down-tray" x-on:click="$dispatch('vb-export')">
+            {{ __('Export PNG') }}
+        </flux:button>
 
         <input type="file"
                x-ref="vbImageInput"
@@ -106,16 +109,15 @@
                          mood: '{{ $card['mood'] ?? 'plain' }}'
                      })"
                      class="vb-card {{ $card['mood'] ? 'mood-' . $card['mood'] : 'mood-plain' }} touch-none select-none">
+                    @if($card['title'])
+                        <div class="vb-card-title">{{ $card['title'] }}</div>
+                    @endif
                     @if(!empty($card['image_url']))
-                        <img src="{{ $card['image_url'] }}" alt="{{ $card['title'] }}" class="size-full rounded-lg object-cover" loading="lazy" />
+                        <img src="{{ $card['image_url'] }}" alt="{{ $card['preview'] }}" class="vb-card-img" loading="lazy" />
                     @else
-                        <div class="flex size-full items-center justify-center rounded-lg bg-zinc-200 text-zinc-400 dark:bg-zinc-700">
+                        <div class="flex flex-1 items-center justify-center rounded-b-lg bg-zinc-200 text-zinc-400 dark:bg-zinc-700">
                             <svg class="size-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
                         </div>
-                    @endif
-                    {{-- Alt text overlay --}}
-                    @if($card['title'])
-                        <div class="vb-card-label">{{ $card['title'] }}</div>
                     @endif
                     {{-- Relationship badge --}}
                     @if(($card['siblings_count'] ?? 0) > 0)
@@ -206,7 +208,12 @@
                  x-on:click.away="$wire.set('showEditorModal', false)">
                 <h2 class="mb-4 text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ __('Edit Image') }}</h2>
 
-                {{-- Alt text --}}
+                {{-- Title --}}
+                <div class="mb-3">
+                    <flux:input wire:model="editorTitle" :label="__('Title')" placeholder="{{ __('Image title (shown as header)...') }}" />
+                </div>
+
+                {{-- Description --}}
                 <div class="mb-3">
                     <flux:input wire:model="editorAlt" :label="__('Description')" placeholder="{{ __('Image description...') }}" />
                 </div>

@@ -388,11 +388,21 @@ select:focus[data-flux-control] {
     overflow: hidden;
     width: 280px;
     height: 220px;
+    display: flex;
+    flex-direction: column;
 }
 
 .vb-card-selected {
     outline: 2px solid var(--color-blue-400);
     outline-offset: 1px;
+}
+
+.vb-card-title {
+    @apply shrink-0 truncate bg-black/70 px-2 py-1 text-xs font-semibold text-white;
+}
+
+.vb-card-img {
+    @apply flex-1 min-h-0 w-full object-cover;
 }
 
 .vb-card-label {

@@ -916,8 +916,19 @@ document.addEventListener('alpine:init', () => {
         },
 
         updateScroll() {
-            Alpine.store('desktop').scrollLeft = this.$el.scrollLeft;
-            Alpine.store('desktop').scrollTop = this.$el.scrollTop;
+            const store = Alpine.store('desktop');
+            store.scrollLeft = this.$el.scrollLeft;
+            store.scrollTop = this.$el.scrollTop;
+
+            // Sync viewport center to Livewire so uploads appear where the user is looking
+            clearTimeout(this._scrollSyncTimer);
+            this._scrollSyncTimer = setTimeout(() => {
+                const zoom = store.zoom || 1;
+                const centerX = Math.round((this.$el.scrollLeft + this.$el.clientWidth / 2) / zoom);
+                const centerY = Math.round((this.$el.scrollTop + this.$el.clientHeight / 2) / zoom);
+                this.$wire.set('viewportCenterX', centerX, false);
+                this.$wire.set('viewportCenterY', centerY, false);
+            }, 200);
         },
 
         _clearLinkingUI() {

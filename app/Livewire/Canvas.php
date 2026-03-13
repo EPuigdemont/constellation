@@ -213,7 +213,7 @@ class Canvas extends Component
             $image = $imageService->store($user, $this->imageUpload);
             \Illuminate\Support\Facades\Log::info('[Canvas] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
 
-            $position = $service->assignDefaultPosition($user, $image->id, 'image');
+            $position = $service->assignDefaultPosition($user, $image->id, 'image', $this->viewportCenterX, $this->viewportCenterY);
             \Illuminate\Support\Facades\Log::info('[Canvas] Position assigned', ['positionId' => $position->id, 'x' => $position->x, 'y' => $position->y]);
 
             $card = [

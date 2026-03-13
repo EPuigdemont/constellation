@@ -23,6 +23,7 @@ class Image extends Model
         'path',
         'disk',
         'alt',
+        'title',
         'mood',
         'color_override',
         'is_public',
