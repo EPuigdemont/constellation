@@ -110,15 +110,15 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 6 — Diary View
 
-- [ ] Add a "Diary" link to the sidebar, when viewing this mode, the page displays the diary, showing multiples of 2 (default 2) pages, with pagination OR infinite scroll (default infinite scroll, show pagination buttons in the center bottom to enable going to paginate mode)
-- [ ] Move the "trashcan" to the bottom right of the viewport
-- [ ] Overhaul the "diary" display. Add a new desktop entity called "Diary" which will contain the diary entries inside. 
-- [ ] The Diary display looks like a notebook, closed at first, it can be double clicked to open (show an animation like a book opening). It can display multiples of 2 diary entries. It paginates. It can be resized.
-- [ ] Resize behavior is a bit inconsistent, with elements resetting their size or position. To avoid desync between front and backend, buffer the position of elements in the front end and then sync it up to the backend (front-end has higher authority) to avoid desync bugs
-- [ ] In desktop view, allow a quick-filter to show the diary, diary entries, notes or post-its only
-- [ ] Add the missing + Image to the top controls bar to upload images
-- [ ] Add an "Images" link to the sidebar, display the images the user has uploaded in a grid, with filename, date and associated entities (diary, note)
-- [ ] The rich text editor is still not working correctly, with no bold, italics, underscored, H, etc. applying to the text - this might be a CSS issue. Ensure the editor works correctly.
+- [x] Add a "Diary" link to the sidebar, when viewing this mode, the page displays the diary, showing multiples of 2 (default 2) pages, with pagination OR infinite scroll (default infinite scroll, show pagination buttons in the center bottom to enable going to paginate mode)
+- [x] Move the "trashcan" to the bottom right of the viewport
+- [x] Overhaul the "diary" display. Add a new desktop entity called "Diary" which will contain the diary entries inside. 
+- [x] The Diary display looks like a notebook, closed at first, it can be double clicked to open (show an animation like a book opening). It can display multiples of 2 diary entries. It paginates. It can be resized.
+- [x] Resize behavior is a bit inconsistent, with elements resetting their size or position. To avoid desync between front and backend, buffer the position of elements in the front end and then sync it up to the backend (front-end has higher authority) to avoid desync bugs
+- [x] In desktop view, allow a quick-filter to show the diary, diary entries, notes or post-its only
+- [x] Add the missing + Image to the top controls bar to upload images
+- [x] Add an "Images" link to the sidebar, display the images the user has uploaded in a grid, with filename, date and associated entities (diary, note)
+- [x] The rich text editor is still not working correctly, with no bold, italics, underscored, H, etc. applying to the text - this might be a CSS issue. Ensure the editor works correctly.
 
 ---
 
@@ -137,6 +137,8 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 - [ ] Define CSS custom properties for theme system (colors, fonts, border styles, animation classes)
 - [ ] Implement base themes: `summer`, `love`, `breeze`, `night`, `cozy`
+- [ ] Each theme has a distinct color palette and mood (e.g. `love` is pink/red with a heartbeat animation, `breeze` is light blue with a floating animation)"
+- [ ] Add small visual elements for each theme (e.g. `summer` has a sun icon on the header, `night` has a moon icon)
 - [ ] Each theme: one CSS file in `/resources/css/themes/`, one JS animation file
 - [ ] Body class swap on theme change (Livewire → update `users.theme` → Alpine swaps class without reload)
 - [ ] Theme switcher UI (accessible from settings or persistent toolbar)
@@ -147,6 +149,9 @@ Tasks sorted by implementation priority. Do not skip phases.
 - [ ] Add subtle theme-based animations to entity cards (e.g. `love` theme has a gentle heartbeat animation, `breeze` has a slow floating animation)
 - [ ] Add a "welcome" page on first login with a cute welcome text
 - [ ] Add a cute "loading" page with a cute text (randomly selected from a defined list) on login
+- [ ] Rework the user system to use a username (not email) and password to login, remove email field and authentication via email, update login form accordingly
+- [ ] Beautify the login page with a nice background, the user's avatar in the center, and a cute welcome message that changes based on the time of day (e.g. "Good morning, sunshine!" for morning, "Good evening, star!" for night)
+- [ ] Ensure nothing in the app looks like a typical CRUD app, add small design flourishes and animations to make it feel more personal and less like a generic admin panel (e.g. animated buttons, hover effects, smooth transitions between views)
 
 ---
 

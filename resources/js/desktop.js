@@ -346,6 +346,13 @@ function createCardElement(card, wire) {
             return;
         }
 
+        // Mark as selected
+        store.selectedCardId = card.id;
+        store.selectedCardType = card.type;
+        store.selectedCardIsOwner = card.is_owner ?? false;
+        document.querySelectorAll('.desktop-card.desktop-card-selected').forEach(s => s.classList.remove('desktop-card-selected'));
+        el.classList.add('desktop-card-selected');
+
         wire.bringToFront(card.id, card.type).then((newZ) => {
             if (newZ) {
                 cardZ = newZ;
@@ -424,6 +431,8 @@ document.addEventListener('alpine:init', () => {
         cardX: card.x ?? 0,
         cardY: card.y ?? 0,
         cardZ: card.z_index ?? 0,
+        cardW: card.width ?? null,
+        cardH: card.height ?? null,
         entityId: card.id,
         entityType: card.type,
         isOwner: card.is_owner ?? false,
@@ -520,18 +529,14 @@ document.addEventListener('alpine:init', () => {
                 ],
                 listeners: {
                     move: (event) => {
-                        this.$el.style.width = event.rect.width + 'px';
-                        this.$el.style.height = event.rect.height + 'px';
+                        this.cardW = Math.round(event.rect.width);
+                        this.cardH = Math.round(event.rect.height);
                     },
-                    end: (event) => {
-                        this._debouncedSaveSize(event.rect.width, event.rect.height);
+                    end: () => {
+                        this._debouncedSaveSize(this.cardW, this.cardH);
                     },
                 },
             });
-
-            // Apply initial width/height from card data
-            if (card.width) this.$el.style.width = card.width + 'px';
-            if (card.height) this.$el.style.height = card.height + 'px';
         },
 
         _debouncedSave() {
@@ -856,7 +861,7 @@ document.addEventListener('alpine:init', () => {
                 const wire = this.$wire;
                 interact(trashcan).dropzone({
                     accept: '[data-card-id]',
-                    overlap: 0.25,
+                    overlap: 'pointer',
                     ondragenter: () => {
                         trashcan.classList.add('desktop-trashcan-active');
                     },

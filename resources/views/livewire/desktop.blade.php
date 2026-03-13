@@ -1,8 +1,8 @@
 <div class="flex h-screen flex-col overflow-hidden">
     {{-- Toolbar --}}
-    <div class="flex items-center gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="flex min-w-0 items-center gap-2 overflow-hidden border-b border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900">
         {{-- Full buttons (wide screens) --}}
-        <div class="hidden items-center gap-1 md:flex">
+        <div class="hidden shrink-0 items-center gap-1 lg:flex">
             <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'diary' })">
                 {{ __('Diary Entry') }}
             </flux:button>
@@ -18,7 +18,7 @@
         </div>
 
         {{-- Collapsed dropdown (narrow screens) --}}
-        <div class="relative md:hidden" x-data="{ createOpen: false }">
+        <div class="relative lg:hidden" x-data="{ createOpen: false }">
             <flux:button size="sm" icon="plus" x-on:click="createOpen = !createOpen">
                 {{ __('New') }}
             </flux:button>
@@ -57,12 +57,12 @@
         {{-- Search & Filter --}}
         <div x-data="desktopSearch" class="flex items-center gap-2">
             {{-- Entity type quick-filter --}}
-            <div class="flex items-center gap-0.5 rounded-md border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800">
+            <div class="hidden items-center gap-0.5 rounded-md border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800 md:flex">
                 <template x-for="f in typeFilters" :key="f.value">
                     <button type="button"
                             x-on:click="filterByType(f.value)"
                             :class="activeTypeFilter === f.value ? 'bg-zinc-200 dark:bg-zinc-700 font-semibold' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700'"
-                            class="rounded px-2 py-1 text-xs text-zinc-700 dark:text-zinc-300"
+                            class="rounded px-1.5 py-1 text-xs text-zinc-700 dark:text-zinc-300"
                             x-text="f.label">
                     </button>
                 </template>
@@ -73,7 +73,7 @@
                        x-model="searchQuery"
                        x-on:input.debounce.250ms="filterCards()"
                        placeholder="{{ __('Search cards...') }}"
-                       class="w-40 rounded-lg border border-zinc-200 bg-white px-3 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                       class="w-28 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 lg:w-36">
                 <button x-show="searchQuery !== '' || activeTagFilter !== null || activeTypeFilter !== null"
                         x-on:click="clearFilters()"
                         x-cloak
@@ -114,10 +114,10 @@
             </div>
         </div>
 
-        <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
+        <span class="h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600"></span>
 
         {{-- Canvas view toggles --}}
-        <div x-data="desktopToggles" class="flex items-center gap-1">
+        <div x-data="desktopToggles" class="flex shrink-0 items-center gap-1">
             <button type="button" x-on:click="toggleGrid()"
                     :class="showGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                     class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
@@ -147,9 +147,9 @@
             </flux:button>
         </div>
 
-        <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
+        <span class="h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600"></span>
 
-        <div x-data="desktopZoom" class="flex items-center gap-2">
+        <div x-data="desktopZoom" class="flex shrink-0 items-center gap-2">
             <flux:button size="sm" icon="minus" x-on:click="zoomOut" />
             <span class="w-12 text-center text-sm text-zinc-600 dark:text-zinc-400"
                   x-text="Math.round(zoom * 100) + '%'"></span>
@@ -197,7 +197,7 @@
                      data-card-type="{{ $card['type'] }}"
                      x-data="desktopCard({{ Js::from(array_merge($card, ['is_owner' => $card['owner_id'] === auth()->id()])) }})"
                      x-init="initDrag()"
-                     :style="'position: absolute; left: ' + cardX + 'px; top: ' + cardY + 'px; z-index: ' + cardZ + ';{{ $card['color_override'] ? ' background-color: ' . $card['color_override'] . ';' : '' }}{{ $card['width'] ? ' width: ' . $card['width'] . 'px;' : '' }}{{ $card['height'] ? ' height: ' . $card['height'] . 'px;' : '' }}'"
+                     :style="'position: absolute; left: ' + cardX + 'px; top: ' + cardY + 'px; z-index: ' + cardZ + ';{{ $card['color_override'] ? ' background-color: ' . $card['color_override'] . ';' : '' }}' + (cardW ? ' width: ' + cardW + 'px;' : '') + (cardH ? ' height: ' + cardH + 'px;' : '')"
                      x-on:contextmenu.prevent.stop="$dispatch('desktop-context', {
                          x: $event.clientX,
                          y: $event.clientY,

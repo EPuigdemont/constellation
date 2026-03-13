@@ -121,8 +121,6 @@ class Desktop extends Component
     public function saveSize(DesktopService $service, string $entityId, string $entityType, float $width, float $height): void
     {
         $service->saveSize(Auth::user(), $entityId, $entityType, $width, $height);
-
-        $this->updateCardInList($entityId, ['width' => $width, 'height' => $height]);
     }
 
     public function saveZoom(DesktopService $service, float $zoom): void
