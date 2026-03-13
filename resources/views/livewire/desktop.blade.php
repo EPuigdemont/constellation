@@ -13,6 +13,30 @@
 
         <flux:spacer />
 
+        {{-- Canvas view toggles --}}
+        <div x-data="desktopToggles" class="flex items-center gap-1">
+            <flux:button size="sm" x-on:click="toggleGrid()" :variant="showGrid ? 'filled' : 'ghost'" title="{{ __('Show as Grid') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" /></svg>
+            </flux:button>
+            <flux:button size="sm" x-on:click="toggleGuides()" :variant="showGuides ? 'filled' : 'ghost'" title="{{ __('Show Guide Lines') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+            </flux:button>
+            <flux:button size="sm" x-on:click="toggleSnap()" :variant="snapToGrid ? 'filled' : 'ghost'" title="{{ __('Snap to Grid') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
+            </flux:button>
+
+            <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
+
+            <flux:button size="sm" x-on:click="$dispatch('center-canvas')" title="{{ __('Center Canvas') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" /></svg>
+            </flux:button>
+            <flux:button size="sm" x-on:click="$dispatch('zoom-to-fit')" title="{{ __('Zoom to Fit') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+            </flux:button>
+        </div>
+
+        <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
+
         <div x-data="desktopZoom" class="flex items-center gap-2">
             <flux:button size="sm" icon="minus" x-on:click="zoomOut" />
             <span class="w-12 text-center text-sm text-zinc-600 dark:text-zinc-400"
@@ -29,9 +53,13 @@
         <div wire:ignore
              x-data="{ get zoom() { return Alpine.store('desktop').zoom } }"
              :style="'transform: scale(' + zoom + '); transform-origin: 0 0; width: 4000px; height: 4000px;'"
+             :class="Alpine.store('desktop').showGrid ? 'desktop-grid-bg' : ''"
              class="relative"
              id="desktop-canvas"
              x-on:contextmenu.prevent="$dispatch('desktop-context', { x: $event.clientX, y: $event.clientY })">
+
+            {{-- Guide lines (rendered by JS) --}}
+            <div id="desktop-guides" class="pointer-events-none absolute inset-0" style="z-index: 99998;"></div>
 
             @foreach($cards as $index => $card)
                 <div wire:key="card-{{ $card['id'] }}"
@@ -278,9 +306,25 @@
                 </flux:field>
             </div>
 
-            <div class="flex justify-end gap-2">
-                <flux:button x-on:click="syncToWire(); $wire.showEditorModal = false">{{ __('Cancel') }}</flux:button>
-                <flux:button variant="primary" x-on:click="syncToWire()" wire:click="saveEditor">{{ __('Save') }}</flux:button>
+            <div class="flex items-center justify-between">
+                @if($editingEntityId !== '')
+                    <div x-data="{ confirmDelete: false }">
+                        <flux:button x-show="!confirmDelete" variant="danger" size="sm" x-on:click="confirmDelete = true">
+                            {{ __('Delete') }}
+                        </flux:button>
+                        <div x-show="confirmDelete" x-cloak class="flex items-center gap-2">
+                            <span class="text-sm text-red-600 dark:text-red-400">{{ __('Are you sure?') }}</span>
+                            <flux:button variant="danger" size="sm" wire:click="deleteFromEditor">{{ __('Yes, delete') }}</flux:button>
+                            <flux:button size="sm" x-on:click="confirmDelete = false">{{ __('No') }}</flux:button>
+                        </div>
+                    </div>
+                @else
+                    <div></div>
+                @endif
+                <div class="flex gap-2">
+                    <flux:button x-on:click="syncToWire(); $wire.showEditorModal = false">{{ __('Cancel') }}</flux:button>
+                    <flux:button variant="primary" x-on:click="syncToWire()" wire:click="saveEditor">{{ __('Save') }}</flux:button>
+                </div>
             </div>
         </div>
     </flux:modal>

@@ -222,6 +222,33 @@ select:focus[data-flux-control] {
 .mood-dot-plain { background-color: var(--color-zinc-400); }
 .mood-dot-custom { background-color: var(--color-zinc-400); }
 
+/* ─── Desktop Grid & Guide Lines ─── */
+
+.desktop-grid-bg {
+    background-image:
+        linear-gradient(to right, var(--color-zinc-300) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--color-zinc-300) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.dark .desktop-grid-bg {
+    background-image:
+        linear-gradient(to right, var(--color-zinc-700) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--color-zinc-700) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.desktop-guide-line {
+    position: absolute;
+    background-color: #3b82f6;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.dark .desktop-guide-line {
+    background-color: #60a5fa;
+}
+
 /* ─── Tiptap Editor ─── */
 
 .tiptap-editor-content {

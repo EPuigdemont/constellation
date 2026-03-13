@@ -6,6 +6,23 @@
 
 import interact from 'interactjs';
 
+/** Grid cell size in pixels (used for snap and grid layout) */
+const GRID_SIZE = 40;
+
+/** Padding between cards in grid layout mode */
+const GRID_LAYOUT_GAP = 20;
+
+/** Card approximate dimensions for grid layout */
+const CARD_WIDTHS = { postit: 192, diary_entry: 256, note: 256, image: 224 };
+const CARD_HEIGHT_ESTIMATE = 120;
+
+/**
+ * Snap a value to the nearest grid line.
+ */
+function snapToGrid(value) {
+    return Math.round(value / GRID_SIZE) * GRID_SIZE;
+}
+
 /**
  * Build inner HTML for a card element from card data.
  * Mirrors the Blade component: resources/views/components/desktop/entity-card.blade.php
@@ -73,11 +90,129 @@ function escapeHtml(text) {
 }
 
 /**
- * Create a card DOM element and initialize it with Alpine + interact.js
+ * Get all card elements and their bounding info from the canvas.
+ */
+function getCardElements() {
+    const canvas = document.getElementById('desktop-canvas');
+    if (!canvas) return [];
+    return Array.from(canvas.querySelectorAll('[data-card-id]'));
+}
+
+/**
+ * Compute the bounding box of all cards on the canvas.
+ * Returns { minX, minY, maxX, maxY } in canvas coordinates.
+ */
+function getCardsBoundingBox() {
+    const cards = getCardElements();
+    if (cards.length === 0) return null;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    for (const el of cards) {
+        const x = parseFloat(el.style.left) || 0;
+        const y = parseFloat(el.style.top) || 0;
+        const w = el.offsetWidth || 200;
+        const h = el.offsetHeight || 100;
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + w);
+        maxY = Math.max(maxY, y + h);
+    }
+
+    return { minX, minY, maxX, maxY };
+}
+
+/**
+ * Show alignment guide lines while dragging.
+ */
+function showGuideLines(dragEl) {
+    const store = Alpine.store('desktop');
+    if (!store.showGuides) return;
+
+    const guidesContainer = document.getElementById('desktop-guides');
+    if (!guidesContainer) return;
+
+    guidesContainer.innerHTML = '';
+
+    const dragX = parseFloat(dragEl.style.left) || 0;
+    const dragY = parseFloat(dragEl.style.top) || 0;
+    const dragW = dragEl.offsetWidth || 200;
+    const dragH = dragEl.offsetHeight || 100;
+    const dragCX = dragX + dragW / 2;
+    const dragCY = dragY + dragH / 2;
+
+    const THRESHOLD = 8;
+    const cards = getCardElements();
+
+    for (const el of cards) {
+        if (el === dragEl) continue;
+
+        const x = parseFloat(el.style.left) || 0;
+        const y = parseFloat(el.style.top) || 0;
+        const w = el.offsetWidth || 200;
+        const h = el.offsetHeight || 100;
+        const cx = x + w / 2;
+        const cy = y + h / 2;
+
+        // Vertical center alignment
+        if (Math.abs(dragCX - cx) < THRESHOLD) {
+            guidesContainer.appendChild(createGuideLine('vertical', cx, Math.min(dragY, y), Math.max(dragY + dragH, y + h)));
+        }
+        // Left edge alignment
+        if (Math.abs(dragX - x) < THRESHOLD) {
+            guidesContainer.appendChild(createGuideLine('vertical', x, Math.min(dragY, y), Math.max(dragY + dragH, y + h)));
+        }
+        // Right edge alignment
+        if (Math.abs((dragX + dragW) - (x + w)) < THRESHOLD) {
+            guidesContainer.appendChild(createGuideLine('vertical', x + w, Math.min(dragY, y), Math.max(dragY + dragH, y + h)));
+        }
+        // Horizontal center alignment
+        if (Math.abs(dragCY - cy) < THRESHOLD) {
+            guidesContainer.appendChild(createGuideLine('horizontal', Math.min(dragX, x), cy, Math.max(dragX + dragW, x + w)));
+        }
+        // Top edge alignment
+        if (Math.abs(dragY - y) < THRESHOLD) {
+            guidesContainer.appendChild(createGuideLine('horizontal', Math.min(dragX, x), y, Math.max(dragX + dragW, x + w)));
+        }
+        // Bottom edge alignment
+        if (Math.abs((dragY + dragH) - (y + h)) < THRESHOLD) {
+            guidesContainer.appendChild(createGuideLine('horizontal', Math.min(dragX, x), y + h, Math.max(dragX + dragW, x + w)));
+        }
+    }
+}
+
+function createGuideLine(orientation, startOrX, startYOrY, end) {
+    const line = document.createElement('div');
+    line.className = 'desktop-guide-line';
+
+    if (orientation === 'vertical') {
+        line.style.left = startOrX + 'px';
+        line.style.top = startYOrY + 'px';
+        line.style.width = '1px';
+        line.style.height = (end - startYOrY) + 'px';
+    } else {
+        line.style.left = startOrX + 'px';
+        line.style.top = startYOrY + 'px';
+        line.style.width = (end - startOrX) + 'px';
+        line.style.height = '1px';
+    }
+
+    return line;
+}
+
+function clearGuideLines() {
+    const guidesContainer = document.getElementById('desktop-guides');
+    if (guidesContainer) guidesContainer.innerHTML = '';
+}
+
+/**
+ * Create a card DOM element and initialize it with interact.js
  */
 function createCardElement(card, wire) {
     const el = document.createElement('div');
     el.setAttribute('data-card-id', card.id);
+    el.setAttribute('data-card-type', card.type);
     el.style.position = 'absolute';
     el.style.left = card.x + 'px';
     el.style.top = card.y + 'px';
@@ -109,13 +244,31 @@ function createCardElement(card, wire) {
                 const zoom = Alpine.store('desktop').zoom || 1;
                 cardX += event.dx / zoom;
                 cardY += event.dy / zoom;
-                el.style.left = cardX + 'px';
-                el.style.top = cardY + 'px';
+
+                if (Alpine.store('desktop').snapToGrid) {
+                    el.style.left = snapToGrid(cardX) + 'px';
+                    el.style.top = snapToGrid(cardY) + 'px';
+                } else {
+                    el.style.left = cardX + 'px';
+                    el.style.top = cardY + 'px';
+                }
+
+                showGuideLines(el);
+
                 if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
                     hasDragged = true;
                 }
             },
             end: () => {
+                clearGuideLines();
+
+                if (Alpine.store('desktop').snapToGrid) {
+                    cardX = snapToGrid(cardX);
+                    cardY = snapToGrid(cardY);
+                    el.style.left = cardX + 'px';
+                    el.style.top = cardY + 'px';
+                }
+
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => {
                     wire.savePosition(card.id, card.type, Math.round(cardX), Math.round(cardY), cardZ);
@@ -160,12 +313,35 @@ function createCardElement(card, wire) {
 
 document.addEventListener('alpine:init', () => {
 
-    // Global store for cross-component zoom access
+    // Global store for cross-component state
     Alpine.store('desktop', {
         zoom: 1.0,
         scrollLeft: 0,
         scrollTop: 0,
+        showGrid: false,
+        showGuides: false,
+        snapToGrid: false,
     });
+
+    /**
+     * desktopToggles — toolbar toggle buttons for grid/guides/snap
+     */
+    Alpine.data('desktopToggles', () => ({
+        get showGrid() { return Alpine.store('desktop').showGrid; },
+        get showGuides() { return Alpine.store('desktop').showGuides; },
+        get snapToGrid() { return Alpine.store('desktop').snapToGrid; },
+
+        toggleGrid() {
+            Alpine.store('desktop').showGrid = !Alpine.store('desktop').showGrid;
+        },
+        toggleGuides() {
+            Alpine.store('desktop').showGuides = !Alpine.store('desktop').showGuides;
+            if (!Alpine.store('desktop').showGuides) clearGuideLines();
+        },
+        toggleSnap() {
+            Alpine.store('desktop').snapToGrid = !Alpine.store('desktop').snapToGrid;
+        },
+    }));
 
     /**
      * desktopCard — draggable entity card with interact.js
@@ -197,11 +373,26 @@ document.addEventListener('alpine:init', () => {
                         const zoom = Alpine.store('desktop').zoom || 1;
                         this.cardX += event.dx / zoom;
                         this.cardY += event.dy / zoom;
+
+                        if (Alpine.store('desktop').snapToGrid) {
+                            this.$el.style.left = snapToGrid(this.cardX) + 'px';
+                            this.$el.style.top = snapToGrid(this.cardY) + 'px';
+                        }
+
+                        showGuideLines(this.$el);
+
                         if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
                             this._hasDragged = true;
                         }
                     },
                     end: () => {
+                        clearGuideLines();
+
+                        if (Alpine.store('desktop').snapToGrid) {
+                            this.cardX = snapToGrid(this.cardX);
+                            this.cardY = snapToGrid(this.cardY);
+                        }
+
                         this._debouncedSave();
                     },
                 },
@@ -244,9 +435,12 @@ document.addEventListener('alpine:init', () => {
     }));
 
     /**
-     * desktopViewport — tracks scroll position for placing new entities at screen center
+     * desktopViewport — tracks scroll position + handles canvas events
      */
     Alpine.data('desktopViewport', () => ({
+        /** Stores original positions before grid layout to allow reverting */
+        _savedPositions: null,
+
         init() {
             this.updateScroll();
 
@@ -263,6 +457,65 @@ document.addEventListener('alpine:init', () => {
                 } else if (e.detail.mode === 'note') {
                     this.$wire.openNoteModal(centerX, centerY);
                 }
+            });
+
+            // Center canvas: compute bounding box of all cards, scroll viewport to center it
+            window.addEventListener('center-canvas', () => {
+                const bbox = getCardsBoundingBox();
+                if (!bbox) return;
+
+                const viewport = this.$el;
+                const zoom = Alpine.store('desktop').zoom || 1;
+
+                const contentCenterX = (bbox.minX + bbox.maxX) / 2;
+                const contentCenterY = (bbox.minY + bbox.maxY) / 2;
+
+                const scrollX = (contentCenterX * zoom) - (viewport.clientWidth / 2);
+                const scrollY = (contentCenterY * zoom) - (viewport.clientHeight / 2);
+
+                viewport.scrollTo({
+                    left: Math.max(0, scrollX),
+                    top: Math.max(0, scrollY),
+                    behavior: 'smooth',
+                });
+            });
+
+            // Zoom to fit: calculate optimal zoom to fit all cards in viewport
+            window.addEventListener('zoom-to-fit', () => {
+                const bbox = getCardsBoundingBox();
+                if (!bbox) return;
+
+                const viewport = this.$el;
+                const PADDING = 60;
+
+                const contentW = (bbox.maxX - bbox.minX) + PADDING * 2;
+                const contentH = (bbox.maxY - bbox.minY) + PADDING * 2;
+
+                const scaleX = viewport.clientWidth / contentW;
+                const scaleY = viewport.clientHeight / contentH;
+                let optimalZoom = Math.min(scaleX, scaleY);
+
+                // Clamp to valid zoom range
+                optimalZoom = Math.max(0.25, Math.min(2.0, Math.round(optimalZoom * 10) / 10));
+
+                // Apply zoom
+                Alpine.store('desktop').zoom = optimalZoom;
+                this.$wire.saveZoom(optimalZoom);
+
+                // Then center on content
+                setTimeout(() => {
+                    const contentCenterX = (bbox.minX + bbox.maxX) / 2;
+                    const contentCenterY = (bbox.minY + bbox.maxY) / 2;
+
+                    const scrollX = (contentCenterX * optimalZoom) - (viewport.clientWidth / 2);
+                    const scrollY = (contentCenterY * optimalZoom) - (viewport.clientHeight / 2);
+
+                    viewport.scrollTo({
+                        left: Math.max(0, scrollX),
+                        top: Math.max(0, scrollY),
+                        behavior: 'smooth',
+                    });
+                }, 50);
             });
 
             // Listen for card-created events to inject new cards into the wire:ignore canvas
@@ -305,7 +558,6 @@ document.addEventListener('alpine:init', () => {
                 const el = canvas.querySelector(`[data-card-id="${entityId}"]`);
                 if (!el) return;
 
-                // Read current card data from element, merge updates, rebuild HTML
                 const currentType = el.className.match(/card-type-(\S+)/)?.[1] || '';
                 const card = {
                     type: currentType,
@@ -316,10 +568,7 @@ document.addEventListener('alpine:init', () => {
                     updated_at: new Date().toISOString(),
                 };
 
-                // Update mood class
                 el.className = el.className.replace(/mood-\S+/, `mood-${card.mood}`);
-
-                // Rebuild inner HTML
                 el.innerHTML = buildCardInnerHTML(card);
             });
         },

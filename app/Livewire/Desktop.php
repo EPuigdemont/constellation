@@ -298,6 +298,22 @@ class Desktop extends Component
         $this->tagSearch = '';
     }
 
+    public function deleteFromEditor(): void
+    {
+        if ($this->editingEntityId === '') {
+            return;
+        }
+
+        $card = collect($this->cards)->firstWhere('id', $this->editingEntityId);
+        if (! $card) {
+            return;
+        }
+
+        $this->deleteEntity($this->editingEntityId, $card['type']);
+        $this->showEditorModal = false;
+        $this->resetEditor();
+    }
+
     public function deleteEntity(string $entityId, string $entityType): void
     {
         $model = $this->resolveEntity($entityId, $entityType);

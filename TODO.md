@@ -77,12 +77,12 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 4.5 — Virtual Desktop (Scratchboard) Improvements
 
-- [ ] Add a "show as grid" toggle for desktop view (entities snap to a grid layout)
-- [ ] Add a "show guide lines" toggle that shows alignment guides when dragging entities
-- [ ] Implement "snap to grid" option when dragging entities (configurable in settings)
-- [ ] Add a "center canvas" button that resets all entity positions to a centered layout
-- [ ] Add a "perfect canvas zoom" button that sets the zoom level to fit all entities within the viewport, calculating the optimal scale factor based on the bounding box of all entity positions
-- [ ] Add a "delete" button for entities when opening their edit modal, with confirmation prompt
+- [x] Add a "show as grid" toggle for desktop view (entities snap to a grid layout)
+- [x] Add a "show guide lines" toggle that shows alignment guides when dragging entities
+- [x] Implement "snap to grid" option when dragging entities (configurable in settings)
+- [x] Add a "center canvas" button that resets all entity positions to a centered layout
+- [x] Add a "perfect canvas zoom" button that sets the zoom level to fit all entities within the viewport, calculating the optimal scale factor based on the bounding box of all entity positions
+- [x] Add a "delete" button for entities when opening their edit modal, with confirmation prompt
 
 ---
 
