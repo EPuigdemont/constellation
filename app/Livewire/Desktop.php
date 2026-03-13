@@ -80,21 +80,29 @@ class Desktop extends Component
         $service->saveZoom(Auth::user(), $zoom);
     }
 
-    public function openDiaryModal(): void
+    public float $viewportCenterX = 2000.0;
+
+    public float $viewportCenterY = 2000.0;
+
+    public function openDiaryModal(float $centerX = 2000.0, float $centerY = 2000.0): void
     {
         $this->resetEditor();
         $this->editorMode = 'diary';
+        $this->viewportCenterX = $centerX;
+        $this->viewportCenterY = $centerY;
         $this->showEditorModal = true;
     }
 
-    public function openNoteModal(): void
+    public function openNoteModal(float $centerX = 2000.0, float $centerY = 2000.0): void
     {
         $this->resetEditor();
         $this->editorMode = 'note';
+        $this->viewportCenterX = $centerX;
+        $this->viewportCenterY = $centerY;
         $this->showEditorModal = true;
     }
 
-    public function createPostit(DesktopService $service): void
+    public function createPostit(DesktopService $service, float $centerX = 2000.0, float $centerY = 2000.0): void
     {
         $user = Auth::user();
 
@@ -105,7 +113,7 @@ class Desktop extends Component
             'is_public' => false,
         ]);
 
-        $position = $service->assignDefaultPosition($user, $postit->id, 'postit');
+        $position = $service->assignDefaultPosition($user, $postit->id, 'postit', $centerX, $centerY);
 
         $this->cards[] = [
             'id' => $postit->id,
@@ -119,6 +127,8 @@ class Desktop extends Component
             'y' => $position->y,
             'z_index' => $position->z_index,
             'owner_id' => $user->id,
+            'created_at' => $postit->created_at->toIso8601String(),
+            'updated_at' => $postit->updated_at->toIso8601String(),
         ];
 
         $this->maxZIndex = $position->z_index;
@@ -253,7 +263,7 @@ class Desktop extends Component
             $type = 'note';
         }
 
-        $position = $service->assignDefaultPosition($user, $entity->id, $type);
+        $position = $service->assignDefaultPosition($user, $entity->id, $type, $this->viewportCenterX, $this->viewportCenterY);
 
         $this->cards[] = [
             'id' => $entity->id,
@@ -267,6 +277,8 @@ class Desktop extends Component
             'y' => $position->y,
             'z_index' => $position->z_index,
             'owner_id' => $user->id,
+            'created_at' => $entity->created_at->toIso8601String(),
+            'updated_at' => $entity->updated_at->toIso8601String(),
         ];
 
         $this->maxZIndex = $position->z_index;

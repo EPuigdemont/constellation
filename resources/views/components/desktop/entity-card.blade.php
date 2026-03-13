@@ -1,8 +1,23 @@
 @props(['card'])
 
+@php
+    $createdAt = $card['created_at'] ? \Carbon\Carbon::parse($card['created_at']) : null;
+    $updatedAt = $card['updated_at'] ? \Carbon\Carbon::parse($card['updated_at']) : null;
+    $wasEdited = $createdAt && $updatedAt && !$createdAt->eq($updatedAt);
+    $shortDate = $updatedAt?->format('H:i d/m/y');
+    $tooltip = $wasEdited
+        ? __('Created') . ': ' . $createdAt->format('l, j F Y \a\t H:i:s') . "\n" . __('Last updated') . ': ' . $updatedAt->format('l, j F Y \a\t H:i:s')
+        : ($createdAt?->format('l, j F Y \a\t H:i:s') ?? '');
+@endphp
+
 <div class="desktop-card-inner">
     @if($card['type'] === 'diary_entry')
-        <span class="desktop-card-badge">{{ __('Diary') }}</span>
+        <div class="desktop-card-header">
+            <span class="desktop-card-badge">{{ __('Diary') }}</span>
+            @if($shortDate)
+                <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
+            @endif
+        </div>
         @if($card['title'])
             <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
         @endif
@@ -11,7 +26,12 @@
         @endif
 
     @elseif($card['type'] === 'note')
-        <span class="desktop-card-badge">{{ __('Note') }}</span>
+        <div class="desktop-card-header">
+            <span class="desktop-card-badge">{{ __('Note') }}</span>
+            @if($shortDate)
+                <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
+            @endif
+        </div>
         @if($card['title'])
             <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
         @endif
@@ -20,10 +40,20 @@
         @endif
 
     @elseif($card['type'] === 'postit')
+        @if($shortDate)
+            <div class="desktop-card-header">
+                <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
+            </div>
+        @endif
         <p class="desktop-card-preview">{{ $card['preview'] ?: __('Empty post-it') }}</p>
 
     @elseif($card['type'] === 'image')
-        <span class="desktop-card-badge">{{ __('Image') }}</span>
+        <div class="desktop-card-header">
+            <span class="desktop-card-badge">{{ __('Image') }}</span>
+            @if($shortDate)
+                <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
+            @endif
+        </div>
         <p class="desktop-card-preview">{{ $card['preview'] ?: __('No description') }}</p>
     @endif
 

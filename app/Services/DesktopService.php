@@ -84,22 +84,22 @@ class DesktopService
 
     /**
      * Assign a default staggered position for a new entity on the desktop.
+     * Places entity near the provided viewport center with a small random offset to avoid stacking.
      */
-    public function assignDefaultPosition(User $user, string $entityId, string $entityType): EntityPosition
+    public function assignDefaultPosition(User $user, string $entityId, string $entityType, float $centerX = 2000.0, float $centerY = 2000.0): EntityPosition
     {
-        $count = EntityPosition::where('user_id', $user->id)->count();
+        $offsetX = random_int(-80, 80);
+        $offsetY = random_int(-60, 60);
 
-        $centerX = 1800.0;
-        $centerY = 1800.0;
-        $offsetX = ($count % 5) * 220.0;
-        $offsetY = intdiv($count, 5) * 180.0;
+        $x = max(0.0, min(3800.0, $centerX + $offsetX));
+        $y = max(0.0, min(3800.0, $centerY + $offsetY));
 
         return EntityPosition::create([
             'user_id' => $user->id,
             'entity_id' => $entityId,
             'entity_type' => $entityType,
-            'x' => $centerX + $offsetX,
-            'y' => $centerY + $offsetY,
+            'x' => $x,
+            'y' => $y,
             'z_index' => $this->nextZIndex($user),
         ]);
     }
@@ -143,6 +143,8 @@ class DesktopService
             'y' => $position?->y ?? 0.0,
             'z_index' => $position?->z_index ?? 0,
             'owner_id' => $entity->user_id,
+            'created_at' => $entity->created_at?->toIso8601String(),
+            'updated_at' => $entity->updated_at?->toIso8601String(),
         ];
     }
 }

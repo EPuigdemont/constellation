@@ -11,6 +11,8 @@ document.addEventListener('alpine:init', () => {
     // Global store for cross-component zoom access
     Alpine.store('desktop', {
         zoom: 1.0,
+        scrollLeft: 0,
+        scrollTop: 0,
     });
 
     /**
@@ -22,7 +24,9 @@ document.addEventListener('alpine:init', () => {
         cardZ: card.z_index ?? 0,
         entityId: card.id,
         entityType: card.type,
+        isOwner: card.is_owner ?? false,
         _debounceTimer: null,
+        _hasDragged: false,
 
         initDrag() {
             interact(this.$el).draggable({
@@ -34,10 +38,16 @@ document.addEventListener('alpine:init', () => {
                     }),
                 ],
                 listeners: {
+                    start: () => {
+                        this._hasDragged = false;
+                    },
                     move: (event) => {
                         const zoom = Alpine.store('desktop').zoom || 1;
                         this.cardX += event.dx / zoom;
                         this.cardY += event.dy / zoom;
+                        if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
+                            this._hasDragged = true;
+                        }
                     },
                     end: () => {
                         this._debouncedSave();
@@ -52,6 +62,13 @@ document.addEventListener('alpine:init', () => {
                         this.cardZ = newZ;
                     }
                 });
+            });
+
+            // Double-click to edit
+            this.$el.addEventListener('dblclick', () => {
+                if (!this._hasDragged && this.isOwner) {
+                    this.$wire.openEditModal(this.entityId, this.entityType);
+                }
             });
         },
 
@@ -71,6 +88,35 @@ document.addEventListener('alpine:init', () => {
         destroy() {
             clearTimeout(this._debounceTimer);
             interact(this.$el).unset();
+        },
+    }));
+
+    /**
+     * desktopViewport — tracks scroll position for placing new entities at screen center
+     */
+    Alpine.data('desktopViewport', () => ({
+        init() {
+            this.updateScroll();
+
+            window.addEventListener('create-entity', (e) => {
+                const viewport = this.$el;
+                const zoom = Alpine.store('desktop').zoom || 1;
+                const centerX = Math.round((viewport.scrollLeft + viewport.clientWidth / 2) / zoom);
+                const centerY = Math.round((viewport.scrollTop + viewport.clientHeight / 2) / zoom);
+
+                if (e.detail.mode === 'postit') {
+                    this.$wire.createPostit(centerX, centerY);
+                } else if (e.detail.mode === 'diary') {
+                    this.$wire.openDiaryModal(centerX, centerY);
+                } else if (e.detail.mode === 'note') {
+                    this.$wire.openNoteModal(centerX, centerY);
+                }
+            });
+        },
+
+        updateScroll() {
+            Alpine.store('desktop').scrollLeft = this.$el.scrollLeft;
+            Alpine.store('desktop').scrollTop = this.$el.scrollTop;
         },
     }));
 

@@ -104,6 +104,15 @@ select:focus[data-flux-control] {
     @apply text-xs leading-relaxed opacity-75;
 }
 
+.desktop-card-header {
+    @apply flex items-center justify-between gap-2;
+}
+
+.desktop-card-date {
+    @apply ml-auto whitespace-nowrap text-[0.6rem] opacity-50;
+    cursor: default;
+}
+
 .desktop-card-public {
     @apply absolute right-0 top-0 opacity-50;
 }

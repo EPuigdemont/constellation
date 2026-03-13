@@ -1,13 +1,13 @@
 <div class="flex h-screen flex-col overflow-hidden">
     {{-- Toolbar --}}
     <div class="flex items-center gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:button size="sm" icon="plus" wire:click="openDiaryModal">
+        <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'diary' })">
             {{ __('Diary Entry') }}
         </flux:button>
-        <flux:button size="sm" icon="plus" wire:click="openNoteModal">
+        <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'note' })">
             {{ __('Note') }}
         </flux:button>
-        <flux:button size="sm" icon="plus" wire:click="createPostit">
+        <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'postit' })">
             {{ __('Post-it') }}
         </flux:button>
 
@@ -22,7 +22,10 @@
     </div>
 
     {{-- Canvas container --}}
-    <div class="relative flex-1 overflow-auto bg-zinc-100 dark:bg-zinc-800" id="desktop-viewport">
+    <div class="relative flex-1 overflow-auto bg-zinc-100 dark:bg-zinc-800"
+         id="desktop-viewport"
+         x-data="desktopViewport"
+         x-on:scroll="updateScroll()">
         <div wire:ignore
              x-data="{ get zoom() { return Alpine.store('desktop').zoom } }"
              :style="'transform: scale(' + zoom + '); transform-origin: 0 0; width: 4000px; height: 4000px;'"
@@ -32,7 +35,7 @@
 
             @foreach($cards as $index => $card)
                 <div wire:key="card-{{ $card['id'] }}"
-                     x-data="desktopCard({{ Js::from($card) }})"
+                     x-data="desktopCard({{ Js::from(array_merge($card, ['is_owner' => $card['owner_id'] === auth()->id()])) }})"
                      x-init="initDrag()"
                      :style="'position: absolute; left: ' + cardX + 'px; top: ' + cardY + 'px; z-index: ' + cardZ + ';'"
                      x-on:contextmenu.prevent.stop="$dispatch('desktop-context', {
