@@ -64,3 +64,151 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* ─── Desktop Card Base ─── */
+
+.desktop-card {
+    --card-bg: var(--color-zinc-50);
+    --card-border: var(--color-zinc-200);
+    --card-text: var(--color-zinc-800);
+    --card-badge-bg: var(--color-zinc-200);
+    --card-badge-text: var(--color-zinc-600);
+    @apply cursor-grab rounded-lg border bg-[var(--card-bg)] p-3 shadow-md transition-shadow hover:shadow-lg active:cursor-grabbing;
+    border-color: var(--card-border);
+    color: var(--card-text);
+}
+
+.dark .desktop-card {
+    --card-bg: var(--color-zinc-800);
+    --card-border: var(--color-zinc-600);
+    --card-text: var(--color-zinc-200);
+    --card-badge-bg: var(--color-zinc-700);
+    --card-badge-text: var(--color-zinc-300);
+}
+
+.desktop-card-inner {
+    @apply relative flex flex-col gap-1;
+}
+
+.desktop-card-badge {
+    @apply self-start rounded-full px-2 py-0.5 text-[0.625rem] font-semibold uppercase tracking-wide;
+    background: var(--card-badge-bg);
+    color: var(--card-badge-text);
+}
+
+.desktop-card-title {
+    @apply text-sm font-semibold leading-snug;
+}
+
+.desktop-card-preview {
+    @apply text-xs leading-relaxed opacity-75;
+}
+
+.desktop-card-public {
+    @apply absolute right-0 top-0 opacity-50;
+}
+
+/* ─── Card Type Sizing ─── */
+
+.card-type-postit {
+    @apply w-48;
+}
+
+.card-type-diary_entry,
+.card-type-note {
+    @apply w-64;
+}
+
+.card-type-image {
+    @apply w-56;
+}
+
+/* ─── Mood Variants ─── */
+
+.mood-summer {
+    --card-bg: #fff8e1;
+    --card-border: #ffe082;
+    --card-badge-bg: #ffe082;
+    --card-badge-text: #6d4c00;
+}
+
+.dark .mood-summer {
+    --card-bg: #3e2e00;
+    --card-border: #6d4c00;
+    --card-badge-bg: #6d4c00;
+    --card-badge-text: #ffe082;
+}
+
+.mood-love {
+    --card-bg: #fce4ec;
+    --card-border: #f48fb1;
+    --card-badge-bg: #f48fb1;
+    --card-badge-text: #6a1b2a;
+}
+
+.dark .mood-love {
+    --card-bg: #3b1020;
+    --card-border: #6a1b2a;
+    --card-badge-bg: #6a1b2a;
+    --card-badge-text: #f48fb1;
+}
+
+.mood-breeze {
+    --card-bg: #e0f7fa;
+    --card-border: #80deea;
+    --card-badge-bg: #80deea;
+    --card-badge-text: #004d57;
+}
+
+.dark .mood-breeze {
+    --card-bg: #002a30;
+    --card-border: #004d57;
+    --card-badge-bg: #004d57;
+    --card-badge-text: #80deea;
+}
+
+.mood-night {
+    --card-bg: #e8eaf6;
+    --card-border: #9fa8da;
+    --card-badge-bg: #9fa8da;
+    --card-badge-text: #1a237e;
+}
+
+.dark .mood-night {
+    --card-bg: #121836;
+    --card-border: #1a237e;
+    --card-badge-bg: #1a237e;
+    --card-badge-text: #9fa8da;
+}
+
+.mood-cozy {
+    --card-bg: #efebe9;
+    --card-border: #bcaaa4;
+    --card-badge-bg: #bcaaa4;
+    --card-badge-text: #3e2723;
+}
+
+.dark .mood-cozy {
+    --card-bg: #2a1e1a;
+    --card-border: #3e2723;
+    --card-badge-bg: #3e2723;
+    --card-badge-text: #bcaaa4;
+}
+
+.mood-plain {
+    /* Uses base card defaults */
+}
+
+.mood-custom {
+    /* Uses base card defaults — color_override handled inline */
+}
+
+/* ─── Mood Dots (context menu) ─── */
+
+.mood-dot-summer { background-color: #ffe082; }
+.mood-dot-love { background-color: #f48fb1; }
+.mood-dot-breeze { background-color: #80deea; }
+.mood-dot-night { background-color: #9fa8da; }
+.mood-dot-cozy { background-color: #bcaaa4; }
+.mood-dot-plain { background-color: var(--color-zinc-400); }
+.mood-dot-custom { background-color: var(--color-zinc-400); }

@@ -1,0 +1,171 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature\Services;
+
+use App\Enums\Mood;
+use App\Models\DiaryEntry;
+use App\Models\EntityPosition;
+use App\Models\Note;
+use App\Models\Postit;
+use App\Models\User;
+use App\Services\DesktopService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class DesktopServiceTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private DesktopService $service;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->service = new DesktopService();
+    }
+
+    public function test_load_cards_returns_user_entities_with_positions(): void
+    {
+        $user = User::factory()->create();
+        $diary = DiaryEntry::factory()->create(['user_id' => $user->id]);
+
+        EntityPosition::create([
+            'user_id' => $user->id,
+            'entity_id' => $diary->id,
+            'entity_type' => 'diary_entry',
+            'x' => 100.0,
+            'y' => 200.0,
+            'z_index' => 1,
+        ]);
+
+        $cards = $this->service->loadCards($user);
+
+        $this->assertNotEmpty($cards);
+
+        $diaryCard = collect($cards)->firstWhere('id', $diary->id);
+        $this->assertNotNull($diaryCard);
+        $this->assertEquals('diary_entry', $diaryCard['type']);
+        $this->assertEquals(100.0, $diaryCard['x']);
+        $this->assertEquals(200.0, $diaryCard['y']);
+        $this->assertEquals(1, $diaryCard['z_index']);
+    }
+
+    public function test_load_cards_includes_public_entities_from_other_users(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $publicNote = Note::factory()->create([
+            'user_id' => $other->id,
+            'is_public' => true,
+        ]);
+
+        $cards = $this->service->loadCards($user);
+
+        $found = collect($cards)->firstWhere('id', $publicNote->id);
+        $this->assertNotNull($found);
+        $this->assertTrue($found['is_public']);
+    }
+
+    public function test_load_cards_excludes_private_entities_from_other_users(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+
+        $privateNote = Note::factory()->create([
+            'user_id' => $other->id,
+            'is_public' => false,
+        ]);
+
+        $cards = $this->service->loadCards($user);
+
+        $found = collect($cards)->firstWhere('id', $privateNote->id);
+        $this->assertNull($found);
+    }
+
+    public function test_save_position_creates_entity_position(): void
+    {
+        $user = User::factory()->create();
+        $postit = Postit::factory()->create(['user_id' => $user->id]);
+
+        $this->service->savePosition($user, $postit->id, 'postit', 50.0, 75.0, 3);
+
+        $this->assertDatabaseHas('entity_positions', [
+            'user_id' => $user->id,
+            'entity_id' => $postit->id,
+            'entity_type' => 'postit',
+            'x' => 50.0,
+            'y' => 75.0,
+            'z_index' => 3,
+        ]);
+    }
+
+    public function test_save_position_updates_existing_position(): void
+    {
+        $user = User::factory()->create();
+        $postit = Postit::factory()->create(['user_id' => $user->id]);
+
+        $this->service->savePosition($user, $postit->id, 'postit', 50.0, 75.0, 1);
+        $this->service->savePosition($user, $postit->id, 'postit', 150.0, 275.0, 5);
+
+        $this->assertDatabaseCount('entity_positions', 1);
+        $this->assertDatabaseHas('entity_positions', [
+            'entity_id' => $postit->id,
+            'x' => 150.0,
+            'y' => 275.0,
+            'z_index' => 5,
+        ]);
+    }
+
+    public function test_next_z_index_returns_max_plus_one(): void
+    {
+        $user = User::factory()->create();
+        $diary = DiaryEntry::factory()->create(['user_id' => $user->id]);
+
+        EntityPosition::create([
+            'user_id' => $user->id,
+            'entity_id' => $diary->id,
+            'entity_type' => 'diary_entry',
+            'x' => 0,
+            'y' => 0,
+            'z_index' => 10,
+        ]);
+
+        $this->assertEquals(11, $this->service->nextZIndex($user));
+    }
+
+    public function test_next_z_index_returns_one_when_no_positions(): void
+    {
+        $user = User::factory()->create();
+
+        $this->assertEquals(1, $this->service->nextZIndex($user));
+    }
+
+    public function test_save_zoom_updates_user_record(): void
+    {
+        $user = User::factory()->create(['desktop_zoom' => 1.0]);
+
+        $this->service->saveZoom($user, 1.5);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'desktop_zoom' => 1.5,
+        ]);
+    }
+
+    public function test_assign_default_position_creates_staggered_position(): void
+    {
+        $user = User::factory()->create();
+        $diary = DiaryEntry::factory()->create(['user_id' => $user->id]);
+
+        $position = $this->service->assignDefaultPosition($user, $diary->id, 'diary_entry');
+
+        $this->assertInstanceOf(EntityPosition::class, $position);
+        $this->assertEquals($user->id, $position->user_id);
+        $this->assertEquals($diary->id, $position->entity_id);
+        $this->assertGreaterThan(0, $position->x);
+        $this->assertGreaterThan(0, $position->y);
+    }
+}
