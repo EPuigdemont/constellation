@@ -4,7 +4,7 @@
         @include('partials.head')
     </head>
     <body data-theme-scene class="min-h-screen bg-[var(--theme-bg,#fff)] dark:bg-[var(--theme-bg,theme(colors.zinc.800))] theme-{{ auth()->user()?->theme ?? 'summer' }}">
-        <flux:sidebar sticky collapsible class="border-e bg-[var(--theme-sidebar-bg,theme(colors.zinc.50))] border-[var(--theme-sidebar-border,theme(colors.zinc.200))] dark:border-[var(--theme-sidebar-border,theme(colors.zinc.700))] dark:bg-[var(--theme-sidebar-bg,theme(colors.zinc.900))]">
+        <flux:sidebar sticky collapsible class="z-[1] border-e bg-[var(--theme-sidebar-bg,theme(colors.zinc.50))] border-[var(--theme-sidebar-border,theme(colors.zinc.200))] dark:border-[var(--theme-sidebar-border,theme(colors.zinc.700))] dark:bg-[var(--theme-sidebar-bg,theme(colors.zinc.900))]">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('canvas') }}" wire:navigate />
                 <x-theme-icon />
@@ -12,7 +12,8 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
+                {{-- Expanded: full sidebar items with labels --}}
+                <flux:sidebar.group :heading="__('Platform')" class="grid in-data-flux-sidebar-collapsed-desktop:hidden">
                     <flux:sidebar.item icon="book-open" :href="route('diary')" :current="request()->routeIs('diary')" wire:navigate>
                         {{ __('Diary') }}
                     </flux:sidebar.item>
@@ -26,6 +27,34 @@
                         {{ __('Images') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                {{-- Collapsed: icon-only navigation with tooltips --}}
+                <div class="not-in-data-flux-sidebar-collapsed-desktop:hidden flex flex-col items-center gap-1 pt-2">
+                    <flux:tooltip :content="__('Diary')" position="right">
+                        <a href="{{ route('diary') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('diary'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('diary')])>
+                            <flux:icon name="book-open" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Canvas')" position="right">
+                        <a href="{{ route('canvas') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('canvas'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('canvas')])>
+                            <flux:icon name="squares-2x2" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Vision Board')" position="right">
+                        <a href="{{ route('vision-board') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('vision-board'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('vision-board')])>
+                            <flux:icon name="eye" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Images')" position="right">
+                        <a href="{{ route('images') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('images'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('images')])>
+                            <flux:icon name="photo" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                </div>
             </flux:sidebar.nav>
 
             <flux:spacer />
@@ -38,7 +67,7 @@
         </flux:sidebar>
 
         <!-- Mobile User Menu -->
-        <flux:header class="lg:hidden">
+        <flux:header class="lg:hidden z-[1]">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
@@ -108,7 +137,9 @@
         {{-- Theme particle overlay --}}
         <div data-theme-particles class="pointer-events-none fixed inset-0 z-0 opacity-30"></div>
 
-        {{ $slot }}
+        <div class="relative z-[1] flex-1">
+            {{ $slot }}
+        </div>
 
         @fluxScripts
     </body>

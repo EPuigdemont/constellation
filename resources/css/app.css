@@ -761,7 +761,7 @@ select:focus[data-flux-control] {
 
 /* ─── Theme Background Scene ─── */
 
-[data-theme-scene]::after {
+[data-theme-scene]::before {
     content: '';
     position: fixed;
     bottom: 0;
@@ -773,7 +773,7 @@ select:focus[data-flux-control] {
     background-repeat: no-repeat;
     background-position: bottom center;
     pointer-events: none;
-    z-index: -1;
+    z-index: 0;
     opacity: 0.7;
 }
 
