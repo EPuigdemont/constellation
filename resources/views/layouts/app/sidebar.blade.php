@@ -18,11 +18,11 @@
                     <flux:sidebar.item icon="book-open" :href="route('diary')" :current="request()->routeIs('diary')" wire:navigate>
                         {{ __('Diary') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="photo" :href="route('images')" :current="request()->routeIs('images')" wire:navigate>
-                        {{ __('Images') }}
-                    </flux:sidebar.item>
                     <flux:sidebar.item icon="eye" :href="route('vision-board')" :current="request()->routeIs('vision-board')" wire:navigate>
                         {{ __('Vision Board') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="photo" :href="route('images')" :current="request()->routeIs('images')" wire:navigate>
+                        {{ __('Images') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
