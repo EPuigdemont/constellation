@@ -117,6 +117,11 @@ Tasks sorted by implementation priority. Do not skip phases.
 - [ ] Theme switcher UI (accessible from settings or persistent toolbar)
 - [ ] Mood CSS classes: `mood-summer`, `mood-cozy`, `mood-love`, `mood-night`, `mood-plain`, `mood-custom`
 - [ ] Color override: custom hex input applied as inline CSS var on entity card
+- [ ] Add user avatar image upload in settings, displayed in header and login page (stored in `images` with a special tag or relationship to user)
+- [ ] Display user avatar in sidebar/header with a small mood indicator dot (colored according to current mood/theme)
+- [ ] Add subtle theme-based animations to entity cards (e.g. `love` theme has a gentle heartbeat animation, `breeze` has a slow floating animation)
+- [ ] Add a "welcome" page on first login with a cute welcome text
+- [ ] Add a cute "loading" page with a cute text (randomly selected from a defined list) on login
 
 ---
 
