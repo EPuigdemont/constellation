@@ -13,7 +13,7 @@ class AuthMiddlewareTest extends TestCase
 
     public function test_dashboard_redirects_guests_to_login(): void
     {
-        $response = $this->get(route('dashboard'));
+        $response = $this->get(route('canvas'));
 
         $response->assertRedirect(route('login'));
     }

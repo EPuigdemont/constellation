@@ -20,7 +20,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
-#[Title('Desktop')]
+#[Title('Canvas')]
 class Desktop extends Component
 {
     use WithFileUploads;
@@ -158,7 +158,7 @@ class Desktop extends Component
         $postit = Postit::create([
             'user_id' => $user->id,
             'body' => '',
-            'mood' => Mood::Plain,
+            'mood' => Mood::Summer,
             'is_public' => false,
         ]);
 
@@ -169,7 +169,7 @@ class Desktop extends Component
             'type' => 'postit',
             'title' => '',
             'preview' => '',
-            'mood' => 'plain',
+            'mood' => 'summer',
             'color_override' => null,
             'is_public' => false,
             'x' => $position->x,
@@ -225,6 +225,7 @@ class Desktop extends Component
             'width' => null,
             'height' => null,
             'tag_ids' => [],
+            'image_url' => route('images.serve', $image),
         ];
 
         $this->cards[] = $card;
@@ -238,6 +239,10 @@ class Desktop extends Component
     {
         $user = Auth::user();
         $mood = Mood::tryFrom($this->editorMood) ?? Mood::Plain;
+
+        if ($mood !== Mood::Custom) {
+            $this->editorColorOverride = null;
+        }
 
         if ($this->editingEntityId !== '') {
             $this->updateExistingEntity($user, $mood);
@@ -408,6 +413,22 @@ class Desktop extends Component
         );
 
         $this->dispatch('card-deleted', entityId: $entityId);
+    }
+
+    public function quickSavePostit(string $entityId, string $body): void
+    {
+        $model = $this->resolveEntity($entityId, 'postit');
+        if (! $model) {
+            return;
+        }
+
+        Gate::authorize('update', $model);
+
+        $model->update(['body' => $body]);
+
+        $this->updateCardInList($entityId, [
+            'preview' => \Illuminate\Support\Str::limit(strip_tags($body), 120),
+        ]);
     }
 
     public function changeMood(string $entityId, string $entityType, string $mood): void
@@ -649,6 +670,7 @@ class Desktop extends Component
             'width' => null,
             'height' => null,
             'tag_ids' => $this->editorTagIds,
+            'image_url' => null,
         ];
 
         $this->cards[] = $card;

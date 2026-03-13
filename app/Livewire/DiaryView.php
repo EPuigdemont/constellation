@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -20,6 +22,18 @@ class DiaryView extends Component
     public int $currentPage = 1;
 
     public int $entriesPerSpread = 2;
+
+    public string $editingEntryId = '';
+
+    public string $editTitle = '';
+
+    public string $editBody = '';
+
+    public bool $showNewEntryForm = false;
+
+    public string $newTitle = '';
+
+    public string $newBody = '';
 
     public function toggleDisplayMode(): void
     {
@@ -40,6 +54,77 @@ class DiaryView extends Component
         if ($this->currentPage > 1) {
             $this->currentPage--;
         }
+    }
+
+    public function startEditing(string $entryId): void
+    {
+        $entry = DiaryEntry::find($entryId);
+        if (! $entry) {
+            return;
+        }
+
+        Gate::authorize('update', $entry);
+
+        $this->editingEntryId = $entryId;
+        $this->editTitle = $entry->title ?? '';
+        $this->editBody = $entry->body ?? '';
+    }
+
+    public function cancelEditing(): void
+    {
+        $this->editingEntryId = '';
+        $this->editTitle = '';
+        $this->editBody = '';
+    }
+
+    public function saveEntry(): void
+    {
+        if ($this->editingEntryId === '') {
+            return;
+        }
+
+        $entry = DiaryEntry::find($this->editingEntryId);
+        if (! $entry) {
+            return;
+        }
+
+        Gate::authorize('update', $entry);
+
+        $entry->update([
+            'title' => $this->editTitle,
+            'body' => $this->editBody,
+        ]);
+
+        $this->cancelEditing();
+    }
+
+    public function openNewEntry(): void
+    {
+        $this->showNewEntryForm = true;
+        $this->newTitle = '';
+        $this->newBody = '';
+    }
+
+    public function cancelNewEntry(): void
+    {
+        $this->showNewEntryForm = false;
+        $this->newTitle = '';
+        $this->newBody = '';
+    }
+
+    public function createEntry(): void
+    {
+        $user = Auth::user();
+
+        DiaryEntry::create([
+            'user_id' => $user->id,
+            'title' => $this->newTitle,
+            'body' => $this->newBody,
+            'mood' => Mood::Plain,
+            'is_public' => false,
+        ]);
+
+        $this->cancelNewEntry();
     }
 
     public function render(): View

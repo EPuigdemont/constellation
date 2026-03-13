@@ -469,6 +469,25 @@ select:focus[data-flux-control] {
     height: 0;
 }
 
+/* ─── Post-it Inline Editing ─── */
+
+.postit-editable-text {
+    cursor: text;
+    outline: none;
+    min-height: 1.2em;
+}
+
+.postit-editable-text:focus {
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+}
+
+.dark .postit-editable-text:focus {
+    background: rgba(255, 255, 255, 0.05);
+}
+
 /* ─── Diary Notebook on Desktop ─── */
 
 .diary-notebook {

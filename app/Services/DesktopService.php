@@ -290,6 +290,8 @@ class DesktopService
             ? $entity->tags->pluck('id')->all()
             : [];
 
+        $imageUrl = $type === 'image' ? route('images.serve', $entity) : null;
+
         return [
             'id' => $entity->id,
             'type' => $type,
@@ -311,6 +313,7 @@ class DesktopService
             'children_count' => $relData['children_count'],
             'siblings_count' => $relData['siblings_count'],
             'tag_ids' => $tagIds,
+            'image_url' => $imageUrl,
         ];
     }
 }

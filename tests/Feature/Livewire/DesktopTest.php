@@ -33,7 +33,7 @@ class DesktopTest extends TestCase
 
     public function test_guest_gets_redirected(): void
     {
-        $this->get(route('dashboard'))
+        $this->get(route('canvas'))
             ->assertRedirect(route('login'));
     }
 

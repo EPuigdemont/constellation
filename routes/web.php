@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', Desktop::class)->name('dashboard');
+    Route::get('canvas', Desktop::class)->name('canvas');
     Route::get('diary', DiaryView::class)->name('diary');
     Route::get('images', ImagesGallery::class)->name('images');
 });

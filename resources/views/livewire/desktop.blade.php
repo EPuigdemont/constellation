@@ -1,18 +1,50 @@
 <div class="flex h-screen flex-col overflow-hidden">
     {{-- Toolbar --}}
     <div class="flex items-center gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'diary' })">
-            {{ __('Diary Entry') }}
-        </flux:button>
-        <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'note' })">
-            {{ __('Note') }}
-        </flux:button>
-        <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'postit' })">
-            {{ __('Post-it') }}
-        </flux:button>
-        <flux:button size="sm" icon="plus" x-on:click="$refs.standaloneImageInput.click()">
-            {{ __('Image') }}
-        </flux:button>
+        {{-- Full buttons (wide screens) --}}
+        <div class="hidden items-center gap-1 md:flex">
+            <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'diary' })">
+                {{ __('Diary Entry') }}
+            </flux:button>
+            <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'note' })">
+                {{ __('Note') }}
+            </flux:button>
+            <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'postit' })">
+                {{ __('Post-it') }}
+            </flux:button>
+            <flux:button size="sm" icon="plus" x-on:click="$refs.standaloneImageInput.click()">
+                {{ __('Image') }}
+            </flux:button>
+        </div>
+
+        {{-- Collapsed dropdown (narrow screens) --}}
+        <div class="relative md:hidden" x-data="{ createOpen: false }">
+            <flux:button size="sm" icon="plus" x-on:click="createOpen = !createOpen">
+                {{ __('New') }}
+            </flux:button>
+            <div x-show="createOpen"
+                 x-on:click.away="createOpen = false"
+                 x-cloak
+                 class="absolute left-0 z-50 mt-1 w-44 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'diary' }); createOpen = false"
+                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    {{ __('Diary Entry') }}
+                </button>
+                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'note' }); createOpen = false"
+                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    {{ __('Note') }}
+                </button>
+                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'postit' }); createOpen = false"
+                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    {{ __('Post-it') }}
+                </button>
+                <button type="button" x-on:click="$refs.standaloneImageInput.click(); createOpen = false"
+                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    {{ __('Image') }}
+                </button>
+            </div>
+        </div>
+
         <input type="file"
                x-ref="standaloneImageInput"
                accept="image/jpeg,image/png,image/gif,image/webp"
@@ -380,7 +412,7 @@
             </div>
 
             {{-- Metadata Row --}}
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 {{ $editorMood === 'custom' ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }}">
                 {{-- Mood --}}
                 <flux:field>
                     <flux:label>{{ __('Mood') }}</flux:label>
@@ -391,24 +423,26 @@
                     </flux:select>
                 </flux:field>
 
-                {{-- Color Override --}}
-                <flux:field>
-                    <flux:label>{{ __('Color') }}</flux:label>
-                    <div class="flex items-center gap-2">
-                        <input type="color"
-                               wire:model.live="editorColorOverride"
-                               class="h-9 w-12 cursor-pointer rounded border border-zinc-200 dark:border-zinc-700"
-                               title="{{ __('Custom color override') }}">
-                        @if($editorColorOverride)
-                            <button type="button"
-                                    wire:click="$set('editorColorOverride', null)"
-                                    class="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-                                    title="{{ __('Reset color') }}">
-                                {{ __('Reset') }}
-                            </button>
-                        @endif
-                    </div>
-                </flux:field>
+                {{-- Color Override (only shown when mood is "custom") --}}
+                @if($editorMood === 'custom')
+                    <flux:field>
+                        <flux:label>{{ __('Color') }}</flux:label>
+                        <div class="flex items-center gap-2">
+                            <input type="color"
+                                   wire:model.live="editorColorOverride"
+                                   class="h-9 w-12 cursor-pointer rounded border border-zinc-200 dark:border-zinc-700"
+                                   title="{{ __('Custom color override') }}">
+                            @if($editorColorOverride)
+                                <button type="button"
+                                        wire:click="$set('editorColorOverride', null)"
+                                        class="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                                        title="{{ __('Reset color') }}">
+                                    {{ __('Reset') }}
+                                </button>
+                            @endif
+                        </div>
+                    </flux:field>
+                @endif
 
                 {{-- Tags --}}
                 <flux:field>

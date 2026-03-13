@@ -45,7 +45,12 @@
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             </div>
         @endif
-        <p class="desktop-card-preview">{{ $card['preview'] ?: __('Empty post-it') }}</p>
+        <p class="desktop-card-preview postit-editable-text"
+           contenteditable="true"
+           x-on:blur="$wire.quickSavePostit('{{ $card['id'] }}', $event.target.innerText)"
+           x-on:keydown.enter.prevent="$event.target.blur()"
+           x-on:mousedown.stop
+           x-on:dblclick.stop>{{ $card['preview'] ?: __('Empty post-it') }}</p>
 
     @elseif($card['type'] === 'image')
         <div class="desktop-card-header">
@@ -54,7 +59,11 @@
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             @endif
         </div>
-        <p class="desktop-card-preview">{{ $card['preview'] ?: __('No description') }}</p>
+        @if(!empty($card['image_url']))
+            <img src="{{ $card['image_url'] }}" alt="{{ $card['preview'] ?: __('Image') }}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />
+        @else
+            <p class="desktop-card-preview">{{ $card['preview'] ?: __('No description') }}</p>
+        @endif
     @endif
 
     {{-- Relationship indicators --}}

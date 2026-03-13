@@ -57,7 +57,7 @@ function buildCardInnerHTML(card) {
         if (shortDate) {
             html += `<div class="desktop-card-header"><span class="desktop-card-date">${shortDate}</span></div>`;
         }
-        html += `<p class="desktop-card-preview">${escapeHtml(preview) || 'Empty post-it'}</p>`;
+        html += `<p class="desktop-card-preview postit-editable-text" contenteditable="true">${escapeHtml(preview) || 'Empty post-it'}</p>`;
     } else {
         const badge = badgeLabels[type] || type;
         html += `<div class="desktop-card-header"><span class="desktop-card-badge">${badge}</span>`;
@@ -65,11 +65,15 @@ function buildCardInnerHTML(card) {
             html += `<span class="desktop-card-date">${shortDate}</span>`;
         }
         html += '</div>';
-        if (title) {
-            html += `<h3 class="desktop-card-title">${escapeHtml(title)}</h3>`;
-        }
-        if (preview) {
-            html += `<p class="desktop-card-preview">${escapeHtml(preview)}</p>`;
+        if (type === 'image' && card.image_url) {
+            html += `<img src="${escapeHtml(card.image_url)}" alt="${escapeHtml(preview || 'Image')}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />`;
+        } else {
+            if (title) {
+                html += `<h3 class="desktop-card-title">${escapeHtml(title)}</h3>`;
+            }
+            if (preview) {
+                html += `<p class="desktop-card-preview">${escapeHtml(preview)}</p>`;
+            }
         }
     }
 
@@ -640,6 +644,29 @@ document.addEventListener('alpine:init', () => {
                 canvas.appendChild(el);
             });
 
+            // Post-it inline editing: save on blur via event delegation
+            const canvas = document.getElementById('desktop-canvas');
+            if (canvas) {
+                canvas.addEventListener('blur', (e) => {
+                    if (!e.target.classList.contains('postit-editable-text')) return;
+                    const cardEl = e.target.closest('[data-card-id]');
+                    if (!cardEl) return;
+                    const entityId = cardEl.getAttribute('data-card-id');
+                    const entityType = cardEl.getAttribute('data-card-type');
+                    if (entityType === 'postit' && entityId) {
+                        this.$wire.quickSavePostit(entityId, e.target.innerText);
+                    }
+                }, true);
+
+                canvas.addEventListener('keydown', (e) => {
+                    if (!e.target.classList.contains('postit-editable-text')) return;
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.target.blur();
+                    }
+                }, true);
+            }
+
             // Listen for card-deleted events to remove cards from the canvas
             Livewire.on('card-deleted', (data) => {
                 const entityId = data[0]?.entityId ?? data.entityId;
@@ -719,12 +746,26 @@ document.addEventListener('alpine:init', () => {
                 }
             });
 
-            // Make diary notebook draggable and resizable
+            // Make diary notebook draggable, resizable, and bring-to-front on click
             this.$nextTick(() => {
                 const notebook = document.querySelector('.diary-notebook');
                 if (notebook) {
                     let nbX = parseFloat(notebook.style.left) || 100;
                     let nbY = parseFloat(notebook.style.top) || 100;
+                    let nbZ = parseInt(notebook.style.zIndex) || 1;
+
+                    notebook.addEventListener('mousedown', () => {
+                        // Find max z-index among all elements on canvas
+                        const canvas = document.getElementById('desktop-canvas');
+                        if (!canvas) return;
+                        let maxZ = 0;
+                        canvas.querySelectorAll('[data-card-id], .diary-notebook').forEach(el => {
+                            const z = parseInt(el.style.zIndex) || 0;
+                            if (z > maxZ) maxZ = z;
+                        });
+                        nbZ = maxZ + 1;
+                        notebook.style.zIndex = nbZ;
+                    });
 
                     interact(notebook).draggable({
                         inertia: false,
