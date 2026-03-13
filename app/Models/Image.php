@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Models\Concerns\HasEntityDefaults;
+use Database\Factories\ImageFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+
+class Image extends Model
+{
+    /** @use HasFactory<ImageFactory> */
+    use HasEntityDefaults, HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'path',
+        'disk',
+        'alt',
+        'is_public',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_public' => 'boolean',
+        ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function tags(): MorphToMany
+    {
+        return $this->morphToMany(Tag::class, 'taggable');
+    }
+
+    public function positions(): MorphMany
+    {
+        return $this->morphMany(EntityPosition::class, 'entity');
+    }
+
+    public function relationshipsAsA(): MorphMany
+    {
+        return $this->morphMany(EntityRelationship::class, 'entity_a');
+    }
+
+    public function relationshipsAsB(): MorphMany
+    {
+        return $this->morphMany(EntityRelationship::class, 'entity_b');
+    }
+}

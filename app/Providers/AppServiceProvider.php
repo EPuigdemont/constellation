@@ -4,7 +4,15 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\DiaryEntry;
+use App\Models\EntityRelationship;
+use App\Models\Image;
+use App\Models\ImportantDate;
+use App\Models\Note;
+use App\Models\Postit;
+use App\Models\Tag;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -27,8 +35,14 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
-        // TODO Phase 1: Register morph map when entity models are created
-        // Relation::enforceMorphMap([...]);
+        Relation::enforceMorphMap([
+            'diary_entry' => DiaryEntry::class,
+            'note' => Note::class,
+            'postit' => Postit::class,
+            'image' => Image::class,
+            'tag' => Tag::class,
+            'important_date' => ImportantDate::class,
+        ]);
     }
 
     /**

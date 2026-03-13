@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(TagSeeder::class);
+
+
         User::firstOrCreate(
             ['email' => env('SEED_USER1_EMAIL', 'enric@example.com')],
             [
