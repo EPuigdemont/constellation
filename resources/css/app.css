@@ -767,7 +767,7 @@ select:focus[data-flux-control] {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 200px;
+    height: 45vh;
     background-image: var(--theme-scene, none);
     background-size: 100% 100%;
     background-repeat: no-repeat;
