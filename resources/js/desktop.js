@@ -1009,6 +1009,7 @@ document.addEventListener('alpine:init', () => {
         entityType: null,
         isOwner: false,
         isPublic: false,
+        isHidden: false,
         currentMood: 'plain',
         hasParent: false,
 
@@ -1026,6 +1027,7 @@ document.addEventListener('alpine:init', () => {
             this.entityType = detail.entityType ?? null;
             this.isOwner = detail.isOwner ?? false;
             this.isPublic = detail.isPublic ?? false;
+            this.isHidden = detail.isHidden ?? false;
             this.currentMood = detail.mood ?? 'plain';
             this.hasParent = detail.hasParent ?? false;
             this.open = true;
@@ -1059,6 +1061,18 @@ document.addEventListener('alpine:init', () => {
         togglePublic() {
             if (this.entityId && this.entityType) {
                 this.$wire.togglePublic(this.entityId, this.entityType);
+            }
+            this.close();
+        },
+
+        toggleHidden() {
+            if (this.entityId && this.entityType) {
+                this.$wire.toggleHidden(this.entityId, this.entityType);
+                // Toggle visual immediately
+                const el = document.querySelector(`[data-card-id="${this.entityId}"]`);
+                if (el) {
+                    el.classList.toggle('desktop-card-hidden');
+                }
             }
             this.close();
         },

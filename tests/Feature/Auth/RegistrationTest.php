@@ -34,7 +34,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $response->assertSessionHasNoErrors()
-            ->assertRedirect(route('canvas', absolute: false));
+            ->assertRedirect(route('diary', absolute: false));
 
         $this->assertAuthenticated();
     }

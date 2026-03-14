@@ -325,6 +325,7 @@ class DesktopService
             'siblings_count' => $relData['siblings_count'],
             'tag_ids' => $tagIds,
             'image_url' => $imageUrl,
+            'is_hidden' => (bool) ($position?->is_hidden ?? false),
         ];
     }
 }

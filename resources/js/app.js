@@ -129,7 +129,7 @@ function initDiaryGlitter(canvas) {
         canvas.height = parent.offsetHeight;
     }
 
-    function spawn() {
+    function spawn(initial) {
         const w = canvas.width;
         const h = canvas.height;
         const count = isHovered ? config.count * 2 : config.count;
@@ -137,7 +137,7 @@ function initDiaryGlitter(canvas) {
         while (particles.length < count) {
             particles.push({
                 x: Math.random() * w,
-                y: Math.random() * h * -0.5,
+                y: initial ? Math.random() * h : Math.random() * h * -0.3,
                 emoji: config.emoji[Math.floor(Math.random() * config.emoji.length)],
                 size: config.size[0] + Math.random() * (config.size[1] - config.size[0]),
                 speedY: config.speedY[0] + Math.random() * (config.speedY[1] - config.speedY[0]),
@@ -188,7 +188,7 @@ function initDiaryGlitter(canvas) {
     parent.addEventListener('mouseleave', () => { isHovered = false; });
 
     resize();
-    spawn();
+    spawn(true);
     draw();
 
     const ro = new ResizeObserver(() => resize());

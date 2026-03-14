@@ -601,6 +601,28 @@ class Canvas extends Component
         $this->dispatch('card-detached', entityId: $entityId, parentId: $parentId);
     }
 
+    public function toggleHidden(string $entityId, string $entityType): void
+    {
+        $user = Auth::user();
+
+        $position = \App\Models\EntityPosition::query()
+            ->where('user_id', $user->id)
+            ->where('entity_id', $entityId)
+            ->where('entity_type', $entityType)
+            ->where('context', 'desktop')
+            ->first();
+
+        if (! $position) {
+            return;
+        }
+
+        $position->update(['is_hidden' => ! $position->is_hidden]);
+
+        $this->updateCardInList($entityId, ['is_hidden' => $position->is_hidden]);
+
+        $this->dispatch('card-visibility-changed', entityId: $entityId, isHidden: $position->is_hidden);
+    }
+
     public function togglePublic(string $entityId, string $entityType): void
     {
         $model = $this->resolveEntity($entityId, $entityType);
@@ -613,6 +635,25 @@ class Canvas extends Component
         $model->update(['is_public' => ! $model->is_public]);
 
         $this->updateCardInList($entityId, ['is_public' => ! $model->is_public]);
+    }
+
+    /**
+     * @return array<int, array{id: string, image_url: string, title: string}>
+     */
+    public function getVisionBoardImages(): array
+    {
+        $user = Auth::user();
+
+        return \App\Models\Image::where('user_id', $user->id)
+            ->latest()
+            ->limit(20)
+            ->get()
+            ->map(fn (\App\Models\Image $img): array => [
+                'id' => $img->id,
+                'image_url' => route('images.serve', $img),
+                'title' => $img->title ?? $img->alt ?? '',
+            ])
+            ->all();
     }
 
     public function render(): \Illuminate\Contracts\View\View

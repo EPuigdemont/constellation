@@ -6,6 +6,7 @@ namespace App\Livewire;
 
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
+use App\Models\Tag;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -36,6 +37,19 @@ class DiaryView extends Component
     public string $newBody = '';
 
     public string $search = '';
+
+    /** @var array<int, string> */
+    public array $editTagIds = [];
+
+    public string $tagSearch = '';
+
+    /** @var array<int, array{id: string, name: string}> */
+    public array $availableTags = [];
+
+    /** @var array<int, string> */
+    public array $newTagIds = [];
+
+    public string $newTagSearch = '';
 
     public function mount(): void
     {
@@ -82,6 +96,8 @@ class DiaryView extends Component
         $this->editingEntryId = $entryId;
         $this->editTitle = $entry->title ?? '';
         $this->editBody = $entry->body ?? '';
+        $this->editTagIds = $entry->tags()->pluck('tags.id')->all();
+        $this->loadAvailableTags();
     }
 
     public function cancelEditing(): void
@@ -89,6 +105,9 @@ class DiaryView extends Component
         $this->editingEntryId = '';
         $this->editTitle = '';
         $this->editBody = '';
+        $this->editTagIds = [];
+        $this->tagSearch = '';
+        $this->availableTags = [];
     }
 
     public function saveEntry(): void
@@ -109,6 +128,8 @@ class DiaryView extends Component
             'body' => $this->editBody,
         ]);
 
+        $entry->tags()->sync($this->editTagIds);
+
         $this->cancelEditing();
     }
 
@@ -117,6 +138,9 @@ class DiaryView extends Component
         $this->showNewEntryForm = true;
         $this->newTitle = '';
         $this->newBody = '';
+        $this->newTagIds = [];
+        $this->newTagSearch = '';
+        $this->loadAvailableTags();
     }
 
     public function cancelNewEntry(): void
@@ -124,6 +148,66 @@ class DiaryView extends Component
         $this->showNewEntryForm = false;
         $this->newTitle = '';
         $this->newBody = '';
+        $this->newTagIds = [];
+        $this->newTagSearch = '';
+    }
+
+    public function toggleEditTag(string $tagId): void
+    {
+        if (in_array($tagId, $this->editTagIds, true)) {
+            $this->editTagIds = array_values(array_filter(
+                $this->editTagIds,
+                fn (string $id): bool => $id !== $tagId,
+            ));
+        } else {
+            $this->editTagIds[] = $tagId;
+        }
+    }
+
+    public function toggleNewTag(string $tagId): void
+    {
+        if (in_array($tagId, $this->newTagIds, true)) {
+            $this->newTagIds = array_values(array_filter(
+                $this->newTagIds,
+                fn (string $id): bool => $id !== $tagId,
+            ));
+        } else {
+            $this->newTagIds[] = $tagId;
+        }
+    }
+
+    public function createEditTagInline(string $name): void
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return;
+        }
+
+        $tag = Tag::create([
+            'name' => $name,
+            'user_id' => Auth::id(),
+        ]);
+
+        $this->availableTags[] = ['id' => $tag->id, 'name' => $tag->name];
+        $this->editTagIds[] = $tag->id;
+        $this->tagSearch = '';
+    }
+
+    public function createNewTagInline(string $name): void
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return;
+        }
+
+        $tag = Tag::create([
+            'name' => $name,
+            'user_id' => Auth::id(),
+        ]);
+
+        $this->availableTags[] = ['id' => $tag->id, 'name' => $tag->name];
+        $this->newTagIds[] = $tag->id;
+        $this->newTagSearch = '';
     }
 
     public function changeMood(string $entryId, string $mood): void
@@ -145,13 +229,17 @@ class DiaryView extends Component
     {
         $user = Auth::user();
 
-        DiaryEntry::create([
+        $entry = DiaryEntry::create([
             'user_id' => $user->id,
             'title' => $this->newTitle,
             'body' => $this->newBody,
             'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
             'is_public' => false,
         ]);
+
+        if (! empty($this->newTagIds)) {
+            $entry->tags()->sync($this->newTagIds);
+        }
 
         $this->cancelNewEntry();
     }
@@ -162,6 +250,7 @@ class DiaryView extends Component
 
         $query = DiaryEntry::query()
             ->where('user_id', $user->id)
+            ->with('tags')
             ->orderByDesc('created_at');
 
         if ($this->search !== '') {
@@ -210,5 +299,14 @@ class DiaryView extends Component
         $total = $query->count();
 
         return (int) max(1, ceil($total / $this->entriesPerSpread));
+    }
+
+    private function loadAvailableTags(): void
+    {
+        $this->availableTags = Tag::forUser(Auth::id())
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Tag $tag): array => ['id' => $tag->id, 'name' => $tag->name])
+            ->all();
     }
 }
