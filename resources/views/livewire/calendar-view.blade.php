@@ -1,4 +1,5 @@
-<div class="flex h-full flex-col gap-4 p-4 lg:p-6">
+<div class="page-glitter-wrapper flex h-full flex-col gap-4 p-4 lg:p-6">
+    <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
     {{-- Header: Month Navigation + Filters --}}
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">

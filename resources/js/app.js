@@ -216,6 +216,7 @@ function initAllDiaryGlitter() {
 
     // Init new canvases
     document.querySelectorAll('.diary-entry-glitter').forEach(initDiaryGlitter);
+    document.querySelectorAll('.page-glitter').forEach(initDiaryGlitter);
 }
 
 document.addEventListener('DOMContentLoaded', initAllDiaryGlitter);

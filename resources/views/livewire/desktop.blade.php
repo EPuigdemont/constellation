@@ -443,13 +443,21 @@
              ">
             <flux:heading size="lg">
                 <span x-text="$wire.editingEntityId ? '{{ __('Edit') }}' : '{{ __('New') }}'"></span>
-                <span x-text="$wire.editorMode === 'diary' ? '{{ __('Diary Entry') }}' : ($wire.editorMode === 'postit' ? '{{ __('Post-it') }}' : '{{ __('Note') }}')"></span>
+                <span x-text="$wire.editorMode === 'diary' ? '{{ __('Diary Entry') }}' : ($wire.editorMode === 'postit' ? '{{ __('Post-it') }}' : ($wire.editorMode === 'reminder' ? '{{ __('Reminder') }}' : '{{ __('Note') }}'))"></span>
             </flux:heading>
 
-            @if($editorMode === 'diary' || $editorMode === 'note')
+            @if($editorMode === 'diary' || $editorMode === 'note' || $editorMode === 'reminder')
                 <flux:field>
-                    <flux:label>{{ __('Title') }}</flux:label>
+                    <flux:label>{{ $editorMode === 'reminder' ? __('Reminder title') : __('Title') }}</flux:label>
                     <flux:input wire:model="editorTitle" placeholder="{{ __('Enter title...') }}" />
+                </flux:field>
+            @endif
+
+            @if($editorMode === 'reminder')
+                <flux:field>
+                    <flux:label>{{ __('Remind at') }}</flux:label>
+                    <input type="datetime-local" wire:model="editorRemindAt"
+                           class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-1.5 text-sm text-[var(--theme-text)] focus:border-[var(--theme-accent)] focus:outline-none" />
                 </flux:field>
             @endif
 

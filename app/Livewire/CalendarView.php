@@ -10,6 +10,7 @@ use App\Models\ImportantDate;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
+use App\Models\Tag;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -202,6 +203,7 @@ class CalendarView extends Component
             ? Reminder::where('user_id', $userId)
                 ->whereMonth('remind_at', $this->month)
                 ->whereYear('remind_at', $this->year)
+                ->when($this->filterTag !== '', fn ($q) => $q->whereHas('tags', fn ($tq) => $tq->where('tags.id', $this->filterTag)))
                 ->get()
             : collect();
 
@@ -211,7 +213,7 @@ class CalendarView extends Component
             ? $this->getEntitiesForDate($this->selectedDate, $diaryEntries, $notes, $postits, $importantDates, $reminders)
             : collect();
 
-        $userTags = Auth::user()->tags()->orderBy('name')->get();
+        $userTags = Tag::forUser(Auth::id())->orderBy('name')->get();
 
         return view('livewire.calendar-view', [
             'calendarDays' => $calendarDays,

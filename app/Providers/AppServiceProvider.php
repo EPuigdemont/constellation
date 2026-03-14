@@ -10,6 +10,7 @@ use App\Models\Image;
 use App\Models\ImportantDate;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Reminder;
 use App\Models\Tag;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -42,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
             'image' => Image::class,
             'tag' => Tag::class,
             'important_date' => ImportantDate::class,
+            'reminder' => Reminder::class,
         ]);
     }
 

@@ -58,7 +58,7 @@ class Tag extends Model
         return $query->whereNull('user_id');
     }
 
-    public function scopeForUser(Builder $query, int $userId): Builder
+    public function scopeForUser(Builder $query, string $userId): Builder
     {
         return $query->where('user_id', $userId)->orWhereNull('user_id');
     }

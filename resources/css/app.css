@@ -949,6 +949,22 @@ html:not(.dark) .theme-night {
     opacity: 1;
 }
 
+/* ─── Page-level Glitter Overlay ─── */
+
+.page-glitter-wrapper {
+    position: relative;
+}
+
+.page-glitter {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 75%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 75%, transparent 100%);
+}
+
 /* ─── Calendar View ─── */
 
 .calendar-grid {

@@ -29,11 +29,11 @@
                     <flux:sidebar.item icon="calendar-days" :href="route('calendar')" :current="request()->routeIs('calendar')" wire:navigate>
                         {{ __('Calendar') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="sparkles" :href="route('constellation')" :current="request()->routeIs('constellation')" wire:navigate>
-                        {{ __('Constellation') }}
-                    </flux:sidebar.item>
                     <flux:sidebar.item icon="bell" :href="route('reminders')" :current="request()->routeIs('reminders')" wire:navigate>
                         {{ __('Reminders') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="sparkles" :href="route('constellation')" :current="request()->routeIs('constellation')" wire:navigate>
+                        {{ __('Constellation') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
@@ -69,16 +69,16 @@
                             <flux:icon name="photo" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
-                    <flux:tooltip :content="__('Constellation')" position="right">
-                        <a href="{{ route('constellation') }}" wire:navigate
-                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('constellation'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('constellation')])>
-                            <flux:icon name="sparkles" variant="outline" class="size-5" />
-                        </a>
-                    </flux:tooltip>
                     <flux:tooltip :content="__('Reminders')" position="right">
                         <a href="{{ route('reminders') }}" wire:navigate
                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('reminders'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('reminders')])>
                             <flux:icon name="bell" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Constellation')" position="right">
+                        <a href="{{ route('constellation') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('constellation'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('constellation')])>
+                            <flux:icon name="sparkles" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
                 </div>

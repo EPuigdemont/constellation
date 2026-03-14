@@ -56,6 +56,8 @@ class Canvas extends Component
     /** @var array<int, string> */
     public array $editorTagIds = [];
 
+    public string $editorRemindAt = '';
+
     public string $tagSearch = '';
 
     /** @var array<int, array{id: string, name: string, color: string|null}> */
@@ -336,6 +338,9 @@ class Canvas extends Component
         $this->editorBody = $model->body ?? '';
         $this->editorMood = $model->mood?->value ?? 'plain';
         $this->editorColorOverride = $model->color_override ?? null;
+        $this->editorRemindAt = ($entityType === 'reminder' && $model->remind_at)
+            ? $model->remind_at->format('Y-m-d\TH:i')
+            : '';
         $this->loadTagsForEditor($model);
         $this->showEditorModal = true;
     }
@@ -376,8 +381,12 @@ class Canvas extends Component
         $mood = Mood::tryFrom($this->editorMood) ?? Mood::Plain;
         $data = ['body' => $this->editorBody, 'mood' => $mood, 'color_override' => $this->editorColorOverride];
 
-        if (in_array($card['type'], ['diary_entry', 'note'], true)) {
+        if (in_array($card['type'], ['diary_entry', 'note', 'reminder'], true)) {
             $data['title'] = $this->editorTitle;
+        }
+
+        if ($card['type'] === 'reminder' && $this->editorRemindAt !== '') {
+            $data['remind_at'] = $this->editorRemindAt;
         }
 
         $model->update($data);
@@ -714,6 +723,7 @@ class Canvas extends Component
         $this->editorColorOverride = null;
         $this->editorImage = null;
         $this->imageUpload = null;
+        $this->editorRemindAt = '';
         $this->editorTagIds = [];
         $this->tagSearch = '';
         $this->availableTags = [];
@@ -806,8 +816,12 @@ class Canvas extends Component
             'color_override' => $this->editorColorOverride,
         ];
 
-        if (in_array($card['type'], ['diary_entry', 'note'], true)) {
+        if (in_array($card['type'], ['diary_entry', 'note', 'reminder'], true)) {
             $data['title'] = $this->editorTitle;
+        }
+
+        if ($card['type'] === 'reminder' && $this->editorRemindAt !== '') {
+            $data['remind_at'] = $this->editorRemindAt;
         }
 
         $model->update($data);

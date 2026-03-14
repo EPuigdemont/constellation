@@ -1,6 +1,7 @@
-<div class="flex h-screen flex-col overflow-hidden">
+<div class="page-glitter-wrapper flex h-screen flex-col overflow-hidden">
+    <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
     {{-- Toolbar --}}
-    <div class="flex min-w-0 items-center gap-2 overflow-hidden border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
+    <div class="relative z-10 flex min-w-0 items-center gap-2 overflow-hidden border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
         <flux:button size="sm" icon="plus" x-on:click="$refs.vbImageInput.click()">
             {{ __('Upload Image') }}
         </flux:button>
