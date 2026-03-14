@@ -3,6 +3,7 @@
 use App\Http\Controllers\AvatarServeController;
 use App\Http\Controllers\ImageServeController;
 use App\Http\Controllers\ThemeController;
+use App\Livewire\CalendarView;
 use App\Livewire\Canvas;
 use App\Livewire\DiaryView;
 use App\Livewire\ImagesGallery;
@@ -23,6 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('diary', DiaryView::class)->name('diary');
     Route::get('images', ImagesGallery::class)->name('images');
     Route::get('vision-board', VisionBoard::class)->name('vision-board');
+    Route::get('calendar', CalendarView::class)->name('calendar');
 });
 
 Route::middleware(['auth'])->group(function () {

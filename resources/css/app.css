@@ -874,6 +874,87 @@ select:focus[data-flux-control] {
     opacity: 1;
 }
 
+/* ─── Calendar View ─── */
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-day {
+    min-height: 5rem;
+    cursor: pointer;
+    background: color-mix(in srgb, var(--theme-bg) 60%, transparent);
+}
+
+.calendar-day:hover {
+    background: color-mix(in srgb, var(--theme-bg-secondary) 80%, transparent);
+}
+
+.calendar-day--today {
+    background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
+}
+
+.calendar-day--selected {
+    background: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+}
+
+.calendar-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Mood-colored dots */
+.calendar-dot.mood-spring { background: #81c784; }
+.calendar-dot.mood-summer { background: #ffd54f; }
+.calendar-dot.mood-autumn { background: #ff8a65; }
+.calendar-dot.mood-winter { background: #90caf9; }
+.calendar-dot.mood-love { background: #f48fb1; }
+.calendar-dot.mood-breeze { background: #80deea; }
+.calendar-dot.mood-night { background: #9fa8da; }
+.calendar-dot.mood-cozy { background: #bcaaa4; }
+.calendar-dot.mood-plain { background: #bdbdbd; }
+.calendar-dot.mood-custom { background: #ce93d8; }
+
+/* Entity type badges in selected day panel */
+.mood-spring-badge { background: color-mix(in srgb, #81c784 20%, transparent); color: #2e7d32; }
+.mood-summer-badge { background: color-mix(in srgb, #ffd54f 20%, transparent); color: #f57f17; }
+.mood-autumn-badge { background: color-mix(in srgb, #ff8a65 20%, transparent); color: #bf360c; }
+.mood-winter-badge { background: color-mix(in srgb, #90caf9 20%, transparent); color: #1565c0; }
+.mood-love-badge { background: color-mix(in srgb, #f48fb1 20%, transparent); color: #c2185b; }
+.mood-breeze-badge { background: color-mix(in srgb, #80deea 20%, transparent); color: #00838f; }
+.mood-night-badge { background: color-mix(in srgb, #9fa8da 20%, transparent); color: #303f9f; }
+.mood-cozy-badge { background: color-mix(in srgb, #bcaaa4 20%, transparent); color: #5d4037; }
+.mood-plain-badge { background: color-mix(in srgb, #bdbdbd 20%, transparent); color: #616161; }
+.mood-custom-badge { background: color-mix(in srgb, #ce93d8 20%, transparent); color: #7b1fa2; }
+
+.dark .mood-spring-badge { color: #a5d6a7; }
+.dark .mood-summer-badge { color: #ffe082; }
+.dark .mood-autumn-badge { color: #ffab91; }
+.dark .mood-winter-badge { color: #bbdefb; }
+.dark .mood-love-badge { color: #f8bbd0; }
+.dark .mood-breeze-badge { color: #b2ebf2; }
+.dark .mood-night-badge { color: #c5cae9; }
+.dark .mood-cozy-badge { color: #d7ccc8; }
+.dark .mood-plain-badge { color: #e0e0e0; }
+.dark .mood-custom-badge { color: #e1bee7; }
+
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 3.5rem;
+        padding: 0.25rem;
+    }
+
+    .calendar-dot {
+        width: 5px;
+        height: 5px;
+    }
+}
+
 /* ─── Theme Card Animations ─── */
 
 @media (prefers-reduced-motion: no-preference) {
