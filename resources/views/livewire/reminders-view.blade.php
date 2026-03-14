@@ -36,15 +36,20 @@
                 <div class="flex flex-col gap-3">
                     <input type="text" wire:model="dateLabel" placeholder="{{ __('Label (e.g. Birthday, Anniversary)') }}"
                            class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-sm text-[var(--theme-text)] placeholder-[var(--theme-text-muted)] focus:border-[var(--theme-accent)] focus:outline-none" />
+                    @error('dateLabel') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                     <input type="date" wire:model="dateValue"
                            class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-sm text-[var(--theme-text)] focus:border-[var(--theme-accent)] focus:outline-none" />
+                    @error('dateValue') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                     <label class="flex items-center gap-2 text-sm text-[var(--theme-text)]">
                         <input type="checkbox" wire:model="dateRecurs" class="rounded border-[var(--theme-border)] accent-[var(--theme-accent)]" />
                         {{ __('Recurs annually') }}
                     </label>
                     <div class="flex justify-end gap-2">
                         <flux:button size="xs" variant="subtle" wire:click="closeDateForm">{{ __('Cancel') }}</flux:button>
-                        <flux:button size="xs" variant="primary" wire:click="saveDate">{{ __('Save') }}</flux:button>
+                        <flux:button size="xs" variant="primary" wire:click="saveDate" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="saveDate">{{ __('Save') }}</span>
+                            <span wire:loading wire:target="saveDate">…</span>
+                        </flux:button>
                     </div>
                 </div>
             </div>
@@ -85,7 +90,7 @@
                     </div>
                     <div class="flex items-center gap-1">
                         <flux:button size="xs" variant="subtle" icon="pencil" wire:click="openDateForm('{{ $date->id }}')" />
-                        <flux:button size="xs" variant="subtle" icon="trash" wire:click="deleteDate('{{ $date->id }}')" wire:confirm="{{ __('Delete this date?') }}" />
+                        <flux:button size="xs" variant="subtle" icon="trash" wire:click="deleteDate('{{ $date->id }}')" wire:confirm="{{ __('Delete this date?') }}" wire:loading.attr="disabled" />
                     </div>
                 </div>
             @empty
@@ -110,6 +115,7 @@
                 <div class="flex flex-col gap-3">
                     <input type="text" wire:model="reminderTitle" placeholder="{{ __('Reminder title') }}"
                            class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-sm text-[var(--theme-text)] placeholder-[var(--theme-text-muted)] focus:border-[var(--theme-accent)] focus:outline-none" />
+                    @error('reminderTitle') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                     <textarea wire:model="reminderBody" placeholder="{{ __('Details (optional)') }}" rows="2"
                               class="w-full resize-none rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-sm text-[var(--theme-text)] placeholder-[var(--theme-text-muted)] focus:border-[var(--theme-accent)] focus:outline-none"></textarea>
                     <div>
@@ -125,10 +131,14 @@
                         <label class="mb-1 block text-xs text-[var(--theme-text-muted)]">{{ __('Remind at') }}</label>
                         <input type="datetime-local" wire:model="reminderAt"
                                class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-sm text-[var(--theme-text)] focus:border-[var(--theme-accent)] focus:outline-none" />
+                        @error('reminderAt') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                     </div>
                     <div class="flex justify-end gap-2">
                         <flux:button size="xs" variant="subtle" wire:click="closeReminderForm">{{ __('Cancel') }}</flux:button>
-                        <flux:button size="xs" variant="primary" wire:click="saveReminder">{{ __('Save') }}</flux:button>
+                        <flux:button size="xs" variant="primary" wire:click="saveReminder" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="saveReminder">{{ __('Save') }}</span>
+                            <span wire:loading wire:target="saveReminder">…</span>
+                        </flux:button>
                     </div>
                 </div>
             </div>
@@ -175,7 +185,7 @@
                     </div>
                     <div class="flex items-center gap-1">
                         <flux:button size="xs" variant="subtle" icon="pencil" wire:click="openReminderForm('{{ $reminder->id }}')" />
-                        <flux:button size="xs" variant="subtle" icon="trash" wire:click="deleteReminder('{{ $reminder->id }}')" wire:confirm="{{ __('Delete this reminder?') }}" />
+                        <flux:button size="xs" variant="subtle" icon="trash" wire:click="deleteReminder('{{ $reminder->id }}')" wire:confirm="{{ __('Delete this reminder?') }}" wire:loading.attr="disabled" />
                     </div>
                 </div>
             @empty

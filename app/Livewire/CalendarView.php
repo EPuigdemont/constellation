@@ -178,6 +178,7 @@ class CalendarView extends Component
 
         $diaryEntries = $this->shouldShowType('diary')
             ? DiaryEntry::where('user_id', $userId)
+                ->with('tags')
                 ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                 ->when($this->filterTag !== '', fn ($q) => $q->whereHas('tags', fn ($tq) => $tq->where('tags.id', $this->filterTag)))
                 ->get()
@@ -185,6 +186,7 @@ class CalendarView extends Component
 
         $notes = $this->shouldShowType('note')
             ? Note::where('user_id', $userId)
+                ->with('tags')
                 ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                 ->when($this->filterTag !== '', fn ($q) => $q->whereHas('tags', fn ($tq) => $tq->where('tags.id', $this->filterTag)))
                 ->get()
@@ -192,6 +194,7 @@ class CalendarView extends Component
 
         $postits = $this->shouldShowType('postit')
             ? Postit::where('user_id', $userId)
+                ->with('tags')
                 ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
                 ->when($this->filterTag !== '', fn ($q) => $q->whereHas('tags', fn ($tq) => $tq->where('tags.id', $this->filterTag)))
                 ->get()
@@ -201,6 +204,7 @@ class CalendarView extends Component
 
         $reminders = $this->shouldShowType('all') || $this->filterType === 'reminder'
             ? Reminder::where('user_id', $userId)
+                ->with('tags')
                 ->whereMonth('remind_at', $this->month)
                 ->whereYear('remind_at', $this->year)
                 ->when($this->filterTag !== '', fn ($q) => $q->whereHas('tags', fn ($tq) => $tq->where('tags.id', $this->filterTag)))

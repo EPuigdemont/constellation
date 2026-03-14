@@ -215,8 +215,21 @@
         <flux:button size="sm" variant="ghost" wire:click="cancelLinking">{{ __('Cancel') }}</flux:button>
     </div>
 
+    {{-- Empty state for first-time users --}}
+    @if(count($cards) === 0)
+        <div class="flex flex-1 flex-col items-center justify-center gap-4 p-8">
+            <div class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--theme-accent)]/10">
+                <flux:icon name="sparkles" variant="outline" class="size-8 text-[var(--theme-accent)]" />
+            </div>
+            <div class="text-center">
+                <h2 class="text-lg font-semibold text-[var(--theme-text)]">{{ __('Canvas — your creative workspace') }}</h2>
+                <p class="mt-1 text-sm text-[var(--theme-text-muted)]">{{ __('Create your first entry using the buttons above.') }}</p>
+            </div>
+        </div>
+    @endif
+
     {{-- Canvas container --}}
-    <div class="relative flex-1 overflow-auto"
+    <div class="relative flex-1 overflow-auto {{ count($cards) === 0 ? 'hidden' : '' }}"
          id="desktop-viewport"
          x-data="desktopViewport"
          x-on:scroll="updateScroll()">

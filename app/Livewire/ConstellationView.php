@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Models\Tag;
 use App\Services\ConstellationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -66,7 +67,7 @@ class ConstellationView extends Component
 
     public function render(): View
     {
-        $userTags = Auth::user()->tags()->orderBy('name')->get();
+        $userTags = Tag::forUser(Auth::id())->orderBy('name')->get();
         $graphData = $this->getGraphData();
 
         return view('livewire.constellation-view', [

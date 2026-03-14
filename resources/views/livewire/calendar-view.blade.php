@@ -163,19 +163,22 @@
                                wire:model="createTitle"
                                placeholder="{{ __('Title') }}"
                                class="mb-2 w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-1.5 text-sm text-[var(--theme-text)] placeholder-[var(--theme-text-muted)] focus:border-[var(--theme-accent)] focus:outline-none" />
+                        @error('createTitle') <span class="mb-2 block text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                     @endif
 
                     <textarea wire:model="createBody"
                               placeholder="{{ __('Write something...') }}"
                               rows="3"
                               class="mb-2 w-full resize-none rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-1.5 text-sm text-[var(--theme-text)] placeholder-[var(--theme-text-muted)] focus:border-[var(--theme-accent)] focus:outline-none"></textarea>
+                    @error('createBody') <span class="mb-2 block text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
 
                     <div class="flex items-center justify-end gap-2">
                         <flux:button size="xs" variant="subtle" wire:click="closeCreateForm">
                             {{ __('Cancel') }}
                         </flux:button>
-                        <flux:button size="xs" variant="primary" wire:click="saveNewEntity">
-                            {{ __('Save') }}
+                        <flux:button size="xs" variant="primary" wire:click="saveNewEntity" wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="saveNewEntity">{{ __('Save') }}</span>
+                            <span wire:loading wire:target="saveNewEntity">…</span>
                         </flux:button>
                     </div>
                 </div>

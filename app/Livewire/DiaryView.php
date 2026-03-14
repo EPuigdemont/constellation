@@ -92,7 +92,7 @@ class DiaryView extends Component
 
     public function startEditing(string $entryId): void
     {
-        $entry = DiaryEntry::find($entryId);
+        $entry = DiaryEntry::with('tags')->find($entryId);
         if (! $entry) {
             return;
         }
@@ -102,7 +102,7 @@ class DiaryView extends Component
         $this->editingEntryId = $entryId;
         $this->editTitle = $entry->title ?? '';
         $this->editBody = $entry->body ?? '';
-        $this->editTagIds = $entry->tags()->pluck('tags.id')->all();
+        $this->editTagIds = $entry->tags->pluck('id')->all();
         $this->loadAvailableTags();
     }
 

@@ -2,8 +2,9 @@
     <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
     {{-- Toolbar --}}
     <div class="relative z-10 flex min-w-0 items-center gap-2 overflow-hidden border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
-        <flux:button size="sm" icon="plus" x-on:click="$refs.vbImageInput.click()">
-            {{ __('Upload Image') }}
+        <flux:button size="sm" icon="plus" x-on:click="$refs.vbImageInput.click()" wire:loading.attr="disabled" wire:target="imageUpload">
+            <span wire:loading.remove wire:target="imageUpload">{{ __('Upload Image') }}</span>
+            <span wire:loading wire:target="imageUpload">{{ __('Uploading...') }}</span>
         </flux:button>
         <flux:button size="sm" icon="arrow-down-tray" x-on:click="$dispatch('vb-export')">
             {{ __('Export PNG') }}
@@ -299,7 +300,10 @@
                 {{-- Actions --}}
                 <div class="flex justify-end gap-2">
                     <flux:button size="sm" wire:click="$set('showEditorModal', false)">{{ __('Cancel') }}</flux:button>
-                    <flux:button size="sm" variant="primary" wire:click="saveEditor">{{ __('Save') }}</flux:button>
+                    <flux:button size="sm" variant="primary" wire:click="saveEditor" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="saveEditor">{{ __('Save') }}</span>
+                        <span wire:loading wire:target="saveEditor">…</span>
+                    </flux:button>
                 </div>
             </div>
         </div>

@@ -42,9 +42,8 @@ class DesktopService
             'reminder' => Reminder::class,
         ];
 
-        // Pre-load all relationships for efficient lookups
-        $relationships = EntityRelationship::all();
-
+        // Collect all entities first
+        $allEntities = [];
         foreach ($entityTypes as $morphType => $modelClass) {
             $query = $modelClass::query()
                 ->where('user_id', $user->id)
@@ -59,15 +58,33 @@ class DesktopService
             $entities = $query->get();
 
             foreach ($entities as $entity) {
-                $position = EntityPosition::query()
-                    ->where('user_id', $user->id)
-                    ->where('entity_id', $entity->id)
-                    ->where('entity_type', $morphType)
-                    ->where('context', $context)
-                    ->first();
-
-                $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
+                $allEntities[] = ['entity' => $entity, 'morphType' => $morphType];
             }
+        }
+
+        // Batch load all positions for this user+context instead of N+1 queries
+        $entityIds = array_map(fn ($item) => $item['entity']->id, $allEntities);
+        $positions = EntityPosition::query()
+            ->where('user_id', $user->id)
+            ->where('context', $context)
+            ->whereIn('entity_id', $entityIds)
+            ->get()
+            ->keyBy(fn ($pos) => $pos->entity_id . ':' . $pos->entity_type);
+
+        // Load only relationships involving the collected entity IDs
+        $relationships = EntityRelationship::query()
+            ->where(function ($q) use ($entityIds) {
+                $q->whereIn('entity_a_id', $entityIds)
+                  ->orWhereIn('entity_b_id', $entityIds);
+            })
+            ->get();
+
+        foreach ($allEntities as $item) {
+            $entity = $item['entity'];
+            $morphType = $item['morphType'];
+            $position = $positions->get($entity->id . ':' . $morphType);
+
+            $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
         }
 
         return $cards;

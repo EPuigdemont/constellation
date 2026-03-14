@@ -8,13 +8,13 @@
          x-on:mousemove.window="parallax($event)"></div>
 
     {{-- Top filter bar --}}
-    <div class="relative z-10 flex flex-wrap items-center gap-2 px-4 py-3"
+    <div class="relative z-10 flex flex-wrap items-center gap-2 overflow-x-auto px-4 py-3 max-md:gap-1 max-md:px-2 max-md:py-2"
          style="background: color-mix(in srgb, var(--theme-bg) 60%, transparent); backdrop-filter: blur(12px);">
-        <h1 class="mr-2 text-lg font-semibold text-[var(--theme-text)]">
+        <h1 class="mr-2 shrink-0 text-lg font-semibold text-[var(--theme-text)] max-md:mr-1 max-md:text-sm">
             {{ __('Constellation') }}
         </h1>
 
-        <flux:select wire:model.live="filterType" size="sm" class="w-28">
+        <flux:select wire:model.live="filterType" size="sm" class="w-28 max-md:w-20">
             <option value="all">{{ __('All') }}</option>
             <option value="diary">{{ __('Diary') }}</option>
             <option value="note">{{ __('Notes') }}</option>
@@ -23,30 +23,30 @@
             <option value="reminder">{{ __('Reminders') }}</option>
         </flux:select>
 
-        <flux:select wire:model.live="filterTag" size="sm" class="w-32">
+        <flux:select wire:model.live="filterTag" size="sm" class="w-32 max-md:w-24">
             <option value="">{{ __('All tags') }}</option>
             @foreach ($userTags as $tag)
                 <option value="{{ $tag->id }}">{{ $tag->name }}</option>
             @endforeach
         </flux:select>
 
-        <flux:select wire:model.live="filterMonth" size="sm" class="w-28">
+        <flux:select wire:model.live="filterMonth" size="sm" class="w-28 max-md:hidden">
             <option value="">{{ __('Month') }}</option>
             @for ($m = 1; $m <= 12; $m++)
                 <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
             @endfor
         </flux:select>
 
-        <flux:select wire:model.live="filterWeekday" size="sm" class="w-28">
+        <flux:select wire:model.live="filterWeekday" size="sm" class="w-28 max-md:hidden">
             <option value="">{{ __('Weekday') }}</option>
             @foreach (['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] as $i => $day)
                 <option value="{{ $i + 1 }}">{{ __($day) }}</option>
             @endforeach
         </flux:select>
 
-        <input type="date" wire:model.live="filterDateFrom" class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-2 py-1 text-xs text-[var(--theme-text)]" />
-        <span class="text-xs text-[var(--theme-text-muted)]">{{ __('to') }}</span>
-        <input type="date" wire:model.live="filterDateTo" class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-2 py-1 text-xs text-[var(--theme-text)]" />
+        <input type="date" wire:model.live="filterDateFrom" class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-2 py-1 text-xs text-[var(--theme-text)] max-md:hidden" />
+        <span class="text-xs text-[var(--theme-text-muted)] max-md:hidden">{{ __('to') }}</span>
+        <input type="date" wire:model.live="filterDateTo" class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-2 py-1 text-xs text-[var(--theme-text)] max-md:hidden" />
     </div>
 
     {{-- D3 SVG container --}}
@@ -93,7 +93,7 @@
     </div>
 
     {{-- Legend --}}
-    <div class="absolute bottom-4 left-4 z-20 rounded-lg border border-[var(--theme-border)] px-3 py-2 text-xs"
+    <div class="absolute bottom-4 left-4 z-20 rounded-lg border border-[var(--theme-border)] px-3 py-2 text-xs max-md:hidden"
          style="background: color-mix(in srgb, var(--theme-bg) 85%, transparent); backdrop-filter: blur(12px);">
         <div class="mb-1 font-medium text-[var(--theme-text)]">{{ __('Edges') }}</div>
         <div class="flex flex-col gap-0.5 text-[var(--theme-text-muted)]">

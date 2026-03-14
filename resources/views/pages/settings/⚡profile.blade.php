@@ -134,7 +134,7 @@ new #[Title('Profile settings')] class extends Component {
                            wire:model="avatar"
                            accept="image/jpeg,image/png,image/webp"
                            class="text-sm text-zinc-500 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200 dark:text-zinc-400 dark:file:bg-zinc-700 dark:file:text-zinc-300" />
-                    @error('avatar') <span class="mt-1 text-sm text-red-500">{{ $message }}</span> @enderror
+                    @error('avatar') <span class="mt-1 text-sm text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                 </div>
 
                 <div class="flex gap-2">
@@ -161,12 +161,19 @@ new #[Title('Profile settings')] class extends Component {
     {{-- Profile Information --}}
     <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name, username, and email address')" :show-nav="false">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+            <div>
+                <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+                @error('name') <span class="mt-1 text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+            </div>
 
-            <flux:input wire:model="username" :label="__('Username')" type="text" required autocomplete="username" placeholder="your-username" />
+            <div>
+                <flux:input wire:model="username" :label="__('Username')" type="text" required autocomplete="username" placeholder="your-username" />
+                @error('username') <span class="mt-1 text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+            </div>
 
             <div>
                 <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+                @error('email') <span class="mt-1 text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
 
                 @if ($this->hasUnverifiedEmail)
                     <div>

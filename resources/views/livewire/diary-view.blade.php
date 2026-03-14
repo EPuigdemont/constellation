@@ -55,7 +55,9 @@
         <div class="border-b border-zinc-200 bg-white px-2 py-2 dark:border-zinc-700 dark:bg-zinc-900">
             <div class="mx-auto max-w-3xl space-y-3">
                 <flux:input wire:model="newTitle" placeholder="{{ __('Title...') }}" />
+                @error('newTitle') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                 <flux:textarea wire:model="newBody" placeholder="{{ __('Write your diary entry...') }}" rows="4" />
+                @error('newBody') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
 
                 {{-- Tags --}}
                 <div x-data="{ newTagDropdownOpen: false }" class="relative">
@@ -104,7 +106,10 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <flux:button size="sm" variant="primary" wire:click="createEntry">{{ __('Save') }}</flux:button>
+                    <flux:button size="sm" variant="primary" wire:click="createEntry" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="createEntry">{{ __('Save') }}</span>
+                        <span wire:loading wire:target="createEntry">…</span>
+                    </flux:button>
                     <flux:button size="sm" wire:click="cancelNewEntry">{{ __('Cancel') }}</flux:button>
                 </div>
             </div>
@@ -146,10 +151,15 @@
                         @if($editingEntryId === $entry->id)
                             <div class="relative z-[3] flex flex-1 flex-col gap-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
+                                @error('editTitle') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                                 <flux:textarea wire:model="editBody" placeholder="{{ __('Write...') }}" class="flex-1" rows="10" />
+                                @error('editBody') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                                 @include('livewire.partials.diary-tag-editor', ['tagIds' => $editTagIds, 'searchProp' => 'tagSearch', 'toggleMethod' => 'toggleEditTag', 'createMethod' => 'createEditTagInline'])
                                 <div class="flex items-center gap-2">
-                                    <flux:button size="sm" variant="primary" wire:click="saveEntry">{{ __('Save') }}</flux:button>
+                                    <flux:button size="sm" variant="primary" wire:click="saveEntry" wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="saveEntry">{{ __('Save') }}</span>
+                                        <span wire:loading wire:target="saveEntry">…</span>
+                                    </flux:button>
                                     <flux:button size="sm" wire:click="cancelEditing">{{ __('Cancel') }}</flux:button>
                                 </div>
                             </div>
@@ -224,10 +234,15 @@
                         @if($editingEntryId === $entry->id)
                             <div class="relative z-[3] space-y-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
+                                @error('editTitle') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                                 <flux:textarea wire:model="editBody" placeholder="{{ __('Write...') }}" rows="6" />
+                                @error('editBody') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                                 @include('livewire.partials.diary-tag-editor', ['tagIds' => $editTagIds, 'searchProp' => 'tagSearch', 'toggleMethod' => 'toggleEditTag', 'createMethod' => 'createEditTagInline'])
                                 <div class="flex items-center gap-2">
-                                    <flux:button size="sm" variant="primary" wire:click="saveEntry">{{ __('Save') }}</flux:button>
+                                    <flux:button size="sm" variant="primary" wire:click="saveEntry" wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="saveEntry">{{ __('Save') }}</span>
+                                        <span wire:loading wire:target="saveEntry">…</span>
+                                    </flux:button>
                                     <flux:button size="sm" wire:click="cancelEditing">{{ __('Cancel') }}</flux:button>
                                 </div>
                             </div>
