@@ -16,7 +16,20 @@ function createParticle(width, height) {
         baseOpacity: Math.random() * 0.4 + 0.2,
         twinkleSpeed: Math.random() * 0.005 + 0.002,
         phase: Math.random() * Math.PI * 2,
+        fourPoint: Math.random() < 0.3, // ~30% of stars get 4-point sparkle
     };
+}
+
+function drawFourPointStar(ctx, x, y, outerRadius, innerRadius) {
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI) / 2 - Math.PI / 2;
+        const midAngle = angle + Math.PI / 4;
+        ctx.lineTo(x + Math.cos(angle) * outerRadius, y + Math.sin(angle) * outerRadius);
+        ctx.lineTo(x + Math.cos(midAngle) * innerRadius, y + Math.sin(midAngle) * innerRadius);
+    }
+    ctx.closePath();
+    ctx.fill();
 }
 
 function animate(ctx, width, height, time) {
@@ -26,10 +39,15 @@ function animate(ctx, width, height, time) {
         const opacity = p.baseOpacity + Math.sin(time * p.twinkleSpeed + p.phase) * 0.3;
         if (opacity <= 0) continue;
 
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(159, 168, 218, ${Math.max(0, opacity)})`;
-        ctx.fill();
+        if (p.fourPoint) {
+            const pulse = 1 + Math.sin(time * p.twinkleSpeed * 1.5 + p.phase) * 0.3;
+            drawFourPointStar(ctx, p.x, p.y, p.size * 3 * pulse, p.size * 0.7);
+        } else {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
     animationFrame = requestAnimationFrame((t) => animate(ctx, width, height, t));
