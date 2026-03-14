@@ -39,6 +39,12 @@
                             <flux:icon name="book-open" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
+                    <flux:tooltip :content="__('Calendar')" position="right">
+                        <a href="{{ route('calendar') }}" wire:navigate
+                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('calendar'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('calendar')])>
+                            <flux:icon name="calendar-days" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
                     <flux:tooltip :content="__('Canvas')" position="right">
                         <a href="{{ route('canvas') }}" wire:navigate
                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('canvas'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('canvas')])>
@@ -55,12 +61,6 @@
                         <a href="{{ route('images') }}" wire:navigate
                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('images'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('images')])>
                             <flux:icon name="photo" variant="outline" class="size-5" />
-                        </a>
-                    </flux:tooltip>
-                    <flux:tooltip :content="__('Calendar')" position="right">
-                        <a href="{{ route('calendar') }}" wire:navigate
-                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('calendar'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('calendar')])>
-                            <flux:icon name="calendar-days" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
                 </div>
