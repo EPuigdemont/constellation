@@ -30,6 +30,28 @@ class CalendarView extends Component
 
     public string $filterTag = '';
 
+    /** Modal state for viewing full entity */
+    public bool $showEntityModal = false;
+
+    public string $modalEntityType = '';
+
+    public string $modalEntityTitle = '';
+
+    public string $modalEntityBody = '';
+
+    public string $modalEntityMood = '';
+
+    public string $modalEntityTime = '';
+
+    /** Quick-create state */
+    public bool $showCreateForm = false;
+
+    public string $createType = 'diary';
+
+    public string $createTitle = '';
+
+    public string $createBody = '';
+
     public function mount(): void
     {
         $this->year = (int) now()->year;
@@ -62,6 +84,80 @@ class CalendarView extends Component
     public function selectDate(string $date): void
     {
         $this->selectedDate = $this->selectedDate === $date ? '' : $date;
+        $this->closeCreateForm();
+    }
+
+    public function openEntityModal(string $type, string $id): void
+    {
+        $userId = Auth::id();
+        $entity = match ($type) {
+            'diary' => DiaryEntry::where('user_id', $userId)->find($id),
+            'note' => Note::where('user_id', $userId)->find($id),
+            'postit' => Postit::where('user_id', $userId)->find($id),
+            default => null,
+        };
+
+        if (! $entity) {
+            return;
+        }
+
+        $this->modalEntityType = $type;
+        $this->modalEntityTitle = $type === 'postit' ? 'Post-it' : ($entity->title ?: 'Untitled');
+        $this->modalEntityBody = $entity->body ?? '';
+        $this->modalEntityMood = $entity->mood?->value ?? 'summer';
+        $this->modalEntityTime = $entity->created_at->format('H:i');
+        $this->showEntityModal = true;
+    }
+
+    public function closeEntityModal(): void
+    {
+        $this->showEntityModal = false;
+    }
+
+    public function openCreateForm(string $type = 'diary'): void
+    {
+        $this->createType = $type;
+        $this->createTitle = '';
+        $this->createBody = '';
+        $this->showCreateForm = true;
+    }
+
+    public function closeCreateForm(): void
+    {
+        $this->showCreateForm = false;
+        $this->createTitle = '';
+        $this->createBody = '';
+    }
+
+    public function saveNewEntity(): void
+    {
+        $user = Auth::user();
+        $mood = Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer;
+
+        match ($this->createType) {
+            'diary' => DiaryEntry::create([
+                'user_id' => $user->id,
+                'title' => $this->createTitle ?: 'Untitled',
+                'body' => $this->createBody,
+                'mood' => $mood,
+                'is_public' => false,
+            ]),
+            'note' => Note::create([
+                'user_id' => $user->id,
+                'title' => $this->createTitle ?: 'Untitled',
+                'body' => $this->createBody,
+                'mood' => $mood,
+                'is_public' => false,
+            ]),
+            'postit' => Postit::create([
+                'user_id' => $user->id,
+                'body' => $this->createBody,
+                'mood' => $mood,
+                'is_public' => false,
+            ]),
+        };
+
+        $this->closeCreateForm();
     }
 
     public function render(): View
@@ -182,7 +278,7 @@ class CalendarView extends Component
                 'id' => $e->id,
                 'title' => $e->title ?: 'Untitled',
                 'mood' => $e->mood?->value ?? 'summer',
-                'preview' => str($e->body ?? '')->limit(80)->toString(),
+                'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
 
@@ -192,7 +288,7 @@ class CalendarView extends Component
                 'id' => $e->id,
                 'title' => $e->title ?: 'Untitled',
                 'mood' => $e->mood?->value ?? 'summer',
-                'preview' => str($e->body ?? '')->limit(80)->toString(),
+                'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
 
@@ -202,7 +298,7 @@ class CalendarView extends Component
                 'id' => $e->id,
                 'title' => 'Post-it',
                 'mood' => $e->mood?->value ?? 'summer',
-                'preview' => str($e->body ?? '')->limit(80)->toString(),
+                'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
 
