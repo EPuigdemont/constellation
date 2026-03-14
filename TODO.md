@@ -157,9 +157,9 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 8.5 — Calendar View
 
-- [ ] Calendar view: monthly calendar grid showing days with entries/notes/post-its as dots
-- [ ] Click day → list of entries/notes/post-its for that day, with
-- [ ] Filter by month, year, tag, entity type
+- [x] Calendar view: monthly calendar grid showing days with entries/notes/post-its as dots
+- [x] Click day → list of entries/notes/post-its for that day, with
+- [x] Filter by month, year, tag, entity type
 
 ---
 
