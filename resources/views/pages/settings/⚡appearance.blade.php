@@ -7,10 +7,12 @@ use Livewire\Component;
 
 new #[Title('Appearance settings')] class extends Component {
     public string $theme = 'summer';
+    public string $language = 'en';
 
     public function mount(): void
     {
         $this->theme = Auth::user()->theme ?? 'summer';
+        $this->language = Auth::user()->language ?? 'en';
     }
 
     public function updateTheme(string $value): void
@@ -26,6 +28,20 @@ new #[Title('Appearance settings')] class extends Component {
 
         $this->theme = $theme->value;
         $this->dispatch('theme-updated', theme: $theme->value);
+    }
+
+    public function updateLanguage(string $value): void
+    {
+        if (! in_array($value, ['en', 'es'])) {
+            return;
+        }
+
+        $user = Auth::user();
+        $user->language = $value;
+        $user->save();
+
+        $this->language = $value;
+        app()->setLocale($value);
     }
 }; ?>
 
@@ -72,5 +88,13 @@ new #[Title('Appearance settings')] class extends Component {
                 </button>
             @endforeach
         </div>
+    </x-pages::settings.layout>
+
+    <x-pages::settings.layout :heading="__('Language')" :subheading="__('Choose your preferred language')" :show-nav="false">
+        <flux:radio.group variant="segmented" wire:model.live="language" wire:change="updateLanguage($event.target.value)">
+            <flux:radio value="en">English</flux:radio>
+            <flux:radio value="es">Español</flux:radio>
+        </flux:radio.group>
+        <p class="mt-2 text-xs text-[var(--theme-text-muted)]">{{ __('Changes apply immediately after page reload.') }}</p>
     </x-pages::settings.layout>
 </section>

@@ -29,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'theme',
+        'language',
         'avatar_path',
         'avatar_disk',
         'desktop_zoom',
