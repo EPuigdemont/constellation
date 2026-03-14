@@ -30,6 +30,26 @@
         </flux:button>
     </div>
 
+    {{-- Uplifting entry suggestion (sad entry detection) --}}
+    @if ($upliftTitle)
+        <div class="border-b border-[var(--theme-accent)]/20 px-4 py-3"
+             style="background: color-mix(in srgb, var(--theme-accent) 8%, var(--theme-bg));">
+            <div class="mx-auto flex max-w-3xl items-start gap-3">
+                <span class="mt-0.5 text-lg">💛</span>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-[var(--theme-text)]">
+                        {{ __('Remember this moment?') }}
+                    </p>
+                    <p class="text-sm font-semibold text-[var(--theme-accent)]">{{ $upliftTitle }}</p>
+                    <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">{{ $upliftPreview }}</p>
+                </div>
+                <button wire:click="dismissUplift" class="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]">
+                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+    @endif
+
     {{-- New Entry Form --}}
     @if($showNewEntryForm)
         <div class="border-b border-zinc-200 bg-white px-2 py-2 dark:border-zinc-700 dark:bg-zinc-900">

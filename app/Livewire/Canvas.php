@@ -8,6 +8,7 @@ use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Reminder;
 use App\Models\Tag;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
@@ -172,6 +173,49 @@ class Canvas extends Component
             'owner_id' => $user->id,
             'created_at' => $postit->created_at->toIso8601String(),
             'updated_at' => $postit->updated_at->toIso8601String(),
+            'parent_id' => null,
+            'parent_type' => null,
+            'children_count' => 0,
+            'siblings_count' => 0,
+            'width' => null,
+            'height' => null,
+            'tag_ids' => [],
+        ];
+
+        $this->cards[] = $card;
+        $this->maxZIndex = $position->z_index;
+
+        $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
+    }
+
+    public function createReminder(DesktopService $service, float $centerX = 2000.0, float $centerY = 2000.0): void
+    {
+        $user = Auth::user();
+
+        $reminder = Reminder::create([
+            'user_id' => $user->id,
+            'title' => '',
+            'body' => '',
+            'remind_at' => now()->addDay(),
+            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+        ]);
+
+        $position = $service->assignDefaultPosition($user, $reminder->id, 'reminder', $centerX, $centerY);
+
+        $card = [
+            'id' => $reminder->id,
+            'type' => 'reminder',
+            'title' => '',
+            'preview' => '',
+            'mood' => $reminder->mood?->value ?? 'summer',
+            'color_override' => null,
+            'is_public' => false,
+            'x' => $position->x,
+            'y' => $position->y,
+            'z_index' => $position->z_index,
+            'owner_id' => $user->id,
+            'created_at' => $reminder->created_at->toIso8601String(),
+            'updated_at' => $reminder->updated_at->toIso8601String(),
             'parent_id' => null,
             'parent_type' => null,
             'children_count' => 0,

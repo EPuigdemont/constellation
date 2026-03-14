@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\Tag;
+use App\Services\ReminderService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -37,6 +38,11 @@ class DiaryView extends Component
     public string $newBody = '';
 
     public string $search = '';
+
+    /** Uplifting entry suggestion after a "sad" entry */
+    public ?string $upliftTitle = null;
+
+    public ?string $upliftPreview = null;
 
     /** @var array<int, string> */
     public array $editTagIds = [];
@@ -130,6 +136,7 @@ class DiaryView extends Component
 
         $entry->tags()->sync($this->editTagIds);
 
+        $this->checkForSadEntry($entry);
         $this->cancelEditing();
     }
 
@@ -241,7 +248,35 @@ class DiaryView extends Component
             $entry->tags()->sync($this->newTagIds);
         }
 
+        $this->checkForSadEntry($entry);
         $this->cancelNewEntry();
+    }
+
+    private function checkForSadEntry(DiaryEntry $entry): void
+    {
+        $sadTagNames = ['sad', 'anxious'];
+        $hasSadTag = $entry->tags()->whereIn('name', $sadTagNames)->exists();
+
+        if (! $hasSadTag) {
+            $this->upliftTitle = null;
+            $this->upliftPreview = null;
+
+            return;
+        }
+
+        $service = new ReminderService();
+        $uplift = $service->findUpliftingEntry(Auth::user());
+
+        if ($uplift && $uplift->id !== $entry->id) {
+            $this->upliftTitle = $uplift->title ?: 'Untitled';
+            $this->upliftPreview = str(strip_tags($uplift->body ?? ''))->limit(150)->toString();
+        }
+    }
+
+    public function dismissUplift(): void
+    {
+        $this->upliftTitle = null;
+        $this->upliftPreview = null;
     }
 
     public function render(): View

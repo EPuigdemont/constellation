@@ -20,6 +20,7 @@
             <option value="note">{{ __('Notes') }}</option>
             <option value="postit">{{ __('Post-its') }}</option>
             <option value="image">{{ __('Images') }}</option>
+            <option value="reminder">{{ __('Reminders') }}</option>
         </flux:select>
 
         <flux:select wire:model.live="filterTag" size="sm" class="w-32">

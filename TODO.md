@@ -186,16 +186,16 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 10 — Reminders & Emotional Features
+## Phase 10 — Reminders & Emotional Features ✅
 
-- [ ] Important dates CRUD (anniversaries, birthdays, custom)
-- [ ] Allow user to input their birthday, name day and other special days in the important dates section, with an option to make them recurring annually
-- [ ] Show birthday, name day, special days, etc in the calendar view with a special icon
-- [ ] Add a "Reminders" entity type that can be created in the Canvas, diary and calendar views, with a date field. When the date is reached, show it as an important date and also show a notification on the desktop view
-- [ ] Show reminders in the calendar view with a special icon, and allow filtering by reminders in the constellation view
-- [ ] Daily check: Laravel scheduler (`php artisan schedule:run`) checks for today's important dates
-- [ ] In-app notification/banner shown on login if a date matches today
-- [ ] "Sad entry" detection: if entry is tagged `sad` on save, query for a past entry tagged `happy`/`grateful` from ~1 week, 1 month, or 1 year ago and surface it as a gentle reminder
+- [x] Important dates CRUD (anniversaries, birthdays, custom)
+- [x] Allow user to input their birthday, name day and other special days in the important dates section, with an option to make them recurring annually
+- [x] Show birthday, name day, special days, etc in the calendar view with a special icon (★ for dates, 🔔 for reminders)
+- [x] Add a "Reminders" entity type that can be created in the Canvas, diary and calendar views, with a date field. When the date is reached, show it as an important date and also show a notification on the desktop view
+- [x] Show reminders in the calendar view with a special icon, and allow filtering by reminders in the constellation view
+- [x] Daily check: Laravel scheduler (`php artisan schedule:run`) checks for today's important dates (`reminders:check` command at 08:00)
+- [x] In-app notification/banner shown on login if a date matches today (dismissible banner via session flash)
+- [x] "Sad entry" detection: if entry is tagged `sad` on save, query for a past entry tagged `happy`/`grateful` from ~1 week, 1 month, or 1 year ago and surface it as a gentle reminder
 
 ---
 

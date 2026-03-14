@@ -32,6 +32,9 @@
                     <flux:sidebar.item icon="sparkles" :href="route('constellation')" :current="request()->routeIs('constellation')" wire:navigate>
                         {{ __('Constellation') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="bell" :href="route('reminders')" :current="request()->routeIs('reminders')" wire:navigate>
+                        {{ __('Reminders') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 {{-- Collapsed: icon-only navigation with tooltips --}}
@@ -70,6 +73,12 @@
                         <a href="{{ route('constellation') }}" wire:navigate
                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('constellation'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('constellation')])>
                             <flux:icon name="sparkles" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Reminders')" position="right">
+                        <a href="{{ route('reminders') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('reminders'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('reminders')])>
+                            <flux:icon name="bell" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
                 </div>
@@ -154,6 +163,32 @@
 
         {{-- Theme particle overlay --}}
         <div data-theme-particles class="pointer-events-none fixed inset-0 z-0 opacity-30"></div>
+
+        {{-- Today's notifications banner --}}
+        @if (session('today_notifications'))
+            <div x-data="{ show: true }" x-show="show" x-transition
+                 class="relative z-20 border-b border-[var(--theme-accent)]/20 px-4 py-2"
+                 style="background: color-mix(in srgb, var(--theme-accent) 10%, var(--theme-bg));">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-[var(--theme-text)]">
+                        <flux:icon name="bell-alert" variant="solid" class="size-4 text-[var(--theme-accent)]" />
+                        @foreach (session('today_notifications') as $n)
+                            <span class="inline-flex items-center gap-1 rounded-full border border-[var(--theme-accent)]/20 px-2 py-0.5 text-xs">
+                                @if ($n['type'] === 'important_date')
+                                    <span>★</span>
+                                @else
+                                    <span>🔔</span>
+                                @endif
+                                {{ $n['title'] }}
+                            </span>
+                        @endforeach
+                    </div>
+                    <button x-on:click="show = false" class="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]">
+                        <flux:icon name="x-mark" variant="outline" class="size-4" />
+                    </button>
+                </div>
+            </div>
+        @endif
 
         {{ $slot }}
 

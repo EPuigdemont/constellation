@@ -19,6 +19,7 @@
                 <option value="diary">{{ __('Diary') }}</option>
                 <option value="note">{{ __('Notes') }}</option>
                 <option value="postit">{{ __('Post-its') }}</option>
+                <option value="reminder">{{ __('Reminders') }}</option>
             </flux:select>
 
             {{-- Tag filter --}}
@@ -68,10 +69,16 @@
                     @if ($cell['entities']->isNotEmpty())
                         <div class="flex flex-wrap gap-0.5">
                             @foreach ($cell['entities']->take(6) as $entity)
-                                <span
-                                    class="calendar-dot mood-{{ $entity['mood'] }}"
-                                    title="{{ ucfirst($entity['type']) }}: {{ $entity['title'] }}"
-                                ></span>
+                                @if ($entity['type'] === 'important_date')
+                                    <span class="calendar-dot-star" title="{{ $entity['title'] }}">★</span>
+                                @elseif ($entity['type'] === 'reminder')
+                                    <span class="calendar-dot-bell" title="{{ $entity['title'] }}">🔔</span>
+                                @else
+                                    <span
+                                        class="calendar-dot mood-{{ $entity['mood'] }}"
+                                        title="{{ ucfirst($entity['type']) }}: {{ $entity['title'] }}"
+                                    ></span>
+                                @endif
                             @endforeach
                             @if ($cell['entities']->count() > 6)
                                 <span class="text-[0.6rem] leading-none text-[var(--theme-text-muted)]">
@@ -127,6 +134,13 @@
                                 <flux:icon name="clipboard" variant="outline" class="size-4" />
                                 {{ __('Post-it') }}
                             </button>
+                            <button type="button"
+                                    wire:click="openCreateForm('reminder')"
+                                    x-on:click="open = false"
+                                    class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-[var(--theme-text)] hover:bg-[var(--theme-accent)]/10">
+                                <flux:icon name="bell" variant="outline" class="size-4" />
+                                {{ __('Reminder') }}
+                            </button>
                         </div>
                     </div>
                     <flux:button size="xs" variant="subtle" wire:click="selectDate('{{ $selectedDate }}')" icon="x-mark" />
@@ -139,7 +153,7 @@
                      style="background: color-mix(in srgb, var(--theme-bg) 95%, var(--theme-accent));">
                     <div class="mb-2 flex items-center gap-2">
                         <span class="text-xs font-medium uppercase tracking-wide text-[var(--theme-accent)]">
-                            {{ __('New') }} {{ __($createType === 'diary' ? 'Diary Entry' : ($createType === 'note' ? 'Note' : 'Post-it')) }}
+                            {{ __('New') }} {{ __($createType === 'diary' ? 'Diary Entry' : ($createType === 'note' ? 'Note' : ($createType === 'reminder' ? 'Reminder' : 'Post-it'))) }}
                         </span>
                     </div>
 
@@ -185,6 +199,10 @@
                                     <flux:icon name="book-open" variant="outline" class="size-4 text-[var(--theme-accent)]" />
                                 @elseif ($entity['type'] === 'note')
                                     <flux:icon name="document-text" variant="outline" class="size-4 text-[var(--theme-accent)]" />
+                                @elseif ($entity['type'] === 'important_date')
+                                    <flux:icon name="star" variant="solid" class="size-4 text-[var(--theme-accent)]" />
+                                @elseif ($entity['type'] === 'reminder')
+                                    <flux:icon name="bell" variant="solid" class="size-4 text-[var(--theme-accent)]" />
                                 @else
                                     <flux:icon name="clipboard" variant="outline" class="size-4 text-[var(--theme-accent)]" />
                                 @endif

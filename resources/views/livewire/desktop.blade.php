@@ -15,6 +15,9 @@
             <flux:button size="sm" icon="plus" x-on:click="$refs.standaloneImageInput.click()">
                 {{ __('Image') }}
             </flux:button>
+            <flux:button size="sm" icon="bell" x-on:click="$dispatch('create-entity', { mode: 'reminder' })">
+                {{ __('Reminder') }}
+            </flux:button>
         </div>
 
         {{-- Collapsed dropdown (narrow screens) --}}
@@ -41,6 +44,10 @@
                 <button type="button" x-on:click="$refs.standaloneImageInput.click(); createOpen = false"
                         class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
                     {{ __('Image') }}
+                </button>
+                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'reminder' }); createOpen = false"
+                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    {{ __('Reminder') }}
                 </button>
             </div>
         </div>

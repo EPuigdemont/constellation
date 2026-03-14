@@ -983,6 +983,17 @@ html:not(.dark) .theme-night {
     flex-shrink: 0;
 }
 
+.calendar-dot-star {
+    font-size: 8px;
+    line-height: 1;
+    color: var(--theme-accent);
+}
+
+.calendar-dot-bell {
+    font-size: 7px;
+    line-height: 1;
+}
+
 /* Mood-colored dots */
 .calendar-dot.mood-spring { background: #81c784; }
 .calendar-dot.mood-summer { background: #ffd54f; }

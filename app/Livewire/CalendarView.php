@@ -6,8 +6,10 @@ namespace App\Livewire;
 
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
+use App\Models\ImportantDate;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Reminder;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -155,6 +157,13 @@ class CalendarView extends Component
                 'mood' => $mood,
                 'is_public' => false,
             ]),
+            'reminder' => Reminder::create([
+                'user_id' => $user->id,
+                'title' => $this->createTitle ?: 'Reminder',
+                'body' => $this->createBody,
+                'remind_at' => $this->selectedDate ? Carbon::parse($this->selectedDate)->setTime(9, 0) : now()->addDay(),
+                'mood' => $mood,
+            ]),
         };
 
         $this->closeCreateForm();
@@ -187,10 +196,19 @@ class CalendarView extends Component
                 ->get()
             : collect();
 
-        $calendarDays = $this->buildCalendarGrid($startOfMonth, $diaryEntries, $notes, $postits);
+        $importantDates = ImportantDate::where('user_id', $userId)->get();
+
+        $reminders = $this->shouldShowType('all') || $this->filterType === 'reminder'
+            ? Reminder::where('user_id', $userId)
+                ->whereMonth('remind_at', $this->month)
+                ->whereYear('remind_at', $this->year)
+                ->get()
+            : collect();
+
+        $calendarDays = $this->buildCalendarGrid($startOfMonth, $diaryEntries, $notes, $postits, $importantDates, $reminders);
 
         $selectedDayEntities = $this->selectedDate !== ''
-            ? $this->getEntitiesForDate($this->selectedDate, $diaryEntries, $notes, $postits)
+            ? $this->getEntitiesForDate($this->selectedDate, $diaryEntries, $notes, $postits, $importantDates, $reminders)
             : collect();
 
         $userTags = Auth::user()->tags()->orderBy('name')->get();
@@ -211,7 +229,7 @@ class CalendarView extends Component
     /**
      * @return array<int, array{date: string, day: int, inMonth: bool, isToday: bool, entities: Collection}>
      */
-    private function buildCalendarGrid(Carbon $startOfMonth, Collection $diaryEntries, Collection $notes, Collection $postits): array
+    private function buildCalendarGrid(Carbon $startOfMonth, Collection $diaryEntries, Collection $notes, Collection $postits, Collection $importantDates, Collection $reminders): array
     {
         $daysInMonth = $startOfMonth->daysInMonth;
         $startDayOfWeek = $startOfMonth->dayOfWeekIso; // 1=Monday, 7=Sunday
@@ -238,7 +256,7 @@ class CalendarView extends Component
             $date = $startOfMonth->copy()->day($day)->toDateString();
             $isToday = $date === now()->toDateString();
 
-            $entities = $this->getEntitiesForDate($date, $diaryEntries, $notes, $postits);
+            $entities = $this->getEntitiesForDate($date, $diaryEntries, $notes, $postits, $importantDates, $reminders);
 
             $grid[] = [
                 'date' => $date,
@@ -268,9 +286,10 @@ class CalendarView extends Component
         return $grid;
     }
 
-    private function getEntitiesForDate(string $date, Collection $diaryEntries, Collection $notes, Collection $postits): Collection
+    private function getEntitiesForDate(string $date, Collection $diaryEntries, Collection $notes, Collection $postits, Collection $importantDates, Collection $reminders): Collection
     {
         $entities = collect();
+        $parsedDate = Carbon::parse($date);
 
         $diaryEntries->filter(fn ($e) => $e->created_at->toDateString() === $date)
             ->each(fn ($e) => $entities->push([
@@ -300,6 +319,33 @@ class CalendarView extends Component
                 'mood' => $e->mood?->value ?? 'summer',
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
+            ]));
+
+        // Important dates (exact match or recurring annual match)
+        $importantDates->filter(function ($d) use ($parsedDate) {
+            if ($d->date->toDateString() === $parsedDate->toDateString()) {
+                return true;
+            }
+
+            return $d->recurs_annually && $d->date->month === $parsedDate->month && $d->date->day === $parsedDate->day;
+        })->each(fn ($d) => $entities->push([
+            'type' => 'important_date',
+            'id' => $d->id,
+            'title' => $d->label,
+            'mood' => 'love',
+            'preview' => $d->recurs_annually ? __('Yearly') : '',
+            'created_at' => $d->date->setYear($parsedDate->year),
+        ]));
+
+        // Reminders
+        $reminders->filter(fn ($r) => $r->remind_at->toDateString() === $date)
+            ->each(fn ($r) => $entities->push([
+                'type' => 'reminder',
+                'id' => $r->id,
+                'title' => $r->title,
+                'mood' => $r->mood?->value ?? 'summer',
+                'preview' => str(strip_tags($r->body ?? ''))->limit(80)->toString(),
+                'created_at' => $r->remind_at,
             ]));
 
         return $entities->sortBy('created_at')->values();

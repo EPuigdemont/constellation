@@ -588,6 +588,8 @@ document.addEventListener('alpine:init', () => {
                     this.$wire.openDiaryModal(centerX, centerY);
                 } else if (e.detail.mode === 'note') {
                     this.$wire.openNoteModal(centerX, centerY);
+                } else if (e.detail.mode === 'reminder') {
+                    this.$wire.createReminder(centerX, centerY);
                 }
             });
 

@@ -120,6 +120,11 @@ class User extends Authenticatable
         return $this->hasMany(ImportantDate::class);
     }
 
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
+    }
+
     public function entityPositions(): HasMany
     {
         return $this->hasMany(EntityPosition::class);

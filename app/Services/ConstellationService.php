@@ -9,6 +9,7 @@ use App\Models\EntityRelationship;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Reminder;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
@@ -52,6 +53,7 @@ class ConstellationService
             'note' => Note::class,
             'postit' => Postit::class,
             'image' => Image::class,
+            'reminder' => Reminder::class,
         ];
 
         foreach ($models as $type => $modelClass) {
@@ -99,6 +101,7 @@ class ConstellationService
             $title = match ($type) {
                 'postit' => 'Post-it',
                 'image' => $entity->title ?: $entity->alt ?: 'Image',
+                'reminder' => $entity->title ?: 'Reminder',
                 default => $entity->title ?: 'Untitled',
             };
 
