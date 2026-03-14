@@ -165,17 +165,17 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 9 — Constellation View
 
-- [ ] Fully animated, with a "starry night" background and twinkling stars (CSS animation) and a gentle parallax effect when moving the mouse
-- [ ] `ConstellationService`: compute proximity scores for all entity pairs (tags, type, relationships, date)
-- [ ] JSON endpoint `/api/constellation` returning nodes + edges + scores (auth required)
-- [ ] D3.js force-directed graph in `/resources/js/constellation.js`
-- [ ] Nodes styled by entity type and mood color
-- [ ] Edges styled by relationship type (`parent_child` solid, `sibling` dashed)
-- [ ] View toggle: Livewire `$mode` property switches between `desktop` and `constellation`
-- [ ] Animated transition between modes (Alpine.js)
-- [ ] Zoom and pan on constellation canvas (D3 built-in zoom behavior)
-- [ ] Click node → highlight connected nodes, show entity preview panel
-- [ ] Filter panel: filter by tag, entity type, date range, month, weekday
+- [x] Fully animated, with a "starry night" background and twinkling stars (CSS animation) and a gentle parallax effect when moving the mouse
+- [x] `ConstellationService`: compute proximity scores for all entity pairs (tags, type, relationships, date)
+- [x] JSON endpoint `/api/constellation` returning nodes + edges + scores (auth required)
+- [x] D3.js force-directed graph in `/resources/js/constellation.js`
+- [x] Nodes styled by entity type and mood color
+- [x] Edges styled by relationship type (`parent_child` solid, `sibling` dashed)
+- [x] View toggle: Livewire `$mode` property switches between `desktop` and `constellation`
+- [x] Animated transition between modes (Alpine.js)
+- [x] Zoom and pan on constellation canvas (D3 built-in zoom behavior)
+- [x] Click node → highlight connected nodes, show entity preview panel
+- [x] Filter panel: filter by tag, entity type, date range, month, weekday
 
 ---
 

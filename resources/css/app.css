@@ -1132,3 +1132,27 @@ html:not(.dark) .theme-night {
     pointer-events: none;
     z-index: 0;
 }
+
+/* ─── Constellation View ─── */
+
+.constellation-wrapper {
+    background: #0a0a1a;
+    border-radius: 0;
+}
+
+.constellation-stars {
+    z-index: 0;
+    overflow: hidden;
+}
+
+.constellation-stars-canvas {
+    pointer-events: none;
+}
+
+.constellation-wrapper svg {
+    cursor: grab;
+}
+
+.constellation-wrapper svg:active {
+    cursor: grabbing;
+}
