@@ -155,36 +155,34 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 8.5 — Calendar View
+## Phase 8.5 — Calendar View ✅
 
 - [x] Calendar view: monthly calendar grid showing days with entries/notes/post-its as dots
-- [x] Click day → list of entries/notes/post-its for that day, with
+- [x] Click day → list of entries/notes/post-its for that day, with quick-create form and double-click detail modal
 - [x] Filter by month, year, tag, entity type
 
 ---
 
-## Phase 9 — Constellation View
+## Phase 9 — Constellation View ✅
 
 - [x] Fully animated, with a "starry night" background and twinkling stars (CSS animation) and a gentle parallax effect when moving the mouse
 - [x] `ConstellationService`: compute proximity scores for all entity pairs (tags, type, relationships, date)
-- [x] JSON endpoint `/api/constellation` returning nodes + edges + scores (auth required)
-- [x] D3.js force-directed graph in `/resources/js/constellation.js`
+- [x] D3.js force-directed graph in `/resources/js/constellation.js` (data passed as embedded JSON, not separate API endpoint)
 - [x] Nodes styled by entity type and mood color
-- [x] Edges styled by relationship type (`parent_child` solid, `sibling` dashed)
-- [x] View toggle: Livewire `$mode` property switches between `desktop` and `constellation`
-- [x] Animated transition between modes (Alpine.js)
+- [x] Edges styled by relationship type (`parent_child` solid, `sibling` dashed, `tag` faint, `date` dotted)
+- [x] Constellation as its own route `/constellation` with sidebar link
 - [x] Zoom and pan on constellation canvas (D3 built-in zoom behavior)
 - [x] Click node → highlight connected nodes, show entity preview panel
 - [x] Filter panel: filter by tag, entity type, date range, month, weekday
 
 ---
 
-## Phase 9.5 — Translations
+## Phase 9.5 — Translations ✅
 
-- [ ] Add Laravel localization support
-- [ ] Create `en` and `es` translation files for all UI text
-- [ ] Add language switcher in settings (saves to `users.language`)
-- [ ] Ensure all UI text is translatable via `__('text.key')`
+- [x] Add Laravel localization support (`SetLocale` middleware, `lang/` directory)
+- [x] Create `en` and `es` translation files for all UI text (230+ strings)
+- [x] Add language switcher in settings (saves to `users.language`)
+- [x] Ensure all UI text is translatable via `__('text.key')`
 
 ---
 
