@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\Mood;
+use App\Enums\ReminderType;
 use App\Models\Concerns\HasEntityDefaults;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ class Reminder extends Model
         'body',
         'remind_at',
         'mood',
+        'reminder_type',
         'is_completed',
     ];
 
@@ -30,6 +32,7 @@ class Reminder extends Model
         return [
             'remind_at' => 'datetime',
             'mood' => Mood::class,
+            'reminder_type' => ReminderType::class,
             'is_completed' => 'boolean',
         ];
     }

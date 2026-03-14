@@ -139,6 +139,10 @@ select:focus[data-flux-control] {
     cursor: default;
 }
 
+.desktop-card-shared {
+    @apply absolute bottom-1 left-1.5 flex items-center gap-1 text-[0.55rem] opacity-50;
+}
+
 .desktop-card-public {
     @apply absolute right-0 top-0 opacity-50;
 }
@@ -849,6 +853,12 @@ html:not(.dark) .theme-night {
 
 .diary-pages {
     transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+@media (max-width: 767px) {
+    .diary-pages-responsive > :nth-child(n+2) {
+        display: none;
+    }
 }
 
 .diary-turn-left {

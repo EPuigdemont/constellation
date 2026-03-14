@@ -135,7 +135,7 @@
                 </button>
             @endif
 
-            <div class="diary-pages mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-4 overflow-hidden px-0"
+            <div class="diary-pages diary-pages-responsive mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-4 overflow-hidden px-0"
                  :class="{ 'diary-turn-left': turning && direction === 'left', 'diary-turn-right': turning && direction === 'right' }">
                 @forelse($entries as $entry)
                     @php $moodClass = $entry->mood ? 'mood-' . $entry->mood->value : ''; @endphp
@@ -156,7 +156,7 @@
                         @else
                             <div class="relative z-[3] mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
-                                    {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
+                                    {{ $entry->created_at?->translatedFormat('l, j F Y H:i') }}
                                 </span>
                                 <div class="flex items-center gap-2">
                                     @if($entry->mood)
@@ -234,7 +234,7 @@
                         @else
                             <div class="relative z-[3] mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
-                                    {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
+                                    {{ $entry->created_at?->translatedFormat('l, j F Y H:i') }}
                                 </span>
                                 <div class="flex items-center gap-2">
                                     @if($entry->mood)

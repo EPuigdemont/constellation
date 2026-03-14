@@ -305,5 +305,10 @@
     "Due!": "¡Pendiente!",
     "Delete this reminder?": "¿Eliminar este recordatorio?",
     "No reminders yet.": "Aún no hay recordatorios.",
-    "Remember this moment?": "¿Recuerdas este momento?"
+    "Remember this moment?": "¿Recuerdas este momento?",
+    "General": "General",
+    "Menstrual cycle": "Ciclo menstrual",
+    "Ovulation": "Ovulación",
+    "Type": "Tipo",
+    "Show shared": "Mostrar compartidos"
 }

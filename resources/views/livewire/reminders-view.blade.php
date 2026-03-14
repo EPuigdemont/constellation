@@ -113,6 +113,15 @@
                     <textarea wire:model="reminderBody" placeholder="{{ __('Details (optional)') }}" rows="2"
                               class="w-full resize-none rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-sm text-[var(--theme-text)] placeholder-[var(--theme-text-muted)] focus:border-[var(--theme-accent)] focus:outline-none"></textarea>
                     <div>
+                        <label class="mb-1 block text-xs text-[var(--theme-text-muted)]">{{ __('Type') }}</label>
+                        <select wire:model="reminderType"
+                                class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-sm text-[var(--theme-text)] focus:border-[var(--theme-accent)] focus:outline-none">
+                            @foreach (\App\Enums\ReminderType::cases() as $type)
+                                <option value="{{ $type->value }}">{{ $type->label() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <label class="mb-1 block text-xs text-[var(--theme-text-muted)]">{{ __('Remind at') }}</label>
                         <input type="datetime-local" wire:model="reminderAt"
                                class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-2 text-sm text-[var(--theme-text)] focus:border-[var(--theme-accent)] focus:outline-none" />
@@ -143,12 +152,15 @@
                             @if ($reminder->is_completed)
                                 <flux:icon name="check" variant="outline" class="size-4" />
                             @else
-                                <flux:icon name="bell" variant="outline" class="size-4" />
+                                <flux:icon :name="$reminder->reminder_type?->icon() ?? 'bell'" variant="outline" class="size-4" />
                             @endif
                         </button>
                         <div>
                             <div @class(['text-sm font-medium', 'line-through text-[var(--theme-text-muted)]' => $reminder->is_completed, 'text-[var(--theme-text)]' => !$reminder->is_completed])>
                                 {{ $reminder->title }}
+                                @if ($reminder->reminder_type && $reminder->reminder_type !== \App\Enums\ReminderType::General)
+                                    <span class="ml-1 rounded-full bg-[var(--theme-accent)]/10 px-1.5 py-0.5 text-[0.6rem] text-[var(--theme-accent)]">{{ $reminder->reminder_type->label() }}</span>
+                                @endif
                                 @if ($isDue)
                                     <span class="ml-1 text-xs text-[var(--theme-accent)]">{{ __('Due!') }}</span>
                                 @endif

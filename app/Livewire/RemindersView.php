@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Enums\Mood;
+use App\Enums\ReminderType;
 use App\Models\ImportantDate;
 use App\Models\Reminder;
 use Illuminate\Contracts\View\View;
@@ -39,7 +40,9 @@ class RemindersView extends Component
 
     public string $editingReminderId = '';
 
-    public string $tab = 'dates';
+    public string $reminderType = 'general';
+
+    public string $tab = 'reminders';
 
     public function mount(): void
     {
@@ -115,11 +118,13 @@ class RemindersView extends Component
             $this->reminderTitle = $reminder->title;
             $this->reminderBody = $reminder->body ?? '';
             $this->reminderAt = $reminder->remind_at->format('Y-m-d\TH:i');
+            $this->reminderType = $reminder->reminder_type?->value ?? 'general';
         } else {
             $this->editingReminderId = '';
             $this->reminderTitle = '';
             $this->reminderBody = '';
             $this->reminderAt = now()->addDay()->format('Y-m-d\TH:i');
+            $this->reminderType = 'general';
         }
 
         $this->showReminderForm = true;
@@ -139,6 +144,7 @@ class RemindersView extends Component
             'body' => $this->reminderBody,
             'remind_at' => $this->reminderAt,
             'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+            'reminder_type' => ReminderType::tryFrom($this->reminderType) ?? ReminderType::General,
         ];
 
         if ($this->editingReminderId) {
@@ -170,6 +176,7 @@ class RemindersView extends Component
         $this->reminderTitle = '';
         $this->reminderBody = '';
         $this->reminderAt = now()->addDay()->format('Y-m-d\TH:i');
+        $this->reminderType = 'general';
     }
 
     public function render(): View

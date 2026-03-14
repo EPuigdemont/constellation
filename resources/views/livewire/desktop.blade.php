@@ -1,4 +1,5 @@
-<div class="flex h-screen flex-col overflow-hidden">
+<div class="page-glitter-wrapper flex h-screen flex-col overflow-hidden">
+    <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
     {{-- Toolbar --}}
     <div class="relative z-10 flex min-w-0 items-center gap-2 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
         {{-- Full buttons (wide screens) --}}
@@ -61,7 +62,7 @@
         <flux:spacer />
 
         {{-- Search & Filter --}}
-        <div x-data="desktopSearch" class="flex items-center gap-2">
+        <div x-data="desktopSearch" data-current-user-id="{{ auth()->id() }}" class="flex items-center gap-2">
             {{-- Entity type multi-select filter (icons) --}}
             <div class="hidden items-center gap-0.5 rounded-md border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800 md:flex">
                 {{-- Diary --}}
@@ -142,6 +143,15 @@
                     @endforeach
                 </div>
             </div>
+
+            {{-- Toggle shared elements visibility --}}
+            <button type="button"
+                    x-on:click="showShared = !showShared; filterCards()"
+                    :class="showShared ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                    class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                    title="{{ __('Show shared') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.47.353-2.856.978-4.082" /></svg>
+            </button>
         </div>
 
         <span class="h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600"></span>
@@ -461,8 +471,8 @@
                 </flux:field>
             @endif
 
-            {{-- Tiptap Toolbar --}}
-            <div class="flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-[var(--card-border,var(--color-zinc-200))] bg-[var(--card-bg,var(--color-zinc-50))] px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
+            {{-- Tiptap Toolbar (hidden for now) --}}
+            <div class="hidden flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-[var(--card-border,var(--color-zinc-200))] bg-[var(--card-bg,var(--color-zinc-50))] px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
                 <button type="button" x-on:click="toggleBold()" :class="isActive('bold') ? 'bg-zinc-200 dark:bg-zinc-700' : ''" class="rounded px-2 py-1 text-sm font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700" title="{{ __('Bold') }}">B</button>
                 <button type="button" x-on:click="toggleItalic()" :class="isActive('italic') ? 'bg-zinc-200 dark:bg-zinc-700' : ''" class="rounded px-2 py-1 text-sm italic hover:bg-zinc-200 dark:hover:bg-zinc-700" title="{{ __('Italic') }}">I</button>
                 <button type="button" x-on:click="toggleUnderline()" :class="isActive('underline') ? 'bg-zinc-200 dark:bg-zinc-700' : ''" class="rounded px-2 py-1 text-sm underline hover:bg-zinc-200 dark:hover:bg-zinc-700" title="{{ __('Underline') }}">U</button>
@@ -494,7 +504,7 @@
             </div>
 
             {{-- Tiptap Editor Content --}}
-            <div wire:ignore class="tiptap-editor-content min-h-48 rounded-b-lg border border-[var(--card-border,var(--color-zinc-200))] p-3 dark:border-zinc-700">
+            <div wire:ignore class="tiptap-editor-content min-h-48 rounded-lg border border-[var(--card-border,var(--color-zinc-200))] p-3 dark:border-zinc-700">
                 <div x-ref="editorElement"></div>
             </div>
 

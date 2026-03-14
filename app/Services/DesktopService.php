@@ -11,6 +11,7 @@ use App\Models\EntityRelationship;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Reminder;
 use App\Models\User;
 use Illuminate\Support\Str;
 
@@ -38,6 +39,7 @@ class DesktopService
             'note' => Note::class,
             'postit' => Postit::class,
             'image' => Image::class,
+            'reminder' => Reminder::class,
         ];
 
         // Pre-load all relationships for efficient lookups
@@ -47,6 +49,8 @@ class DesktopService
             $query = $modelClass::query()
                 ->where('user_id', $user->id)
                 ->orWhere('is_public', true);
+
+            $query->with('user');
 
             if (method_exists($modelClass, 'tags')) {
                 $query->with('tags');
@@ -284,10 +288,11 @@ class DesktopService
             'note' => $entity->title ?? '',
             'postit' => '',
             'image' => $entity->title ?? $entity->alt ?? '',
+            'reminder' => $entity->title ?? '',
         };
 
         $preview = match ($type) {
-            'diary_entry', 'note', 'postit' => Str::limit(strip_tags($entity->body ?? ''), 120),
+            'diary_entry', 'note', 'postit', 'reminder' => Str::limit(strip_tags($entity->body ?? ''), 120),
             'image' => $entity->alt ?? '',
         };
 
@@ -326,6 +331,7 @@ class DesktopService
             'tag_ids' => $tagIds,
             'image_url' => $imageUrl,
             'is_hidden' => (bool) ($position?->is_hidden ?? false),
+            'owner_name' => $entity->user?->name ?? '',
         ];
     }
 }
