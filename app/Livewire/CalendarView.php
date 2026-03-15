@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Enums\Mood;
+use App\Models\CalendarDayMood;
 use App\Models\DiaryEntry;
 use App\Models\ImportantDate;
 use App\Models\Note;
@@ -170,6 +171,54 @@ class CalendarView extends Component
         $this->closeCreateForm();
     }
 
+    public function setDayMood(string $date, string $mood): void
+    {
+        $userId = Auth::id();
+
+        if ($mood === '') {
+            CalendarDayMood::where('user_id', $userId)->where('date', $date)->delete();
+
+            return;
+        }
+
+        CalendarDayMood::updateOrCreate(
+            ['user_id' => $userId, 'date' => $date],
+            ['mood' => $mood],
+        );
+    }
+
+    public function saveQuickTaggedNote(string $tagName): void
+    {
+        $user = Auth::user();
+        $mood = Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer;
+
+        $note = Note::create([
+            'user_id' => $user->id,
+            'title' => ucfirst($tagName),
+            'body' => '',
+            'mood' => $mood,
+            'is_public' => false,
+        ]);
+
+        // Override created_at to match the selected date
+        if ($this->selectedDate !== '') {
+            $note->update(['created_at' => Carbon::parse($this->selectedDate)->setTime((int) now()->format('H'), (int) now()->format('i'))]);
+        }
+
+        $tag = Tag::firstOrCreate(
+            ['name' => $tagName, 'user_id' => $user->id],
+        );
+
+        $note->tags()->attach($tag->id);
+
+        if ($tagName === 'menstruation' && $this->selectedDate !== '') {
+            CalendarDayMood::updateOrCreate(
+                ['user_id' => $user->id, 'date' => $this->selectedDate],
+                ['mood' => 'love'],
+            );
+        }
+    }
+
     public function render(): View
     {
         $userId = Auth::id();
@@ -219,11 +268,17 @@ class CalendarView extends Component
 
         $userTags = Tag::forUser(Auth::id())->orderBy('name')->get();
 
+        $dayMoods = CalendarDayMood::where('user_id', $userId)
+            ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
+            ->get()
+            ->keyBy(fn ($dm) => $dm->date->toDateString());
+
         return view('livewire.calendar-view', [
             'calendarDays' => $calendarDays,
             'selectedDayEntities' => $selectedDayEntities,
             'monthName' => $startOfMonth->translatedFormat('F Y'),
             'userTags' => $userTags,
+            'dayMoods' => $dayMoods,
         ]);
     }
 

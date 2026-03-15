@@ -62,19 +62,23 @@
                 @endphp
                 <div @class([
                     'flex items-center justify-between rounded-lg border p-3 transition-colors',
-                    'border-[var(--theme-accent)] bg-[var(--theme-accent)]/5' => $isToday,
-                    'border-[var(--theme-border)]' => !$isToday,
-                ]) style="background: {{ $isToday ? '' : 'color-mix(in srgb, var(--theme-bg) 90%, transparent)' }};">
+                    'border-[var(--theme-accent)] bg-[var(--theme-accent)]/5' => $isToday && !$date->is_done,
+                    'border-[var(--theme-border)] opacity-50' => $date->is_done,
+                    'border-[var(--theme-border)]' => !$isToday && !$date->is_done,
+                ]) style="background: {{ ($isToday && !$date->is_done) ? '' : 'color-mix(in srgb, var(--theme-bg) 90%, transparent)' }};">
                     <div class="flex items-center gap-3">
-                        <div class="flex h-8 w-8 items-center justify-center rounded-full {{ $isToday ? 'bg-[var(--theme-accent)] text-white' : 'bg-[var(--theme-accent)]/10 text-[var(--theme-accent)]' }}">
-                            @if ($date->recurs_annually)
+                        <button wire:click="toggleDateComplete('{{ $date->id }}')"
+                                class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors {{ $date->is_done ? 'bg-green-500/20 text-green-500' : ($isToday ? 'bg-[var(--theme-accent)] text-white' : 'bg-[var(--theme-accent)]/10 text-[var(--theme-accent)]') }}">
+                            @if ($date->is_done)
+                                <flux:icon name="check" variant="outline" class="size-4" />
+                            @elseif ($date->recurs_annually)
                                 <flux:icon name="arrow-path" variant="outline" class="size-4" />
                             @else
                                 <flux:icon name="calendar" variant="outline" class="size-4" />
                             @endif
-                        </div>
+                        </button>
                         <div>
-                            <div class="text-sm font-medium text-[var(--theme-text)]">
+                            <div @class(['text-sm font-medium', 'line-through text-[var(--theme-text-muted)]' => $date->is_done, 'text-[var(--theme-text)]' => !$date->is_done])>
                                 {{ $date->label }}
                                 @if ($isToday)
                                     <span class="ml-1 text-xs text-[var(--theme-accent)]">{{ __('Today!') }}</span>

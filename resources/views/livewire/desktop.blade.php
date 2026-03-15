@@ -176,6 +176,12 @@
                     title="{{ __('Snap to Grid') }}">
                 <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
             </button>
+            <button type="button" x-on:click="toggleWidgets()"
+                    :class="showWidgets ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                    title="{{ __('Widgets') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75l-5.571-3m11.142 0L21.75 12l-4.179 2.25m0 0L12 17.25l-5.571-3m11.142 0L21.75 16.5 12 21.75 2.25 16.5l4.179-2.25" /></svg>
+            </button>
 
             <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
 
@@ -272,6 +278,7 @@
                 $diaryCount = collect($cards)->where('type', 'diary_entry')->count();
             @endphp
             <div data-card-type="diary_notebook"
+                 x-show="Alpine.store('desktop').showWidgets"
                  x-data="diaryNotebook"
                  x-on:dblclick="toggle()"
                  :class="isOpen ? 'is-open' : ''"
@@ -311,6 +318,7 @@
 
             {{-- Vision Board Widget (view-only) --}}
             <div data-card-type="vision_board_widget"
+                 x-show="Alpine.store('desktop').showWidgets"
                  x-data="{
                      isOpen: false,
                      images: [],

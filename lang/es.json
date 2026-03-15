@@ -307,11 +307,26 @@
     "No reminders yet.": "Aún no hay recordatorios.",
     "Remember this moment?": "¿Recuerdas este momento?",
     "General": "General",
+    "Menstruation": "Menstruación",
     "Menstrual cycle": "Ciclo menstrual",
     "Ovulation": "Ovulación",
     "Type": "Tipo",
     "Show shared": "Mostrar compartidos",
     "Create your first entry using the buttons above.": "Crea tu primera entrada usando los botones de arriba.",
     "Uploading...": "Subiendo...",
-    "Show as Grid": "Mostrar cuadrícula"
+    "Show as Grid": "Mostrar cuadrícula",
+
+    "Notifications": "Notificaciones",
+    "Today's Dates": "Fechas de hoy",
+    "Pending Reminders": "Recordatorios pendientes",
+    "No pending reminders.": "No hay recordatorios pendientes.",
+    "Upcoming Dates": "Próximas fechas",
+    "Recently Completed": "Completados recientemente",
+    "Pending": "Pendiente",
+    "Done": "Hecho",
+    "Change day color": "Cambiar color del día",
+    "View": "Ver",
+    "Download": "Descargar",
+    "Are you sure you want to delete this image?": "¿Estás seguro de que quieres eliminar esta imagen?",
+    "Widgets": "Widgets"
 }

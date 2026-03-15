@@ -399,6 +399,7 @@ document.addEventListener('alpine:init', () => {
         showGrid: false,
         showGuides: false,
         snapToGrid: false,
+        showWidgets: true,
         linkingMode: '',
         linkingEntityId: '',
         selectedCardId: '',
@@ -424,6 +425,10 @@ document.addEventListener('alpine:init', () => {
         toggleSnap() {
             Alpine.store('desktop').snapToGrid = !Alpine.store('desktop').snapToGrid;
         },
+        toggleWidgets() {
+            Alpine.store('desktop').showWidgets = !Alpine.store('desktop').showWidgets;
+        },
+        get showWidgets() { return Alpine.store('desktop').showWidgets; },
     }));
 
     /**
@@ -661,6 +666,9 @@ document.addEventListener('alpine:init', () => {
 
                 const canvas = document.getElementById('desktop-canvas');
                 if (!canvas) return;
+
+                // Prevent duplicate: skip if a card with this ID already exists in the DOM
+                if (canvas.querySelector(`[data-card-id="${card.id}"]`)) return;
 
                 const el = createCardElement(card, this.$wire);
                 canvas.appendChild(el);

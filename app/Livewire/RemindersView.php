@@ -99,6 +99,12 @@ class RemindersView extends Component
         ImportantDate::where('user_id', Auth::id())->findOrFail($id)->delete();
     }
 
+    public function toggleDateComplete(string $id): void
+    {
+        $date = ImportantDate::where('user_id', Auth::id())->findOrFail($id);
+        $date->update(['is_done' => !$date->is_done]);
+    }
+
     public function closeDateForm(): void
     {
         $this->showDateForm = false;

@@ -12,6 +12,10 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
+                <div class="flex items-center justify-between px-3 py-1 in-data-flux-sidebar-collapsed-desktop:hidden">
+                    <livewire:notifications-bell />
+                </div>
+
                 {{-- Expanded: full sidebar items with labels --}}
                 <flux:sidebar.group :heading="__('Platform')" class="grid in-data-flux-sidebar-collapsed-desktop:hidden">
                     <flux:sidebar.item icon="book-open" :href="route('diary')" :current="request()->routeIs('diary')" wire:navigate>
@@ -39,6 +43,11 @@
 
                 {{-- Collapsed: icon-only navigation with tooltips --}}
                 <div class="not-in-data-flux-sidebar-collapsed-desktop:hidden flex flex-col items-center gap-1 pt-2">
+                    <flux:tooltip :content="__('Notifications')" position="right">
+                        <div class="flex items-center justify-center rounded-md p-2">
+                            <livewire:notifications-bell />
+                        </div>
+                    </flux:tooltip>
                     <flux:tooltip :content="__('Diary')" position="right">
                         <a href="{{ route('diary') }}" wire:navigate
                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('diary'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('diary')])>
@@ -189,6 +198,23 @@
                 </div>
             </div>
         @endif
+
+        {{-- Global loading overlay to prevent duplicate clicks during Livewire requests --}}
+        <div x-data="{
+                 syncing: false,
+                 init() {
+                     Livewire.hook('request', ({ respond, fail }) => {
+                         this.syncing = true;
+                         respond(() => { this.syncing = false; });
+                         fail(() => { this.syncing = false; });
+                     });
+                 }
+             }">
+            <div x-show="syncing" x-cloak
+                 class="fixed inset-0 z-[99990] cursor-wait"
+                 style="background: transparent;">
+            </div>
+        </div>
 
         {{ $slot }}
 

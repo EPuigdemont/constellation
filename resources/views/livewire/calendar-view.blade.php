@@ -47,15 +47,21 @@
         {{-- Day cells --}}
         <div class="calendar-grid">
             @foreach ($calendarDays as $cell)
+                @php
+                    $dayMood = $dayMoods[$cell['date']] ?? null;
+                @endphp
                 <button
                     wire:click="selectDate('{{ $cell['date'] }}')"
                     @class([
                         'calendar-day group relative flex flex-col items-start rounded-lg border p-1.5 text-left transition-all',
-                        'border-[var(--theme-border)] hover:border-[var(--theme-accent)]' => $cell['inMonth'],
+                        'border-[var(--theme-border)] hover:border-[var(--theme-accent)]' => $cell['inMonth'] && !$dayMood,
                         'border-transparent opacity-40' => !$cell['inMonth'],
                         'calendar-day--today' => $cell['isToday'],
                         'calendar-day--selected ring-2 ring-[var(--theme-accent)]' => $selectedDate === $cell['date'],
                     ])
+                    @if($dayMood && $cell['inMonth'])
+                        style="background: var(--mood-{{ $dayMood->mood }}-bg, color-mix(in srgb, var(--theme-bg) 90%, transparent)); border-color: var(--mood-{{ $dayMood->mood }}-border, var(--theme-border));"
+                    @endif
                 >
                     <span @class([
                         'mb-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium',
@@ -142,6 +148,43 @@
                                 <flux:icon name="bell" variant="outline" class="size-4" />
                                 {{ __('Reminder') }}
                             </button>
+                            <div class="my-1 border-t border-[var(--theme-border)]"></div>
+                            <button type="button"
+                                    wire:click="saveQuickTaggedNote('menstruation')"
+                                    x-on:click="open = false"
+                                    class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-[var(--theme-text)] hover:bg-[var(--theme-accent)]/10">
+                                <flux:icon name="heart" variant="outline" class="size-4" />
+                                {{ __('Menstruation') }}
+                            </button>
+                            <button type="button"
+                                    wire:click="saveQuickTaggedNote('ovulation')"
+                                    x-on:click="open = false"
+                                    class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-[var(--theme-text)] hover:bg-[var(--theme-accent)]/10">
+                                <flux:icon name="sparkles" variant="outline" class="size-4" />
+                                {{ __('Ovulation') }}
+                            </button>
+                        </div>
+                    </div>
+                    {{-- Day mood selector --}}
+                    <div x-data="{ moodOpen: false }" class="relative">
+                        <flux:button size="xs" variant="subtle" icon="paint-brush" x-on:click="moodOpen = !moodOpen" />
+                        <div x-show="moodOpen" x-cloak x-on:click.outside="moodOpen = false"
+                             class="absolute right-0 top-full z-20 mt-1 rounded-lg border border-[var(--theme-border)] p-2 shadow-lg"
+                             style="background: var(--theme-bg);">
+                            <div class="flex flex-wrap gap-1">
+                                <button type="button" wire:click="setDayMood('{{ $selectedDate }}', '')" x-on:click="moodOpen = false"
+                                        class="rounded-full border border-[var(--theme-border)] p-1.5 text-xs hover:bg-[var(--theme-accent)]/10"
+                                        title="{{ __('Reset color') }}">
+                                    <flux:icon name="x-mark" variant="outline" class="size-3" />
+                                </button>
+                                @foreach(\App\Enums\Mood::cases() as $m)
+                                    @if($m !== \App\Enums\Mood::Custom)
+                                        <button type="button" wire:click="setDayMood('{{ $selectedDate }}', '{{ $m->value }}')" x-on:click="moodOpen = false"
+                                                class="mood-{{ $m->value }} size-6 rounded-full border transition-transform hover:scale-110"
+                                                title="{{ ucfirst($m->value) }}"></button>
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                     <flux:button size="xs" variant="subtle" wire:click="selectDate('{{ $selectedDate }}')" icon="x-mark" />

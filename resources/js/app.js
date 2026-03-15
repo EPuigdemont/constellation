@@ -88,11 +88,13 @@ const glitterConfigs = {
         size: [8, 14],
     },
     breeze: {
-        emoji: ['~', '≈', '∿'],
+        emoji: ['~', '≈', '∿', '⌇'],
         colors: ['#80deea', '#b2ebf2', '#e0f7fa'],
-        count: 8,
-        speedY: [0.15, 0.4],
-        size: [10, 14],
+        count: 10,
+        speedY: [-0.05, 0.05],
+        speedX: [0.4, 1.2],
+        size: [10, 16],
+        sideways: true,
     },
     night: {
         emoji: ['✦', '★', '✧', '⋆'],
@@ -136,12 +138,16 @@ function initDiaryGlitter(canvas) {
 
         while (particles.length < count) {
             particles.push({
-                x: Math.random() * w,
+                x: config.sideways
+                    ? (initial ? Math.random() * w : -20)
+                    : Math.random() * w,
                 y: initial ? Math.random() * h : Math.random() * h * -0.3,
                 emoji: config.emoji[Math.floor(Math.random() * config.emoji.length)],
                 size: config.size[0] + Math.random() * (config.size[1] - config.size[0]),
                 speedY: config.speedY[0] + Math.random() * (config.speedY[1] - config.speedY[0]),
-                speedX: (Math.random() - 0.5) * 0.4,
+                speedX: config.sideways
+                    ? (config.speedX[0] + Math.random() * (config.speedX[1] - config.speedX[0]))
+                    : (Math.random() - 0.5) * 0.4,
                 opacity: 0.3 + Math.random() * 0.5,
                 rotation: Math.random() * 360,
                 rotSpeed: (Math.random() - 0.5) * 1.5,
@@ -159,13 +165,21 @@ function initDiaryGlitter(canvas) {
             p.x += p.speedX;
             p.rotation += p.rotSpeed;
 
-            if (p.y > canvas.height + 20) {
+            const offScreen = config.sideways
+                ? p.x > canvas.width + 20
+                : p.y > canvas.height + 20;
+            if (offScreen) {
                 if (particles.length > targetCount) {
                     particles.splice(i, 1);
                     continue;
                 }
-                p.y = -20;
-                p.x = Math.random() * canvas.width;
+                if (config.sideways) {
+                    p.x = -20;
+                    p.y = Math.random() * canvas.height;
+                } else {
+                    p.y = -20;
+                    p.x = Math.random() * canvas.width;
+                }
             }
 
             ctx.save();

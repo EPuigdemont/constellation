@@ -1055,6 +1055,50 @@ html:not(.dark) .theme-night {
 .dark .mood-plain-badge { color: #e0e0e0; }
 .dark .mood-custom-badge { color: #e1bee7; }
 
+/* ─── Mood Background Variables for Calendar Days ─── */
+
+:root {
+    --mood-spring-bg: #e8f5e9;
+    --mood-spring-border: #a5d6a7;
+    --mood-summer-bg: #fff8e1;
+    --mood-summer-border: #ffe082;
+    --mood-autumn-bg: #fff3e0;
+    --mood-autumn-border: #ffab40;
+    --mood-winter-bg: #e3f2fd;
+    --mood-winter-border: #90caf9;
+    --mood-love-bg: #fce4ec;
+    --mood-love-border: #f48fb1;
+    --mood-breeze-bg: #e0f7fa;
+    --mood-breeze-border: #80deea;
+    --mood-night-bg: #e8eaf6;
+    --mood-night-border: #9fa8da;
+    --mood-cozy-bg: #efebe9;
+    --mood-cozy-border: #bcaaa4;
+    --mood-plain-bg: #f5f5f5;
+    --mood-plain-border: #bdbdbd;
+}
+
+.dark {
+    --mood-spring-bg: #142014;
+    --mood-spring-border: #1b5e20;
+    --mood-summer-bg: #3e2e00;
+    --mood-summer-border: #6d4c00;
+    --mood-autumn-bg: #2a1800;
+    --mood-autumn-border: #4e2700;
+    --mood-winter-bg: #0d2137;
+    --mood-winter-border: #0d47a1;
+    --mood-love-bg: #3b1020;
+    --mood-love-border: #6a1b2a;
+    --mood-breeze-bg: #002a30;
+    --mood-breeze-border: #004d57;
+    --mood-night-bg: #121836;
+    --mood-night-border: #1a237e;
+    --mood-cozy-bg: #2a1e1a;
+    --mood-cozy-border: #3e2723;
+    --mood-plain-bg: #262626;
+    --mood-plain-border: #525252;
+}
+
 @media (max-width: 768px) {
     .calendar-day {
         min-height: 3.5rem;

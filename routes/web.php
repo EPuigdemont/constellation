@@ -10,6 +10,7 @@ use App\Livewire\RemindersView;
 use App\Livewire\DiaryView;
 use App\Livewire\ImagesGallery;
 use App\Livewire\LoadingScreen;
+use App\Livewire\NotificationsView;
 use App\Livewire\VisionBoard;
 use App\Livewire\Welcome;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('calendar', CalendarView::class)->name('calendar');
     Route::get('constellation', ConstellationView::class)->name('constellation');
     Route::get('reminders', RemindersView::class)->name('reminders');
+    Route::get('notifications', NotificationsView::class)->name('notifications');
 });
 
 Route::middleware(['auth'])->group(function () {
