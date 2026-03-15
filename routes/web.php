@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AvatarServeController;
+use App\Http\Controllers\DataExportController;
 use App\Http\Controllers\ImageServeController;
 use App\Http\Controllers\ThemeController;
 use App\Livewire\CalendarView;
@@ -37,6 +38,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('images/{image}', ImageServeController::class)->name('images.serve');
     Route::get('avatar/{user}', AvatarServeController::class)->name('avatar.serve');
     Route::post('theme', [ThemeController::class, 'update'])->name('theme.update');
+    Route::get('data/export', DataExportController::class)->name('data.export');
 });
 
 require __DIR__.'/settings.php';
