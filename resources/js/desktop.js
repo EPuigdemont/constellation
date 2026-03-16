@@ -1089,11 +1089,7 @@ document.addEventListener('alpine:init', () => {
             this.close();
         },
 
-        attachTo() {
-            console.log('hey hey people');
-            if (this.$wire.value('enableLinking')) {
-                console.log('hey hey');
-            }
+        /*attachTo() {
             if (this.entityId && this.entityType) {
                 this.$wire.startLinking(this.entityId, this.entityType, 'attach');
             }
@@ -1101,10 +1097,6 @@ document.addEventListener('alpine:init', () => {
         },
 
         linkSibling() {
-            console.log('hey hey people');
-            if (this.$wire.value('enableLinking')) {
-                console.log('hey hey');
-            }
             if (this.entityId && this.entityType) {
                 this.$wire.startLinking(this.entityId, this.entityType, 'sibling');
             }
@@ -1112,12 +1104,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         detach() {
-            console.log('hey hey people');
             if (this.entityId && this.entityType) {
                 this.$wire.detachFromParent(this.entityId, this.entityType);
             }
             this.close();
-        },
+        },*/
     }));
 
     /**
