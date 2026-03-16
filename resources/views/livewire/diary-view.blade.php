@@ -30,14 +30,86 @@
         </flux:button>
     </div>
 
+    {{-- Uplifting entry suggestion (sad entry detection) --}}
+    @if ($upliftTitle)
+        <div class="border-b border-[var(--theme-accent)]/20 px-4 py-3"
+             style="background: color-mix(in srgb, var(--theme-accent) 8%, var(--theme-bg));">
+            <div class="mx-auto flex max-w-3xl items-start gap-3">
+                <span class="mt-0.5 text-lg">💛</span>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-[var(--theme-text)]">
+                        {{ __('Remember this moment?') }}
+                    </p>
+                    <p class="text-sm font-semibold text-[var(--theme-accent)]">{{ $upliftTitle }}</p>
+                    <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">{{ $upliftPreview }}</p>
+                </div>
+                <button wire:click="dismissUplift" class="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]">
+                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+    @endif
+
     {{-- New Entry Form --}}
     @if($showNewEntryForm)
         <div class="border-b border-zinc-200 bg-white px-2 py-2 dark:border-zinc-700 dark:bg-zinc-900">
             <div class="mx-auto max-w-3xl space-y-3">
                 <flux:input wire:model="newTitle" placeholder="{{ __('Title...') }}" />
+                @error('newTitle') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                 <flux:textarea wire:model="newBody" placeholder="{{ __('Write your diary entry...') }}" rows="4" />
+                @error('newBody') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+
+                {{-- Tags --}}
+                <div x-data="{ newTagDropdownOpen: false }" class="relative">
+                    <div class="mb-1 flex flex-wrap gap-1">
+                        @foreach($availableTags as $tag)
+                            @if(in_array($tag['id'], $newTagIds, true))
+                                <span class="inline-flex items-center gap-1 rounded-full bg-zinc-200 px-2 py-0.5 text-xs dark:bg-zinc-700">
+                                    {{ $tag['name'] }}
+                                    <button type="button" wire:click="toggleNewTag('{{ $tag['id'] }}')" class="text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">&times;</button>
+                                </span>
+                            @endif
+                        @endforeach
+                    </div>
+                    <input type="text"
+                           wire:model.live.debounce.300ms="newTagSearch"
+                           x-on:focus="newTagDropdownOpen = true"
+                           x-on:click.away="newTagDropdownOpen = false"
+                           placeholder="{{ __('Search or create tag...') }}"
+                           class="w-full rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800">
+                    <div x-show="newTagDropdownOpen" x-cloak class="absolute z-50 mt-1 max-h-40 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                        @php
+                            $filteredNewTags = collect($availableTags)->filter(fn ($tag) => $newTagSearch === '' || str_contains(strtolower($tag['name']), strtolower($newTagSearch)));
+                        @endphp
+                        @forelse($filteredNewTags as $tag)
+                            <button type="button" wire:click="toggleNewTag('{{ $tag['id'] }}')" class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                @if(in_array($tag['id'], $newTagIds, true))
+                                    <svg class="size-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                @else
+                                    <span class="size-4"></span>
+                                @endif
+                                {{ $tag['name'] }}
+                            </button>
+                        @empty
+                            @if($newTagSearch !== '')
+                                <button type="button" wire:click="createNewTagInline('{{ addslashes($newTagSearch) }}')" x-on:click="newTagDropdownOpen = false" class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-blue-600 hover:bg-zinc-100 dark:text-blue-400 dark:hover:bg-zinc-800">
+                                    + {{ __('Create') }} "{{ $newTagSearch }}"
+                                </button>
+                            @endif
+                        @endforelse
+                        @if($newTagSearch !== '' && $filteredNewTags->isNotEmpty() && !$filteredNewTags->contains(fn ($t) => strtolower($t['name']) === strtolower($newTagSearch)))
+                            <button type="button" wire:click="createNewTagInline('{{ addslashes($newTagSearch) }}')" x-on:click="newTagDropdownOpen = false" class="flex w-full items-center gap-2 border-t border-zinc-200 px-3 py-1.5 text-left text-sm text-blue-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-blue-400 dark:hover:bg-zinc-800">
+                                + {{ __('Create') }} "{{ $newTagSearch }}"
+                            </button>
+                        @endif
+                    </div>
+                </div>
+
                 <div class="flex items-center gap-2">
-                    <flux:button size="sm" variant="primary" wire:click="createEntry">{{ __('Save') }}</flux:button>
+                    <flux:button size="sm" variant="primary" wire:click="createEntry" wire:loading.attr="disabled">
+                        <span wire:loading.remove wire:target="createEntry">{{ __('Save') }}</span>
+                        <span wire:loading wire:target="createEntry">…</span>
+                    </flux:button>
                     <flux:button size="sm" wire:click="cancelNewEntry">{{ __('Cancel') }}</flux:button>
                 </div>
             </div>
@@ -68,7 +140,7 @@
                 </button>
             @endif
 
-            <div class="diary-pages mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-4 overflow-hidden px-0"
+            <div class="diary-pages diary-pages-responsive mx-auto flex flex-1 w-full max-w-5xl items-stretch gap-4 overflow-hidden px-0"
                  :class="{ 'diary-turn-left': turning && direction === 'left', 'diary-turn-right': turning && direction === 'right' }">
                 @forelse($entries as $entry)
                     @php $moodClass = $entry->mood ? 'mood-' . $entry->mood->value : ''; @endphp
@@ -79,16 +151,22 @@
                         @if($editingEntryId === $entry->id)
                             <div class="relative z-[3] flex flex-1 flex-col gap-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
+                                @error('editTitle') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                                 <flux:textarea wire:model="editBody" placeholder="{{ __('Write...') }}" class="flex-1" rows="10" />
+                                @error('editBody') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+                                @include('livewire.partials.diary-tag-editor', ['tagIds' => $editTagIds, 'searchProp' => 'tagSearch', 'toggleMethod' => 'toggleEditTag', 'createMethod' => 'createEditTagInline'])
                                 <div class="flex items-center gap-2">
-                                    <flux:button size="sm" variant="primary" wire:click="saveEntry">{{ __('Save') }}</flux:button>
+                                    <flux:button size="sm" variant="primary" wire:click="saveEntry" wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="saveEntry">{{ __('Save') }}</span>
+                                        <span wire:loading wire:target="saveEntry">…</span>
+                                    </flux:button>
                                     <flux:button size="sm" wire:click="cancelEditing">{{ __('Cancel') }}</flux:button>
                                 </div>
                             </div>
                         @else
                             <div class="relative z-[3] mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
-                                    {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
+                                    {{ $entry->created_at?->translatedFormat('l, j F Y H:i') }}
                                 </span>
                                 <div class="flex items-center gap-2">
                                     @if($entry->mood)
@@ -108,6 +186,13 @@
                                     {!! $entry->body !!}
                                 </div>
                             </div>
+                            @if($entry->tags->isNotEmpty())
+                                <div class="relative z-[3] mt-2 flex flex-wrap gap-1">
+                                    @foreach($entry->tags as $tag)
+                                        <span class="rounded-full bg-zinc-200/60 px-2 py-0.5 text-[0.65rem] text-zinc-600 dark:bg-zinc-700/60 dark:text-zinc-400">{{ $tag->name }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
                             <p class="relative z-[3] mt-3 text-[0.65rem] italic text-zinc-400">{{ __('Double-click to edit') }}</p>
                         @endif
                     </div>
@@ -149,16 +234,22 @@
                         @if($editingEntryId === $entry->id)
                             <div class="relative z-[3] space-y-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
+                                @error('editTitle') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
                                 <flux:textarea wire:model="editBody" placeholder="{{ __('Write...') }}" rows="6" />
+                                @error('editBody') <span class="text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+                                @include('livewire.partials.diary-tag-editor', ['tagIds' => $editTagIds, 'searchProp' => 'tagSearch', 'toggleMethod' => 'toggleEditTag', 'createMethod' => 'createEditTagInline'])
                                 <div class="flex items-center gap-2">
-                                    <flux:button size="sm" variant="primary" wire:click="saveEntry">{{ __('Save') }}</flux:button>
+                                    <flux:button size="sm" variant="primary" wire:click="saveEntry" wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="saveEntry">{{ __('Save') }}</span>
+                                        <span wire:loading wire:target="saveEntry">…</span>
+                                    </flux:button>
                                     <flux:button size="sm" wire:click="cancelEditing">{{ __('Cancel') }}</flux:button>
                                 </div>
                             </div>
                         @else
                             <div class="relative z-[3] mb-3 flex items-center justify-between">
                                 <span class="text-xs font-medium uppercase tracking-wide text-zinc-400">
-                                    {{ $entry->created_at?->format('l, j F Y \a\t H:i') }}
+                                    {{ $entry->created_at?->translatedFormat('l, j F Y H:i') }}
                                 </span>
                                 <div class="flex items-center gap-2">
                                     @if($entry->mood)
@@ -178,6 +269,13 @@
                                     {!! $entry->body !!}
                                 </div>
                             </div>
+                            @if($entry->tags->isNotEmpty())
+                                <div class="relative z-[3] mt-2 flex flex-wrap gap-1">
+                                    @foreach($entry->tags as $tag)
+                                        <span class="rounded-full bg-zinc-200/60 px-2 py-0.5 text-[0.65rem] text-zinc-600 dark:bg-zinc-700/60 dark:text-zinc-400">{{ $tag->name }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
                             <p class="relative z-[3] mt-3 text-[0.65rem] italic text-zinc-400">{{ __('Double-click to edit') }}</p>
                         @endif
                     </div>

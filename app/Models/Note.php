@@ -25,6 +25,7 @@ class Note extends Model
         'mood',
         'color_override',
         'is_public',
+        'created_at',
     ];
 
     protected function casts(): array

@@ -8,6 +8,7 @@ use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Reminder;
 use App\Models\Tag;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
@@ -54,6 +55,8 @@ class Canvas extends Component
 
     /** @var array<int, string> */
     public array $editorTagIds = [];
+
+    public string $editorRemindAt = '';
 
     public string $tagSearch = '';
 
@@ -187,6 +190,49 @@ class Canvas extends Component
         $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
     }
 
+    public function createReminder(DesktopService $service, float $centerX = 2000.0, float $centerY = 2000.0): void
+    {
+        $user = Auth::user();
+
+        $reminder = Reminder::create([
+            'user_id' => $user->id,
+            'title' => '',
+            'body' => '',
+            'remind_at' => now()->addDay(),
+            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+        ]);
+
+        $position = $service->assignDefaultPosition($user, $reminder->id, 'reminder', $centerX, $centerY);
+
+        $card = [
+            'id' => $reminder->id,
+            'type' => 'reminder',
+            'title' => '',
+            'preview' => '',
+            'mood' => $reminder->mood?->value ?? 'summer',
+            'color_override' => null,
+            'is_public' => false,
+            'x' => $position->x,
+            'y' => $position->y,
+            'z_index' => $position->z_index,
+            'owner_id' => $user->id,
+            'created_at' => $reminder->created_at->toIso8601String(),
+            'updated_at' => $reminder->updated_at->toIso8601String(),
+            'parent_id' => null,
+            'parent_type' => null,
+            'children_count' => 0,
+            'siblings_count' => 0,
+            'width' => null,
+            'height' => null,
+            'tag_ids' => [],
+        ];
+
+        $this->cards[] = $card;
+        $this->maxZIndex = $position->z_index;
+
+        $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
+    }
+
     public function updatedImageUpload(): void
     {
         $this->uploadImage(app(EditorImageService::class), app(DesktopService::class));
@@ -292,6 +338,9 @@ class Canvas extends Component
         $this->editorBody = $model->body ?? '';
         $this->editorMood = $model->mood?->value ?? 'plain';
         $this->editorColorOverride = $model->color_override ?? null;
+        $this->editorRemindAt = ($entityType === 'reminder' && $model->remind_at)
+            ? $model->remind_at->format('Y-m-d\TH:i')
+            : '';
         $this->loadTagsForEditor($model);
         $this->showEditorModal = true;
     }
@@ -332,8 +381,12 @@ class Canvas extends Component
         $mood = Mood::tryFrom($this->editorMood) ?? Mood::Plain;
         $data = ['body' => $this->editorBody, 'mood' => $mood, 'color_override' => $this->editorColorOverride];
 
-        if (in_array($card['type'], ['diary_entry', 'note'], true)) {
+        if (in_array($card['type'], ['diary_entry', 'note', 'reminder'], true)) {
             $data['title'] = $this->editorTitle;
+        }
+
+        if ($card['type'] === 'reminder' && $this->editorRemindAt !== '') {
+            $data['remind_at'] = $this->editorRemindAt;
         }
 
         $model->update($data);
@@ -601,6 +654,28 @@ class Canvas extends Component
         $this->dispatch('card-detached', entityId: $entityId, parentId: $parentId);
     }
 
+    public function toggleHidden(string $entityId, string $entityType): void
+    {
+        $user = Auth::user();
+
+        $position = \App\Models\EntityPosition::query()
+            ->where('user_id', $user->id)
+            ->where('entity_id', $entityId)
+            ->where('entity_type', $entityType)
+            ->where('context', 'desktop')
+            ->first();
+
+        if (! $position) {
+            return;
+        }
+
+        $position->update(['is_hidden' => ! $position->is_hidden]);
+
+        $this->updateCardInList($entityId, ['is_hidden' => $position->is_hidden]);
+
+        $this->dispatch('card-visibility-changed', entityId: $entityId, isHidden: $position->is_hidden);
+    }
+
     public function togglePublic(string $entityId, string $entityType): void
     {
         $model = $this->resolveEntity($entityId, $entityType);
@@ -613,6 +688,25 @@ class Canvas extends Component
         $model->update(['is_public' => ! $model->is_public]);
 
         $this->updateCardInList($entityId, ['is_public' => ! $model->is_public]);
+    }
+
+    /**
+     * @return array<int, array{id: string, image_url: string, title: string}>
+     */
+    public function getVisionBoardImages(): array
+    {
+        $user = Auth::user();
+
+        return \App\Models\Image::where('user_id', $user->id)
+            ->latest()
+            ->limit(20)
+            ->get()
+            ->map(fn (\App\Models\Image $img): array => [
+                'id' => $img->id,
+                'image_url' => route('images.serve', $img),
+                'title' => $img->title ?? $img->alt ?? '',
+            ])
+            ->all();
     }
 
     public function render(): \Illuminate\Contracts\View\View
@@ -629,6 +723,7 @@ class Canvas extends Component
         $this->editorColorOverride = null;
         $this->editorImage = null;
         $this->imageUpload = null;
+        $this->editorRemindAt = '';
         $this->editorTagIds = [];
         $this->tagSearch = '';
         $this->availableTags = [];
@@ -721,8 +816,12 @@ class Canvas extends Component
             'color_override' => $this->editorColorOverride,
         ];
 
-        if (in_array($card['type'], ['diary_entry', 'note'], true)) {
+        if (in_array($card['type'], ['diary_entry', 'note', 'reminder'], true)) {
             $data['title'] = $this->editorTitle;
+        }
+
+        if ($card['type'] === 'reminder' && $this->editorRemindAt !== '') {
+            $data['remind_at'] = $this->editorRemindAt;
         }
 
         $model->update($data);

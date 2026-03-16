@@ -96,6 +96,17 @@ select:focus[data-flux-control] {
     --card-badge-text: var(--color-zinc-300);
 }
 
+.desktop-card-hidden {
+    opacity: 0.15;
+    filter: grayscale(0.8);
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.desktop-card-hidden:hover {
+    opacity: 0.4;
+    filter: grayscale(0.4);
+}
+
 .desktop-card-selected {
     outline: 2px solid var(--color-blue-400);
     outline-offset: 1px;
@@ -126,6 +137,10 @@ select:focus[data-flux-control] {
 .desktop-card-date {
     @apply ml-auto whitespace-nowrap text-[0.6rem] opacity-50;
     cursor: default;
+}
+
+.desktop-card-shared {
+    @apply absolute bottom-1 left-1.5 flex items-center gap-1 text-[0.55rem] opacity-50;
 }
 
 .desktop-card-public {
@@ -759,13 +774,75 @@ select:focus[data-flux-control] {
     animation: notebook-open 0.3s ease-out;
 }
 
+/* ─── Vision Board Widget on Canvas ─── */
+
+.vb-widget {
+    width: 200px;
+    min-height: 100px;
+    @apply rounded-lg border bg-[var(--card-bg,var(--color-zinc-50))] p-3 shadow-md;
+    border-color: var(--card-border, var(--color-zinc-200));
+    color: var(--card-text, var(--color-zinc-800));
+}
+
+.dark .vb-widget {
+    --card-bg: var(--color-zinc-800);
+    --card-border: var(--color-zinc-600);
+}
+
+.vb-widget-closed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 1rem 0;
+    cursor: pointer;
+}
+
+.vb-widget-open {
+    width: 280px;
+}
+
+.vb-widget-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
 /* ─── Theme Background Scene ─── */
 
 [data-theme-scene] {
     background-image: var(--theme-scene, none);
-    background-size: 100% 45vh;
+    background-size: contain;
     background-repeat: no-repeat;
     background-position: bottom center;
+}
+
+/* ─── Night Theme: Force Dark Appearance ─── */
+
+.theme-night {
+    color-scheme: dark;
+}
+
+.theme-night,
+.theme-night * {
+    --theme-forced-dark: 1;
+}
+
+html:not(.dark) .theme-night {
+    --theme-bg: #0a0a1a;
+    --theme-bg-secondary: #101030;
+    --theme-sidebar-bg: #0d0d22;
+    --theme-sidebar-border: #1a1a4e;
+    --theme-text: #9fa8da;
+    --theme-text-muted: #7078aa;
+    --theme-accent: #3f51b5;
+    --theme-accent-hover: #5c6bc0;
+    --theme-border: #1a1a4e;
+    --theme-header-bg: #0d0d22;
+    --theme-card-glow: rgba(63, 81, 181, 0.2);
 }
 
 /* ─── Diary Page Navigation ─── */
@@ -776,6 +853,12 @@ select:focus[data-flux-control] {
 
 .diary-pages {
     transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+@media (max-width: 767px) {
+    .diary-pages-responsive > :nth-child(n+2) {
+        display: none;
+    }
 }
 
 .diary-turn-left {
@@ -867,11 +950,165 @@ select:focus[data-flux-control] {
     border-radius: inherit;
     opacity: 0.5;
     transition: opacity 0.3s ease;
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
 }
 
 .diary-entry-themed:hover .diary-entry-glitter,
 .diary-entry-themed:focus-within .diary-entry-glitter {
     opacity: 1;
+}
+
+/* ─── Page-level Glitter Overlay ─── */
+
+.page-glitter-wrapper {
+    position: relative;
+}
+
+.page-glitter {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.35;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 75%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 75%, transparent 100%);
+}
+
+/* ─── Calendar View ─── */
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.calendar-day {
+    min-height: 5rem;
+    cursor: pointer;
+    background: color-mix(in srgb, var(--theme-bg) 60%, transparent);
+}
+
+.calendar-day:hover {
+    background: color-mix(in srgb, var(--theme-bg-secondary) 80%, transparent);
+}
+
+.calendar-day--today {
+    background: color-mix(in srgb, var(--theme-accent) 8%, transparent);
+}
+
+.calendar-day--selected {
+    background: color-mix(in srgb, var(--theme-accent) 12%, transparent);
+}
+
+.calendar-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.calendar-dot-star {
+    font-size: 8px;
+    line-height: 1;
+    color: var(--theme-accent);
+}
+
+.calendar-dot-bell {
+    font-size: 7px;
+    line-height: 1;
+}
+
+/* Mood-colored dots */
+.calendar-dot.mood-spring { background: #81c784; }
+.calendar-dot.mood-summer { background: #ffd54f; }
+.calendar-dot.mood-autumn { background: #ff8a65; }
+.calendar-dot.mood-winter { background: #90caf9; }
+.calendar-dot.mood-love { background: #f48fb1; }
+.calendar-dot.mood-breeze { background: #80deea; }
+.calendar-dot.mood-night { background: #9fa8da; }
+.calendar-dot.mood-cozy { background: #bcaaa4; }
+.calendar-dot.mood-plain { background: #bdbdbd; }
+.calendar-dot.mood-custom { background: #ce93d8; }
+
+/* Entity type badges in selected day panel */
+.mood-spring-badge { background: color-mix(in srgb, #81c784 20%, transparent); color: #2e7d32; }
+.mood-summer-badge { background: color-mix(in srgb, #ffd54f 20%, transparent); color: #f57f17; }
+.mood-autumn-badge { background: color-mix(in srgb, #ff8a65 20%, transparent); color: #bf360c; }
+.mood-winter-badge { background: color-mix(in srgb, #90caf9 20%, transparent); color: #1565c0; }
+.mood-love-badge { background: color-mix(in srgb, #f48fb1 20%, transparent); color: #c2185b; }
+.mood-breeze-badge { background: color-mix(in srgb, #80deea 20%, transparent); color: #00838f; }
+.mood-night-badge { background: color-mix(in srgb, #9fa8da 20%, transparent); color: #303f9f; }
+.mood-cozy-badge { background: color-mix(in srgb, #bcaaa4 20%, transparent); color: #5d4037; }
+.mood-plain-badge { background: color-mix(in srgb, #bdbdbd 20%, transparent); color: #616161; }
+.mood-custom-badge { background: color-mix(in srgb, #ce93d8 20%, transparent); color: #7b1fa2; }
+
+.dark .mood-spring-badge { color: #a5d6a7; }
+.dark .mood-summer-badge { color: #ffe082; }
+.dark .mood-autumn-badge { color: #ffab91; }
+.dark .mood-winter-badge { color: #bbdefb; }
+.dark .mood-love-badge { color: #f8bbd0; }
+.dark .mood-breeze-badge { color: #b2ebf2; }
+.dark .mood-night-badge { color: #c5cae9; }
+.dark .mood-cozy-badge { color: #d7ccc8; }
+.dark .mood-plain-badge { color: #e0e0e0; }
+.dark .mood-custom-badge { color: #e1bee7; }
+
+/* ─── Mood Background Variables for Calendar Days ─── */
+
+:root {
+    --mood-spring-bg: #e8f5e9;
+    --mood-spring-border: #a5d6a7;
+    --mood-summer-bg: #fff8e1;
+    --mood-summer-border: #ffe082;
+    --mood-autumn-bg: #fff3e0;
+    --mood-autumn-border: #ffab40;
+    --mood-winter-bg: #e3f2fd;
+    --mood-winter-border: #90caf9;
+    --mood-love-bg: #fce4ec;
+    --mood-love-border: #f48fb1;
+    --mood-breeze-bg: #e0f7fa;
+    --mood-breeze-border: #80deea;
+    --mood-night-bg: #e8eaf6;
+    --mood-night-border: #9fa8da;
+    --mood-cozy-bg: #efebe9;
+    --mood-cozy-border: #bcaaa4;
+    --mood-plain-bg: #f5f5f5;
+    --mood-plain-border: #bdbdbd;
+}
+
+.dark {
+    --mood-spring-bg: #142014;
+    --mood-spring-border: #1b5e20;
+    --mood-summer-bg: #3e2e00;
+    --mood-summer-border: #6d4c00;
+    --mood-autumn-bg: #2a1800;
+    --mood-autumn-border: #4e2700;
+    --mood-winter-bg: #0d2137;
+    --mood-winter-border: #0d47a1;
+    --mood-love-bg: #3b1020;
+    --mood-love-border: #6a1b2a;
+    --mood-breeze-bg: #002a30;
+    --mood-breeze-border: #004d57;
+    --mood-night-bg: #121836;
+    --mood-night-border: #1a237e;
+    --mood-cozy-bg: #2a1e1a;
+    --mood-cozy-border: #3e2723;
+    --mood-plain-bg: #262626;
+    --mood-plain-border: #525252;
+}
+
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 3.5rem;
+        padding: 0.25rem;
+    }
+
+    .calendar-dot {
+        width: 5px;
+        height: 5px;
+    }
 }
 
 /* ─── Theme Card Animations ─── */
@@ -975,4 +1212,28 @@ select:focus[data-flux-control] {
     height: 100%;
     pointer-events: none;
     z-index: 0;
+}
+
+/* ─── Constellation View ─── */
+
+.constellation-wrapper {
+    background: #0a0a1a;
+    border-radius: 0;
+}
+
+.constellation-stars {
+    z-index: 0;
+    overflow: hidden;
+}
+
+.constellation-stars-canvas {
+    pointer-events: none;
+}
+
+.constellation-wrapper svg {
+    cursor: grab;
+}
+
+.constellation-wrapper svg:active {
+    cursor: grabbing;
 }

@@ -6,8 +6,8 @@
     $wasEdited = $createdAt && $updatedAt && !$createdAt->eq($updatedAt);
     $shortDate = $updatedAt?->format('H:i d/m/y');
     $tooltip = $wasEdited
-        ? __('Created') . ': ' . $createdAt->format('l, j F Y \a\t H:i:s') . "\n" . __('Last updated') . ': ' . $updatedAt->format('l, j F Y \a\t H:i:s')
-        : ($createdAt?->format('l, j F Y \a\t H:i:s') ?? '');
+        ? __('Created') . ': ' . $createdAt->translatedFormat('l, j F Y H:i:s') . "\n" . __('Last updated') . ': ' . $updatedAt->translatedFormat('l, j F Y H:i:s')
+        : ($createdAt?->translatedFormat('l, j F Y H:i:s') ?? '');
 @endphp
 
 <div class="desktop-card-inner">

@@ -11,6 +11,7 @@ use App\Models\EntityRelationship;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Reminder;
 use App\Models\User;
 use Illuminate\Support\Str;
 
@@ -21,11 +22,6 @@ class DesktopService
      *
      * Includes the user's own entities and public entities from others.
      * Left-joins entity_positions so every card has coordinates.
-     *
-     * @return array<int, array{id: string, type: string, title: string, preview: string, mood: string|null, color_override: string|null, is_public: bool, x: float, y: float, z_index: int, owner_id: int}>
-     */
-    /**
-     * Load all entity cards for a user's desktop.
      *
      * @param  array<string, class-string>|null  $entityTypes  Override which entity types to load
      */
@@ -38,15 +34,17 @@ class DesktopService
             'note' => Note::class,
             'postit' => Postit::class,
             'image' => Image::class,
+            'reminder' => Reminder::class,
         ];
 
-        // Pre-load all relationships for efficient lookups
-        $relationships = EntityRelationship::all();
-
+        // Collect all entities first
+        $allEntities = [];
         foreach ($entityTypes as $morphType => $modelClass) {
             $query = $modelClass::query()
                 ->where('user_id', $user->id)
                 ->orWhere('is_public', true);
+
+            $query->with('user');
 
             if (method_exists($modelClass, 'tags')) {
                 $query->with('tags');
@@ -55,15 +53,33 @@ class DesktopService
             $entities = $query->get();
 
             foreach ($entities as $entity) {
-                $position = EntityPosition::query()
-                    ->where('user_id', $user->id)
-                    ->where('entity_id', $entity->id)
-                    ->where('entity_type', $morphType)
-                    ->where('context', $context)
-                    ->first();
-
-                $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
+                $allEntities[] = ['entity' => $entity, 'morphType' => $morphType];
             }
+        }
+
+        // Batch load all positions for this user+context instead of N+1 queries
+        $entityIds = array_map(fn ($item) => $item['entity']->id, $allEntities);
+        $positions = EntityPosition::query()
+            ->where('user_id', $user->id)
+            ->where('context', $context)
+            ->whereIn('entity_id', $entityIds)
+            ->get()
+            ->keyBy(fn ($pos) => $pos->entity_id . ':' . $pos->entity_type);
+
+        // Load only relationships involving the collected entity IDs
+        $relationships = EntityRelationship::query()
+            ->where(function ($q) use ($entityIds) {
+                $q->whereIn('entity_a_id', $entityIds)
+                  ->orWhereIn('entity_b_id', $entityIds);
+            })
+            ->get();
+
+        foreach ($allEntities as $item) {
+            $entity = $item['entity'];
+            $morphType = $item['morphType'];
+            $position = $positions->get($entity->id . ':' . $morphType);
+
+            $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
         }
 
         return $cards;
@@ -284,10 +300,11 @@ class DesktopService
             'note' => $entity->title ?? '',
             'postit' => '',
             'image' => $entity->title ?? $entity->alt ?? '',
+            'reminder' => $entity->title ?? '',
         };
 
         $preview = match ($type) {
-            'diary_entry', 'note', 'postit' => Str::limit(strip_tags($entity->body ?? ''), 120),
+            'diary_entry', 'note', 'postit', 'reminder' => Str::limit(strip_tags($entity->body ?? ''), 120),
             'image' => $entity->alt ?? '',
         };
 
@@ -325,6 +342,8 @@ class DesktopService
             'siblings_count' => $relData['siblings_count'],
             'tag_ids' => $tagIds,
             'image_url' => $imageUrl,
+            'is_hidden' => (bool) ($position?->is_hidden ?? false),
+            'owner_name' => $entity->user?->name ?? '',
         ];
     }
 }

@@ -1,6 +1,7 @@
-<div class="flex h-screen flex-col overflow-hidden">
+<div class="page-glitter-wrapper flex h-screen flex-col overflow-hidden">
+    <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
     {{-- Toolbar --}}
-    <div class="flex min-w-0 items-center gap-2 overflow-hidden border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
+    <div class="relative z-10 flex min-w-0 items-center gap-2 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
         {{-- Full buttons (wide screens) --}}
         <div class="hidden shrink-0 items-center gap-1 lg:flex">
             <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'diary' })">
@@ -14,6 +15,9 @@
             </flux:button>
             <flux:button size="sm" icon="plus" x-on:click="$refs.standaloneImageInput.click()">
                 {{ __('Image') }}
+            </flux:button>
+            <flux:button size="sm" icon="bell" x-on:click="$dispatch('create-entity', { mode: 'reminder' })">
+                {{ __('Reminder') }}
             </flux:button>
         </div>
 
@@ -42,6 +46,10 @@
                         class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
                     {{ __('Image') }}
                 </button>
+                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'reminder' }); createOpen = false"
+                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                    {{ __('Reminder') }}
+                </button>
             </div>
         </div>
 
@@ -54,7 +62,7 @@
         <flux:spacer />
 
         {{-- Search & Filter --}}
-        <div x-data="desktopSearch" class="flex items-center gap-2">
+        <div x-data="desktopSearch" data-current-user-id="{{ auth()->id() }}" class="flex items-center gap-2">
             {{-- Entity type multi-select filter (icons) --}}
             <div class="hidden items-center gap-0.5 rounded-md border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800 md:flex">
                 {{-- Diary --}}
@@ -135,6 +143,15 @@
                     @endforeach
                 </div>
             </div>
+
+            {{-- Toggle shared elements visibility --}}
+            <button type="button"
+                    x-on:click="showShared = !showShared; filterCards()"
+                    :class="showShared ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                    class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                    title="{{ __('Show shared') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.47.353-2.856.978-4.082" /></svg>
+            </button>
         </div>
 
         <span class="h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600"></span>
@@ -158,6 +175,12 @@
                     class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
                     title="{{ __('Snap to Grid') }}">
                 <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
+            </button>
+            <button type="button" x-on:click="toggleWidgets()"
+                    :class="showWidgets ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                    title="{{ __('Widgets') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75l-5.571-3m11.142 0L21.75 12l-4.179 2.25m0 0L12 17.25l-5.571-3m11.142 0L21.75 16.5 12 21.75 2.25 16.5l4.179-2.25" /></svg>
             </button>
 
             <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
@@ -198,8 +221,21 @@
         <flux:button size="sm" variant="ghost" wire:click="cancelLinking">{{ __('Cancel') }}</flux:button>
     </div>
 
+    {{-- Empty state for first-time users --}}
+    @if(count($cards) === 0)
+        <div class="flex flex-1 flex-col items-center justify-center gap-4 p-8">
+            <div class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--theme-accent)]/10">
+                <flux:icon name="sparkles" variant="outline" class="size-8 text-[var(--theme-accent)]" />
+            </div>
+            <div class="text-center">
+                <h2 class="text-lg font-semibold text-[var(--theme-text)]">{{ __('Canvas — your creative workspace') }}</h2>
+                <p class="mt-1 text-sm text-[var(--theme-text-muted)]">{{ __('Create your first entry using the buttons above.') }}</p>
+            </div>
+        </div>
+    @endif
+
     {{-- Canvas container --}}
-    <div class="relative flex-1 overflow-auto"
+    <div class="relative flex-1 overflow-auto {{ count($cards) === 0 ? 'hidden' : '' }}"
          id="desktop-viewport"
          x-data="desktopViewport"
          x-on:scroll="updateScroll()">
@@ -228,10 +264,11 @@
                          entityType: '{{ $card['type'] }}',
                          isOwner: {{ $card['owner_id'] === auth()->id() ? 'true' : 'false' }},
                          isPublic: {{ $card['is_public'] ? 'true' : 'false' }},
+                         isHidden: {{ !empty($card['is_hidden']) ? 'true' : 'false' }},
                          mood: '{{ $card['mood'] ?? 'plain' }}',
                          hasParent: {{ !empty($card['parent_id']) ? 'true' : 'false' }}
                      })"
-                     class="desktop-card {{ $card['mood'] ? 'mood-' . $card['mood'] : 'mood-plain' }} card-type-{{ $card['type'] }} touch-none select-none">
+                     class="desktop-card {{ $card['mood'] ? 'mood-' . $card['mood'] : 'mood-plain' }} card-type-{{ $card['type'] }} touch-none select-none {{ !empty($card['is_hidden']) ? 'desktop-card-hidden' : '' }}">
                     <x-desktop.entity-card :card="$card" />
                 </div>
             @endforeach
@@ -241,6 +278,7 @@
                 $diaryCount = collect($cards)->where('type', 'diary_entry')->count();
             @endphp
             <div data-card-type="diary_notebook"
+                 x-show="Alpine.store('desktop').showWidgets"
                  x-data="diaryNotebook"
                  x-on:dblclick="toggle()"
                  :class="isOpen ? 'is-open' : ''"
@@ -277,6 +315,51 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Vision Board Widget (view-only) --}}
+            <div data-card-type="vision_board_widget"
+                 x-show="Alpine.store('desktop').showWidgets"
+                 x-data="{
+                     isOpen: false,
+                     images: [],
+                     loaded: false,
+                     async toggle() {
+                         this.isOpen = !this.isOpen;
+                         if (this.isOpen && !this.loaded) {
+                             this.images = await $wire.getVisionBoardImages();
+                             this.loaded = true;
+                         }
+                     }
+                 }"
+                 x-on:dblclick="toggle()"
+                 class="vb-widget touch-none select-none"
+                 style="position: absolute; left: 350px; top: 100px; z-index: 1;">
+
+                <template x-if="!isOpen">
+                    <div class="vb-widget-closed">
+                        <svg class="size-8 opacity-40" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.007-9.963-7.178z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        <span class="text-xs font-medium opacity-60">{{ __('Vision Board') }}</span>
+                        <span class="text-[0.6rem] opacity-40">{{ __('Double-click to open') }}</span>
+                    </div>
+                </template>
+
+                <template x-if="isOpen">
+                    <div class="vb-widget-open">
+                        <div class="mb-2 flex items-center justify-between">
+                            <span class="text-xs font-semibold opacity-70">{{ __('Vision Board') }}</span>
+                            <a href="{{ route('vision-board') }}" wire:navigate class="text-[0.6rem] text-[var(--theme-accent)] hover:underline">{{ __('Open Full') }} &rarr;</a>
+                        </div>
+                        <div class="vb-widget-grid">
+                            <template x-if="images.length === 0">
+                                <div class="col-span-3 py-4 text-center text-xs opacity-50">{{ __('No images yet') }}</div>
+                            </template>
+                            <template x-for="img in images" :key="img.id">
+                                <img :src="img.image_url" :alt="img.title" :title="img.title" class="h-16 w-full rounded object-cover" loading="lazy" />
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
     </div>
 
@@ -309,6 +392,10 @@
                             <span x-text="isPublic ? '{{ __('Make Private') }}' : '{{ __('Make Public') }}'"></span>
                         </button>
 
+                        <button x-on:click="toggleHidden()" class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                            <span x-text="isHidden ? '{{ __('Show on Canvas') }}' : '{{ __('Hide from Canvas') }}'"></span>
+                        </button>
+
                         {{-- Mood submenu --}}
                         <div class="relative" x-data="{ moodOpen: false }">
                             <button x-on:click.stop="moodOpen = !moodOpen"
@@ -328,10 +415,10 @@
                             </div>
                         </div>
 
-                        <div class="my-1 border-t border-zinc-200 dark:border-zinc-700"></div>
+                       {{-- <div class="my-1 border-t border-zinc-200 dark:border-zinc-700"></div>
 
                         {{-- Relationship actions --}}
-                        <button x-on:click="attachTo()"
+                        {{--<button x-on:click="attachTo()"
                                 class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
                             <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" /></svg>
                             {{ __('Attach to…') }}
@@ -347,7 +434,7 @@
                                 <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 {{ __('Detach from Parent') }}
                             </button>
-                        </template>
+                        </template>--}}
 
                         <div class="my-1 border-t border-zinc-200 dark:border-zinc-700"></div>
 
@@ -374,7 +461,7 @@
     </div>
 
     {{-- Editor Modal --}}
-    <flux:modal wire:model="showEditorModal" class="w-full max-w-3xl">
+    <flux:modal wire:model="showEditorModal" class="w-full max-w-3xl" flyout>
         <div class="desktop-editor-modal space-y-4" x-data="tiptapEditor" x-on:keydown.escape.window="syncToWire()"
              :class="'mood-' + ($wire.editorMood || 'plain')"
              :style="$wire.editorColorOverride ? 'background-color: ' + $wire.editorColorOverride : ''"
@@ -387,18 +474,26 @@
              ">
             <flux:heading size="lg">
                 <span x-text="$wire.editingEntityId ? '{{ __('Edit') }}' : '{{ __('New') }}'"></span>
-                <span x-text="$wire.editorMode === 'diary' ? '{{ __('Diary Entry') }}' : ($wire.editorMode === 'postit' ? '{{ __('Post-it') }}' : '{{ __('Note') }}')"></span>
+                <span x-text="$wire.editorMode === 'diary' ? '{{ __('Diary Entry') }}' : ($wire.editorMode === 'postit' ? '{{ __('Post-it') }}' : ($wire.editorMode === 'reminder' ? '{{ __('Reminder') }}' : '{{ __('Note') }}'))"></span>
             </flux:heading>
 
-            @if($editorMode === 'diary' || $editorMode === 'note')
+            @if($editorMode === 'diary' || $editorMode === 'note' || $editorMode === 'reminder')
                 <flux:field>
-                    <flux:label>{{ __('Title') }}</flux:label>
+                    <flux:label>{{ $editorMode === 'reminder' ? __('Reminder title') : __('Title') }}</flux:label>
                     <flux:input wire:model="editorTitle" placeholder="{{ __('Enter title...') }}" />
                 </flux:field>
             @endif
 
-            {{-- Tiptap Toolbar --}}
-            <div class="flex flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-[var(--card-border,var(--color-zinc-200))] bg-[var(--card-bg,var(--color-zinc-50))] px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
+            @if($editorMode === 'reminder')
+                <flux:field>
+                    <flux:label>{{ __('Remind at') }}</flux:label>
+                    <input type="datetime-local" wire:model="editorRemindAt"
+                           class="w-full rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-3 py-1.5 text-sm text-[var(--theme-text)] focus:border-[var(--theme-accent)] focus:outline-none" />
+                </flux:field>
+            @endif
+
+            {{-- Tiptap Toolbar (hidden for now) --}}
+            <div class="hidden flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-[var(--card-border,var(--color-zinc-200))] bg-[var(--card-bg,var(--color-zinc-50))] px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
                 <button type="button" x-on:click="toggleBold()" :class="isActive('bold') ? 'bg-zinc-200 dark:bg-zinc-700' : ''" class="rounded px-2 py-1 text-sm font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700" title="{{ __('Bold') }}">B</button>
                 <button type="button" x-on:click="toggleItalic()" :class="isActive('italic') ? 'bg-zinc-200 dark:bg-zinc-700' : ''" class="rounded px-2 py-1 text-sm italic hover:bg-zinc-200 dark:hover:bg-zinc-700" title="{{ __('Italic') }}">I</button>
                 <button type="button" x-on:click="toggleUnderline()" :class="isActive('underline') ? 'bg-zinc-200 dark:bg-zinc-700' : ''" class="rounded px-2 py-1 text-sm underline hover:bg-zinc-200 dark:hover:bg-zinc-700" title="{{ __('Underline') }}">U</button>
@@ -430,7 +525,7 @@
             </div>
 
             {{-- Tiptap Editor Content --}}
-            <div wire:ignore class="tiptap-editor-content min-h-48 rounded-b-lg border border-[var(--card-border,var(--color-zinc-200))] p-3 dark:border-zinc-700">
+            <div wire:ignore class="tiptap-editor-content min-h-48 rounded-lg border border-[var(--card-border,var(--color-zinc-200))] p-3 dark:border-zinc-700">
                 <div x-ref="editorElement"></div>
             </div>
 

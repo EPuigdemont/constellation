@@ -23,6 +23,7 @@ class EntityPosition extends Model
         'z_index',
         'width',
         'height',
+        'is_hidden',
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class EntityPosition extends Model
             'z_index' => 'integer',
             'width' => 'float',
             'height' => 'float',
+            'is_hidden' => 'boolean',
         ];
     }
 

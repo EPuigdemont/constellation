@@ -1,40 +1,50 @@
 /**
- * Breeze theme — floating cloud wisps
+ * Breeze theme — floating cloud wisps with varied speeds
  */
 
 let animationFrame = null;
 let canvas = null;
 
-const particles = [];
-const MAX_PARTICLES = 10;
+const clouds = [];
+const MAX_CLOUDS = 14;
 
-function createParticle(width, height) {
+function createCloud(width, height, startRandom = false) {
+    const speed = Math.random() * 0.5 + 0.1; // 0.1 to 0.6 — some much faster
     return {
-        x: -30 + Math.random() * 10,
-        y: Math.random() * height,
-        width: Math.random() * 30 + 20,
-        height: Math.random() * 10 + 5,
-        speedX: Math.random() * 0.3 + 0.1,
-        opacity: Math.random() * 0.15 + 0.05,
+        x: startRandom ? Math.random() * width : -60 - Math.random() * 100,
+        y: Math.random() * height * 0.85,
+        // Cloud = group of 2-3 overlapping ellipses
+        parts: Array.from({ length: 2 + Math.floor(Math.random() * 2) }, () => ({
+            offsetX: (Math.random() - 0.5) * 30,
+            offsetY: (Math.random() - 0.5) * 8,
+            rx: Math.random() * 40 + 25,
+            ry: Math.random() * 12 + 6,
+        })),
+        speedX: speed,
+        opacity: Math.random() * 0.12 + 0.04,
     };
 }
 
 function animate(ctx, width, height) {
     ctx.clearRect(0, 0, width, height);
 
-    for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.speedX;
+    for (let i = clouds.length - 1; i >= 0; i--) {
+        const c = clouds[i];
+        c.x += c.speedX;
 
-        if (p.x > width + 40) {
-            particles[i] = createParticle(width, height);
+        // Reset when off-screen right
+        const maxPartWidth = Math.max(...c.parts.map(p => p.rx));
+        if (c.x - maxPartWidth > width + 60) {
+            clouds[i] = createCloud(width, height);
             continue;
         }
 
-        ctx.beginPath();
-        ctx.ellipse(p.x, p.y, p.width / 2, p.height / 2, 0, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(128, 222, 234, ${p.opacity})`;
-        ctx.fill();
+        for (const part of c.parts) {
+            ctx.beginPath();
+            ctx.ellipse(c.x + part.offsetX, c.y + part.offsetY, part.rx, part.ry, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(128, 222, 234, ${c.opacity})`;
+            ctx.fill();
+        }
     }
 
     animationFrame = requestAnimationFrame(() => animate(ctx, width, height));
@@ -52,12 +62,17 @@ export function init() {
     canvas.height = window.innerHeight;
 
     const ctx = canvas.getContext('2d');
-    particles.length = 0;
-    for (let i = 0; i < MAX_PARTICLES; i++) {
-        const p = createParticle(canvas.width, canvas.height);
-        p.x = Math.random() * canvas.width;
-        particles.push(p);
+    clouds.length = 0;
+    for (let i = 0; i < MAX_CLOUDS; i++) {
+        clouds.push(createCloud(canvas.width, canvas.height, true));
     }
+
+    const resizeHandler = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', resizeHandler);
+    canvas._resizeHandler = resizeHandler;
 
     animate(ctx, canvas.width, canvas.height);
 }
@@ -68,8 +83,11 @@ export function destroy() {
         animationFrame = null;
     }
     if (canvas) {
+        if (canvas._resizeHandler) {
+            window.removeEventListener('resize', canvas._resizeHandler);
+        }
         canvas.remove();
         canvas = null;
     }
-    particles.length = 0;
+    clouds.length = 0;
 }

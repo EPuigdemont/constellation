@@ -35,7 +35,10 @@ new class extends Component {
             </flux:subheading>
         </div>
 
-        <flux:input wire:model="password" :label="__('Password')" type="password" viewable />
+        <div>
+            <flux:input wire:model="password" :label="__('Password')" type="password" viewable />
+            @error('password') <span class="mt-1 text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+        </div>
 
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>

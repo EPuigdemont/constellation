@@ -29,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'theme',
+        'language',
         'avatar_path',
         'avatar_disk',
         'desktop_zoom',
@@ -117,6 +118,11 @@ class User extends Authenticatable
     public function importantDates(): HasMany
     {
         return $this->hasMany(ImportantDate::class);
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
     }
 
     public function entityPositions(): HasMany

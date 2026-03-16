@@ -22,6 +22,7 @@ class ImportantDate extends Model
         'label',
         'date',
         'recurs_annually',
+        'is_done',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class ImportantDate extends Model
         return [
             'date' => 'date',
             'recurs_annually' => 'boolean',
+            'is_done' => 'boolean',
         ];
     }
 

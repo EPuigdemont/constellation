@@ -155,49 +155,47 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ---
 
-## Phase 8.5 — Calendar View
+## Phase 8.5 — Calendar View ✅
 
-- [ ] Calendar view: monthly calendar grid showing days with entries/notes/post-its as dots
-- [ ] Click day → list of entries/notes/post-its for that day, with
-- [ ] Filter by month, year, tag, entity type
-
----
-
-## Phase 9 — Constellation View
-
-- [ ] Fully animated, with a "starry night" background and twinkling stars (CSS animation) and a gentle parallax effect when moving the mouse
-- [ ] `ConstellationService`: compute proximity scores for all entity pairs (tags, type, relationships, date)
-- [ ] JSON endpoint `/api/constellation` returning nodes + edges + scores (auth required)
-- [ ] D3.js force-directed graph in `/resources/js/constellation.js`
-- [ ] Nodes styled by entity type and mood color
-- [ ] Edges styled by relationship type (`parent_child` solid, `sibling` dashed)
-- [ ] View toggle: Livewire `$mode` property switches between `desktop` and `constellation`
-- [ ] Animated transition between modes (Alpine.js)
-- [ ] Zoom and pan on constellation canvas (D3 built-in zoom behavior)
-- [ ] Click node → highlight connected nodes, show entity preview panel
-- [ ] Filter panel: filter by tag, entity type, date range, month, weekday
+- [x] Calendar view: monthly calendar grid showing days with entries/notes/post-its as dots
+- [x] Click day → list of entries/notes/post-its for that day, with quick-create form and double-click detail modal
+- [x] Filter by month, year, tag, entity type
 
 ---
 
-## Phase 9.5 — Translations
+## Phase 9 — Constellation View ✅
 
-- [ ] Add Laravel localization support
-- [ ] Create `en` and `es` translation files for all UI text
-- [ ] Add language switcher in settings (saves to `users.language`)
-- [ ] Ensure all UI text is translatable via `__('text.key')`
+- [x] Fully animated, with a "starry night" background and twinkling stars (CSS animation) and a gentle parallax effect when moving the mouse
+- [x] `ConstellationService`: compute proximity scores for all entity pairs (tags, type, relationships, date)
+- [x] D3.js force-directed graph in `/resources/js/constellation.js` (data passed as embedded JSON, not separate API endpoint)
+- [x] Nodes styled by entity type and mood color
+- [x] Edges styled by relationship type (`parent_child` solid, `sibling` dashed, `tag` faint, `date` dotted)
+- [x] Constellation as its own route `/constellation` with sidebar link
+- [x] Zoom and pan on constellation canvas (D3 built-in zoom behavior)
+- [x] Click node → highlight connected nodes, show entity preview panel
+- [x] Filter panel: filter by tag, entity type, date range, month, weekday
 
 ---
 
-## Phase 10 — Reminders & Emotional Features
+## Phase 9.5 — Translations ✅
 
-- [ ] Important dates CRUD (anniversaries, birthdays, custom)
-- [ ] Allow user to input their birthday, name day and other special days in the important dates section, with an option to make them recurring annually
-- [ ] Show birthday, name day, special days, etc in the calendar view with a special icon
-- [ ] Add a "Reminders" entity type that can be created in the Canvas, diary and calendar views, with a date field. When the date is reached, show it as an important date and also show a notification on the desktop view
-- [ ] Show reminders in the calendar view with a special icon, and allow filtering by reminders in the constellation view
-- [ ] Daily check: Laravel scheduler (`php artisan schedule:run`) checks for today's important dates
-- [ ] In-app notification/banner shown on login if a date matches today
-- [ ] "Sad entry" detection: if entry is tagged `sad` on save, query for a past entry tagged `happy`/`grateful` from ~1 week, 1 month, or 1 year ago and surface it as a gentle reminder
+- [x] Add Laravel localization support (`SetLocale` middleware, `lang/` directory)
+- [x] Create `en` and `es` translation files for all UI text (230+ strings)
+- [x] Add language switcher in settings (saves to `users.language`)
+- [x] Ensure all UI text is translatable via `__('text.key')`
+
+---
+
+## Phase 10 — Reminders & Emotional Features ✅
+
+- [x] Important dates CRUD (anniversaries, birthdays, custom)
+- [x] Allow user to input their birthday, name day and other special days in the important dates section, with an option to make them recurring annually
+- [x] Show birthday, name day, special days, etc in the calendar view with a special icon (★ for dates, 🔔 for reminders)
+- [x] Add a "Reminders" entity type that can be created in the Canvas, diary and calendar views, with a date field. When the date is reached, show it as an important date and also show a notification on the desktop view
+- [x] Show reminders in the calendar view with a special icon, and allow filtering by reminders in the constellation view
+- [x] Daily check: Laravel scheduler (`php artisan schedule:run`) checks for today's important dates (`reminders:check` command at 08:00)
+- [x] In-app notification/banner shown on login if a date matches today (dismissible banner via session flash)
+- [x] "Sad entry" detection: if entry is tagged `sad` on save, query for a past entry tagged `happy`/`grateful` from ~1 week, 1 month, or 1 year ago and surface it as a gentle reminder
 
 ---
 
