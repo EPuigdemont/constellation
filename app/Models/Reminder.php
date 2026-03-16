@@ -25,6 +25,7 @@ class Reminder extends Model
         'mood',
         'reminder_type',
         'is_completed',
+        'created_at',
     ];
 
     protected function casts(): array

@@ -14,7 +14,7 @@ use Livewire\Component;
 
 #[Layout('layouts.app')]
 #[Title('Constellation')]
-class ConstellationView extends Component
+class Constellation extends Component
 {
     public string $filterType = 'all';
 

@@ -14,7 +14,7 @@ use Livewire\Component;
 
 #[Layout('layouts.app')]
 #[Title('Notifications')]
-class NotificationsView extends Component
+class Notifications extends Component
 {
     public function toggleReminderDone(string $id): void
     {

@@ -23,11 +23,6 @@ class DesktopService
      * Includes the user's own entities and public entities from others.
      * Left-joins entity_positions so every card has coordinates.
      *
-     * @return array<int, array{id: string, type: string, title: string, preview: string, mood: string|null, color_override: string|null, is_public: bool, x: float, y: float, z_index: int, owner_id: int}>
-     */
-    /**
-     * Load all entity cards for a user's desktop.
-     *
      * @param  array<string, class-string>|null  $entityTypes  Override which entity types to load
      */
     public function loadCards(User $user, string $context = 'desktop', ?array $entityTypes = null): array

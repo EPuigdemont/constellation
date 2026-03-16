@@ -16,7 +16,7 @@ use Livewire\Component;
 
 #[Layout('layouts.app')]
 #[Title('Reminders')]
-class RemindersView extends Component
+class Reminders extends Component
 {
     // Important dates form
     public bool $showDateForm = false;

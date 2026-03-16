@@ -17,7 +17,7 @@ use Livewire\Component;
 
 #[Layout('layouts.app')]
 #[Title('Diary')]
-class DiaryView extends Component
+class Diary extends Component
 {
     public string $displayMode = 'paginated';
 

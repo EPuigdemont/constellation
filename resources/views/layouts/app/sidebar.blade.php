@@ -21,23 +21,23 @@
                     <flux:sidebar.item icon="book-open" :href="route('diary')" :current="request()->routeIs('diary')" wire:navigate>
                         {{ __('Diary') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="squares-2x2" :href="route('canvas')" :current="request()->routeIs('canvas')" wire:navigate>
-                        {{ __('Canvas') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="eye" :href="route('vision-board')" :current="request()->routeIs('vision-board')" wire:navigate>
-                        {{ __('Vision Board') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="photo" :href="route('images')" :current="request()->routeIs('images')" wire:navigate>
-                        {{ __('Images') }}
-                    </flux:sidebar.item>
                     <flux:sidebar.item icon="calendar-days" :href="route('calendar')" :current="request()->routeIs('calendar')" wire:navigate>
                         {{ __('Calendar') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="bell" :href="route('reminders')" :current="request()->routeIs('reminders')" wire:navigate>
                         {{ __('Reminders') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="squares-2x2" :href="route('canvas')" :current="request()->routeIs('canvas')" wire:navigate>
+                        {{ __('Canvas') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="eye" :href="route('vision-board')" :current="request()->routeIs('vision-board')" wire:navigate>
+                        {{ __('Vision Board') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="sparkles" :href="route('constellation')" :current="request()->routeIs('constellation')" wire:navigate>
                         {{ __('Constellation') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="photo" :href="route('images')" :current="request()->routeIs('images')" wire:navigate>
+                        {{ __('Images') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
@@ -60,6 +60,12 @@
                             <flux:icon name="calendar-days" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
+                    <flux:tooltip :content="__('Reminders')" position="right">
+                        <a href="{{ route('reminders') }}" wire:navigate
+                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('reminders'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('reminders')])>
+                            <flux:icon name="bell" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
                     <flux:tooltip :content="__('Canvas')" position="right">
                         <a href="{{ route('canvas') }}" wire:navigate
                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('canvas'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('canvas')])>
@@ -72,22 +78,16 @@
                             <flux:icon name="eye" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
-                    <flux:tooltip :content="__('Images')" position="right">
-                        <a href="{{ route('images') }}" wire:navigate
-                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('images'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('images')])>
-                            <flux:icon name="photo" variant="outline" class="size-5" />
-                        </a>
-                    </flux:tooltip>
-                    <flux:tooltip :content="__('Reminders')" position="right">
-                        <a href="{{ route('reminders') }}" wire:navigate
-                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('reminders'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('reminders')])>
-                            <flux:icon name="bell" variant="outline" class="size-5" />
-                        </a>
-                    </flux:tooltip>
                     <flux:tooltip :content="__('Constellation')" position="right">
                         <a href="{{ route('constellation') }}" wire:navigate
                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('constellation'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('constellation')])>
                             <flux:icon name="sparkles" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Images')" position="right">
+                        <a href="{{ route('images') }}" wire:navigate
+                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('images'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('images')])>
+                            <flux:icon name="photo" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
                 </div>

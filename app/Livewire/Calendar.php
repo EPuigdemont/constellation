@@ -22,7 +22,7 @@ use Livewire\Component;
 
 #[Layout('layouts.app')]
 #[Title('Calendar')]
-class CalendarView extends Component
+class Calendar extends Component
 {
     public int $year;
 
@@ -55,6 +55,10 @@ class CalendarView extends Component
     public string $createTitle = '';
 
     public string $createBody = '';
+
+    public array $createTags = [];
+
+    public string $createDate = '';
 
     public function mount(): void
     {
@@ -118,12 +122,16 @@ class CalendarView extends Component
         $this->showEntityModal = false;
     }
 
-    public function openCreateForm(string $type = 'diary'): void
+    public function openCreateForm(string $type = 'diary', string $tag = ''): void
     {
         $this->createType = $type;
         $this->createTitle = '';
         $this->createBody = '';
         $this->showCreateForm = true;
+        $this->createDate = $this->selectedDate;
+        if ($tag !== '') {
+            $this->createTags = [$tag];
+        }
     }
 
     public function closeCreateForm(): void
@@ -131,6 +139,8 @@ class CalendarView extends Component
         $this->showCreateForm = false;
         $this->createTitle = '';
         $this->createBody = '';
+        $this->createTags = [];
+        $this->createDate = '';
     }
 
     public function saveNewEntity(): void
@@ -138,35 +148,64 @@ class CalendarView extends Component
         $user = Auth::user();
         $mood = Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer;
 
+        $createdAt = null;
+        if ($this->createDate !== '') {
+            $createdAt = Carbon::parse($this->createDate);
+        }
+
         match ($this->createType) {
-            'diary' => DiaryEntry::create([
+            'diary' => $entity = DiaryEntry::create([
                 'user_id' => $user->id,
                 'title' => $this->createTitle ?: 'Untitled',
                 'body' => $this->createBody,
                 'mood' => $mood,
                 'is_public' => false,
+                'created_at' => $createdAt,
             ]),
-            'note' => Note::create([
+            'note' => $entity = Note::create([
                 'user_id' => $user->id,
                 'title' => $this->createTitle ?: 'Untitled',
                 'body' => $this->createBody,
                 'mood' => $mood,
                 'is_public' => false,
+                'created_at' => $createdAt,
             ]),
-            'postit' => Postit::create([
+            'postit' => $entity = Postit::create([
                 'user_id' => $user->id,
                 'body' => $this->createBody,
                 'mood' => $mood,
                 'is_public' => false,
+                'created_at' => $createdAt,
             ]),
-            'reminder' => Reminder::create([
+            'reminder' => $entity = Reminder::create([
                 'user_id' => $user->id,
                 'title' => $this->createTitle ?: 'Reminder',
                 'body' => $this->createBody,
                 'remind_at' => $this->selectedDate ? Carbon::parse($this->selectedDate)->setTime(9, 0) : now()->addDay(),
                 'mood' => $mood,
+                'created_at' => $createdAt,
             ]),
         };
+
+        if (!empty($this->createTags)) {
+            if (in_array('menstruation', $this->createTags) && $this->selectedDate !== '') {
+                CalendarDayMood::updateOrCreate(
+                    ['user_id' => $user->id, 'date' => $this->selectedDate],
+                    ['mood' => 'love'],
+                );
+            }
+            if (in_array('ovulation', $this->createTags) && $this->selectedDate !== '') {
+                CalendarDayMood::updateOrCreate(
+                    ['user_id' => $user->id, 'date' => $this->selectedDate],
+                    ['mood' => 'breeze'],
+                );
+            }
+        }
+
+        if (!empty($this->createTags)) {
+            $tagIds = Tag::whereIn('name', $this->createTags)->pluck('id')->toArray();
+            $entity->tags()->sync($tagIds);
+        }
 
         $this->closeCreateForm();
     }
@@ -185,38 +224,6 @@ class CalendarView extends Component
             ['user_id' => $userId, 'date' => $date],
             ['mood' => $mood],
         );
-    }
-
-    public function saveQuickTaggedNote(string $tagName): void
-    {
-        $user = Auth::user();
-        $mood = Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer;
-
-        $note = Note::create([
-            'user_id' => $user->id,
-            'title' => ucfirst($tagName),
-            'body' => '',
-            'mood' => $mood,
-            'is_public' => false,
-        ]);
-
-        // Override created_at to match the selected date
-        if ($this->selectedDate !== '') {
-            $note->update(['created_at' => Carbon::parse($this->selectedDate)->setTime((int) now()->format('H'), (int) now()->format('i'))]);
-        }
-
-        $tag = Tag::firstOrCreate(
-            ['name' => $tagName, 'user_id' => $user->id],
-        );
-
-        $note->tags()->attach($tag->id);
-
-        if ($tagName === 'menstruation' && $this->selectedDate !== '') {
-            CalendarDayMood::updateOrCreate(
-                ['user_id' => $user->id, 'date' => $this->selectedDate],
-                ['mood' => 'love'],
-            );
-        }
     }
 
     public function render(): View

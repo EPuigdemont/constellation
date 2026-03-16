@@ -150,14 +150,14 @@
                             </button>
                             <div class="my-1 border-t border-[var(--theme-border)]"></div>
                             <button type="button"
-                                    wire:click="saveQuickTaggedNote('menstruation')"
+                                    wire:click="openCreateForm('note', 'menstruation')"
                                     x-on:click="open = false"
                                     class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-[var(--theme-text)] hover:bg-[var(--theme-accent)]/10">
                                 <flux:icon name="heart" variant="outline" class="size-4" />
                                 {{ __('Menstruation') }}
                             </button>
                             <button type="button"
-                                    wire:click="saveQuickTaggedNote('ovulation')"
+                                    wire:click="openCreateForm('note', 'ovulation')"
                                     x-on:click="open = false"
                                     class="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-[var(--theme-text)] hover:bg-[var(--theme-accent)]/10">
                                 <flux:icon name="sparkles" variant="outline" class="size-4" />

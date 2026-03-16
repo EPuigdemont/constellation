@@ -461,7 +461,7 @@
     </div>
 
     {{-- Editor Modal --}}
-    <flux:modal wire:model="showEditorModal" class="w-full max-w-3xl">
+    <flux:modal wire:model="showEditorModal" class="w-full max-w-3xl" flyout>
         <div class="desktop-editor-modal space-y-4" x-data="tiptapEditor" x-on:keydown.escape.window="syncToWire()"
              :class="'mood-' + ($wire.editorMood || 'plain')"
              :style="$wire.editorColorOverride ? 'background-color: ' + $wire.editorColorOverride : ''"
