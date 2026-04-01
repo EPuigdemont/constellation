@@ -1,7 +1,7 @@
 <div class="flex h-screen flex-col overflow-hidden">
     {{-- Toolbar --}}
     <div class="flex items-center gap-3 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
-        <flux:heading size="lg">{{ __('Diary') }}</flux:heading>
+        <flux:heading size="lg" class="max-lg:hidden">{{ __('Diary') }}</flux:heading>
 
         <flux:spacer />
 
@@ -19,14 +19,17 @@
             @endif
         </div>
 
-        <flux:button size="sm" icon="plus" wire:click="openNewEntry">
-            {{ __('New Entry') }}
+        <flux:button size="sm" icon="plus" wire:click="openNewEntry" title="{{ __('New Entry') }}" aria-label="{{ __('New Entry') }}">
+            <x-icons.diary class="hidden size-4 max-[420px]:inline-block" />
+            <span class="max-[420px]:hidden">{{ __('New Entry') }}</span>
         </flux:button>
 
         <flux:button size="sm"
                      x-on:click="$wire.toggleDisplayMode()"
-                     :icon="$displayMode === 'scroll' ? 'book-open' : 'bars-3'">
-            {{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}
+                     :icon="$displayMode === 'scroll' ? 'book-open' : 'bars-3'"
+                     title="{{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}"
+                     aria-label="{{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}">
+            <span class="max-[420px]:hidden">{{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}</span>
         </flux:button>
     </div>
 

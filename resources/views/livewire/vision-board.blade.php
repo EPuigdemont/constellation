@@ -1,113 +1,133 @@
 <div class="page-glitter-wrapper flex h-screen flex-col overflow-hidden">
     <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
     {{-- Toolbar --}}
-    <div class="relative z-10 flex min-w-0 items-center gap-2 overflow-hidden border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
-        <flux:button size="sm" icon="plus" x-on:click="$refs.vbImageInput.click()" wire:loading.attr="disabled" wire:target="imageUpload">
-            <span wire:loading.remove wire:target="imageUpload">{{ __('Upload Image') }}</span>
-            <span wire:loading wire:target="imageUpload">{{ __('Uploading...') }}</span>
-        </flux:button>
-        <flux:button size="sm" icon="arrow-down-tray" x-on:click="$dispatch('vb-export')">
-            {{ __('Export PNG') }}
-        </flux:button>
+    <div x-data="visionBoardToolbar"
+         class="relative z-10 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))] min-[836px]:flex min-[836px]:items-center min-[836px]:gap-2 min-[836px]:flex-nowrap">
+        <div class="flex min-w-0 items-center gap-2 min-[836px]:contents">
+            <flux:button size="sm"
+                         icon="plus"
+                         x-on:click="$refs.vbImageInput.click()"
+                         wire:loading.attr="disabled"
+                         wire:target="imageUpload"
+                         title="{{ __('Upload Image') }}"
+                         aria-label="{{ __('Upload Image') }}" />
+            <flux:button size="sm"
+                         icon="arrow-down-tray"
+                         x-on:click="$dispatch('vb-export')"
+                         title="{{ __('Export PNG') }}"
+                         aria-label="{{ __('Export PNG') }}" />
 
-        <input type="file"
-               x-ref="vbImageInput"
-               accept="image/jpeg,image/png,image/gif,image/webp"
-               class="hidden"
-               wire:model="imageUpload" />
+            <input type="file"
+                   x-ref="vbImageInput"
+                   accept="image/jpeg,image/png,image/gif,image/webp"
+                   class="hidden"
+                   wire:model="imageUpload" />
 
-        <flux:spacer />
+            <flux:spacer class="min-[836px]:hidden" />
 
-        {{-- Search --}}
-        <div x-data="visionBoardSearch" class="flex items-center gap-2">
-            <div class="relative">
-                <input type="text"
-                       x-model="searchQuery"
-                       x-on:input.debounce.250ms="filterCards()"
-                       placeholder="{{ __('Search images...') }}"
-                       class="w-28 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 lg:w-36">
-                <button x-show="searchQuery !== '' || activeTagFilter !== null"
-                        x-on:click="clearFilters()"
-                        x-cloak
-                        type="button"
-                        class="absolute inset-y-0 right-1 flex items-center px-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-                        title="{{ __('Clear filters') }}">
-                    <x-icons.close class="size-3.5" />
-                </button>
-            </div>
+            <flux:button size="sm"
+                         icon="bars-2"
+                         class="min-[836px]:hidden"
+                         x-on:click="toggleControls()"
+                         x-bind:aria-expanded="controlsOpen"
+                         x-bind:title="controlsOpen ? '{{ __('Hide Controls') }}' : '{{ __('Show Controls') }}'"
+                         x-bind:aria-label="controlsOpen ? '{{ __('Hide Controls') }}' : '{{ __('Show Controls') }}'" />
+        </div>
 
-            {{-- Tag filter --}}
-            <div class="relative" x-data="{ tagFilterOpen: false }">
-                <button type="button"
-                        x-on:click="tagFilterOpen = !tagFilterOpen"
-                        :class="activeTagFilter ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                        class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
-                        title="{{ __('Filter by Tag') }}">
-                    <x-icons.tag />
-                </button>
-                <div x-show="tagFilterOpen"
-                     x-on:click.away="tagFilterOpen = false"
-                     x-cloak
-                     class="absolute right-0 z-50 mt-1 max-h-48 w-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                    <button type="button"
-                            x-on:click="filterByTag(null); tagFilterOpen = false"
-                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                            :class="!activeTagFilter ? 'font-semibold' : ''">
-                        {{ __('All Tags') }}
+        <div x-show="!isCompact || controlsOpen"
+             x-cloak
+             class="mt-2 flex min-w-0 flex-wrap items-center gap-2 min-[836px]:mt-0 min-[836px]:contents">
+            {{-- Search --}}
+            <div x-data="visionBoardSearch" class="flex min-w-0 flex-wrap items-center gap-2">
+                <div class="relative">
+                    <input type="text"
+                           x-model="searchQuery"
+                           x-on:input.debounce.250ms="filterCards()"
+                           placeholder="{{ __('Search images...') }}"
+                           class="w-28 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 lg:w-36">
+                    <button x-show="searchQuery !== '' || activeTagFilter !== null"
+                            x-on:click="clearFilters()"
+                            x-cloak
+                            type="button"
+                            class="absolute inset-y-0 right-1 flex items-center px-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                            title="{{ __('Clear filters') }}">
+                        <x-icons.close class="size-3.5" />
                     </button>
-                    @foreach($filterAvailableTags as $tag)
+                </div>
+
+                {{-- Tag filter --}}
+                <div class="relative" x-data="{ tagFilterOpen: false }">
+                    <button type="button"
+                            x-on:click="tagFilterOpen = !tagFilterOpen"
+                            :class="activeTagFilter ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                            class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                            title="{{ __('Filter by Tag') }}">
+                        <x-icons.tag />
+                    </button>
+                    <div x-show="tagFilterOpen"
+                         x-on:click.away="tagFilterOpen = false"
+                         x-cloak
+                         class="absolute right-0 z-50 mt-1 max-h-48 w-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
                         <button type="button"
-                                x-on:click="filterByTag('{{ $tag['id'] }}'); tagFilterOpen = false"
+                                x-on:click="filterByTag(null); tagFilterOpen = false"
                                 class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                                :class="activeTagFilter === '{{ $tag['id'] }}' ? 'font-semibold' : ''">
-                            {{ $tag['name'] }}
+                                :class="!activeTagFilter ? 'font-semibold' : ''">
+                            {{ __('All Tags') }}
                         </button>
-                    @endforeach
+                        @foreach($filterAvailableTags as $tag)
+                            <button type="button"
+                                    x-on:click="filterByTag('{{ $tag['id'] }}'); tagFilterOpen = false"
+                                    class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                    :class="activeTagFilter === '{{ $tag['id'] }}' ? 'font-semibold' : ''">
+                                {{ $tag['name'] }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <span class="h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600"></span>
+            <span class="hidden h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600 min-[836px]:inline-block"></span>
 
-        {{-- Canvas view toggles --}}
-        <div x-data="visionBoardToggles" class="flex shrink-0 items-center gap-1">
-            <button type="button" x-on:click="toggleGrid()"
-                    :class="showGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
-                    title="{{ __('Show Grid') }}">
-                <x-icons.grid-bg />
-            </button>
-            <button type="button" x-on:click="toggleGuides()"
-                    :class="showGuides ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
-                    title="{{ __('Show Guide Lines') }}">
-                <x-icons.guides />
-            </button>
-            <button type="button" x-on:click="toggleSnap()"
-                    :class="snapToGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
-                    title="{{ __('Snap to Grid') }}">
-                <x-icons.snap />
-            </button>
+            {{-- Canvas view toggles --}}
+            <div x-data="visionBoardToggles" class="flex shrink-0 items-center gap-1">
+                <button type="button" x-on:click="toggleGrid()"
+                        :class="showGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                        title="{{ __('Show Grid') }}">
+                    <x-icons.grid-bg />
+                </button>
+                <button type="button" x-on:click="toggleGuides()"
+                        :class="showGuides ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                        title="{{ __('Show Guide Lines') }}">
+                    <x-icons.guides />
+                </button>
+                <button type="button" x-on:click="toggleSnap()"
+                        :class="snapToGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                        title="{{ __('Snap to Grid') }}">
+                    <x-icons.snap />
+                </button>
 
-            <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
+                <span class="mx-1 hidden h-5 w-px bg-zinc-300 dark:bg-zinc-600 min-[836px]:inline-block"></span>
 
-            <flux:button size="sm" x-on:click="$dispatch('vb-center-canvas')" title="{{ __('Center Canvas') }}">
-                <x-icons.center-canvas />
-            </flux:button>
-            <flux:button size="sm" x-on:click="$dispatch('vb-zoom-to-fit')" title="{{ __('Zoom to Fit') }}">
-                <x-icons.zoom-fit />
-            </flux:button>
-        </div>
+                <flux:button size="sm" x-on:click="$dispatch('vb-center-canvas')" title="{{ __('Center Canvas') }}">
+                    <x-icons.center-canvas />
+                </flux:button>
+                <flux:button size="sm" x-on:click="$dispatch('vb-zoom-to-fit')" title="{{ __('Zoom to Fit') }}">
+                    <x-icons.zoom-fit />
+                </flux:button>
+            </div>
 
-        <span class="h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600"></span>
+            <span class="hidden h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600 min-[836px]:inline-block"></span>
 
-        {{-- Zoom --}}
-        <div x-data="visionBoardZoom" class="flex shrink-0 items-center gap-2">
-            <flux:button size="sm" icon="minus" x-on:click="zoomOut" />
-            <span class="w-12 text-center text-sm text-zinc-600 dark:text-zinc-400"
-                  x-text="Math.round(zoom * 100) + '%'"></span>
-            <flux:button size="sm" icon="plus" x-on:click="zoomIn" />
+            {{-- Zoom --}}
+            <div x-data="visionBoardZoom" class="flex shrink-0 items-center gap-2">
+                <flux:button size="sm" icon="minus" x-on:click="zoomOut" />
+                <span class="w-12 text-center text-sm text-zinc-600 dark:text-zinc-400"
+                      x-text="Math.round(zoom * 100) + '%'"></span>
+                <flux:button size="sm" icon="plus" x-on:click="zoomIn" />
+            </div>
         </div>
     </div>
 

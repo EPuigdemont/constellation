@@ -106,6 +106,12 @@
         <flux:header class="lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
+            @if(isset($title) && $title)
+                <flux:heading size="sm" class="ml-1 truncate text-[var(--theme-text)]">
+                    {{ $title }}
+                </flux:heading>
+            @endif
+
             <flux:spacer />
 
             <flux:dropdown position="top" align="end">

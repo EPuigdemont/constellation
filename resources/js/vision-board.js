@@ -132,6 +132,47 @@ document.addEventListener('alpine:init', () => {
     });
 
     /**
+     * visionBoardToolbar — responsive controls visibility for compact widths
+     */
+    Alpine.data('visionBoardToolbar', () => ({
+        isCompact: false,
+        controlsOpen: true,
+        _mediaQuery: null,
+        _mediaHandler: null,
+
+        init() {
+            this._mediaQuery = window.matchMedia('(max-width: 835px)');
+            this._mediaHandler = (event) => {
+                this.isCompact = event.matches;
+                this.controlsOpen = !event.matches;
+            };
+
+            this.isCompact = this._mediaQuery.matches;
+            this.controlsOpen = !this.isCompact;
+
+            if (typeof this._mediaQuery.addEventListener === 'function') {
+                this._mediaQuery.addEventListener('change', this._mediaHandler);
+            } else {
+                this._mediaQuery.addListener(this._mediaHandler);
+            }
+        },
+
+        toggleControls() {
+            this.controlsOpen = !this.controlsOpen;
+        },
+
+        destroy() {
+            if (!this._mediaQuery || !this._mediaHandler) return;
+
+            if (typeof this._mediaQuery.removeEventListener === 'function') {
+                this._mediaQuery.removeEventListener('change', this._mediaHandler);
+            } else {
+                this._mediaQuery.removeListener(this._mediaHandler);
+            }
+        },
+    }));
+
+    /**
      * visionBoardCard — draggable/resizable image card
      */
     Alpine.data('visionBoardCard', (card) => ({
