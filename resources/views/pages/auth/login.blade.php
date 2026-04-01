@@ -61,12 +61,13 @@
                     {{ __('Log in') }}
                 </flux:button>
             </div>
-
-            <div class="flex items-center justify-end">
-                <flux:button variant="primary" href="/register" class="w-full">
-                    {{ __('Register') }}
-                </flux:button>
-            </div>
         </form>
+
+        <div class="text-center text-sm text-zinc-600 dark:text-zinc-400">
+            <span>{{ __('Don\'t have an account yet?') }}</span>
+            <flux:link :href="route('register')" wire:navigate class="text-sm font-medium">
+                {{ __('Register here') }}
+            </flux:link>
+        </div>
     </div>
 </x-layouts::auth>
