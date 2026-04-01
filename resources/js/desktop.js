@@ -399,7 +399,7 @@ document.addEventListener('alpine:init', () => {
         showGrid: false,
         showGuides: false,
         snapToGrid: false,
-        showWidgets: true,
+        showWidgets: false,
         linkingMode: '',
         linkingEntityId: '',
         selectedCardId: '',
