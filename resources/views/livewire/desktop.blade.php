@@ -105,7 +105,7 @@
                        x-on:input.debounce.250ms="filterCards()"
                        placeholder="{{ __('Search cards...') }}"
                        class="w-28 rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 lg:w-36">
-                <button x-show="searchQuery !== '' || activeTagFilter !== null || activeTypeFilters.length < allTypes.length"
+                <button x-show="searchQuery !== '' || activeTagFilter !== null || activeTypeFilters.length < allTypes.length || !showShared"
                         x-on:click="clearFilters()"
                         x-cloak
                         type="button"
@@ -146,7 +146,7 @@
 
             {{-- Toggle shared elements visibility --}}
             <button type="button"
-                    x-on:click="showShared = !showShared; filterCards()"
+                    x-on:click="toggleShared()"
                     :class="showShared ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
                     class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
                     title="{{ __('Show shared') }}">

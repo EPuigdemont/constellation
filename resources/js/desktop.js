@@ -16,6 +16,78 @@ const GRID_LAYOUT_GAP = 20;
 const CARD_WIDTHS = { postit: 192, diary_entry: 256, note: 256, image: 224 };
 const CARD_HEIGHT_ESTIMATE = 120;
 
+/** Device-persisted desktop display preferences cookie */
+const DESKTOP_PREFERENCES_COOKIE = 'constellation_desktop_preferences';
+const DESKTOP_PREFERENCES_VERSION = 1;
+const FILTERABLE_CARD_TYPES = ['diary_entry', 'note', 'postit', 'image', 'reminder'];
+
+function getDefaultDesktopPreferences() {
+    return {
+        version: DESKTOP_PREFERENCES_VERSION,
+        visibleTypes: [...FILTERABLE_CARD_TYPES],
+        showShared: true,
+        showGrid: false,
+        showGuides: false,
+        snapToGrid: false,
+        showWidgets: false,
+    };
+}
+
+function normalizeDesktopPreferences(preferences = {}) {
+    const defaults = getDefaultDesktopPreferences();
+    const visibleTypes = Array.isArray(preferences.visibleTypes)
+        ? [...new Set(preferences.visibleTypes.filter((type) => FILTERABLE_CARD_TYPES.includes(type)))]
+        : defaults.visibleTypes;
+
+    return {
+        version: DESKTOP_PREFERENCES_VERSION,
+        visibleTypes: visibleTypes.length > 0 ? visibleTypes : defaults.visibleTypes,
+        showShared: typeof preferences.showShared === 'boolean' ? preferences.showShared : defaults.showShared,
+        showGrid: typeof preferences.showGrid === 'boolean' ? preferences.showGrid : defaults.showGrid,
+        showGuides: typeof preferences.showGuides === 'boolean' ? preferences.showGuides : defaults.showGuides,
+        snapToGrid: typeof preferences.snapToGrid === 'boolean' ? preferences.snapToGrid : defaults.snapToGrid,
+        showWidgets: typeof preferences.showWidgets === 'boolean' ? preferences.showWidgets : defaults.showWidgets,
+    };
+}
+
+function readDesktopPreferences() {
+    if (typeof document === 'undefined') {
+        return getDefaultDesktopPreferences();
+    }
+
+    const cookie = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith(`${DESKTOP_PREFERENCES_COOKIE}=`));
+
+    if (!cookie) {
+        return getDefaultDesktopPreferences();
+    }
+
+    try {
+        const value = cookie.slice(cookie.indexOf('=') + 1);
+
+        return normalizeDesktopPreferences(JSON.parse(decodeURIComponent(value)));
+    } catch {
+        return getDefaultDesktopPreferences();
+    }
+}
+
+function writeDesktopPreferences(overrides = {}) {
+    if (typeof document === 'undefined') {
+        return normalizeDesktopPreferences(overrides);
+    }
+
+    const preferences = normalizeDesktopPreferences({
+        ...readDesktopPreferences(),
+        ...overrides,
+    });
+
+    const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `${DESKTOP_PREFERENCES_COOKIE}=${encodeURIComponent(JSON.stringify(preferences))}; Max-Age=31536000; Path=/; SameSite=Lax${secure}`;
+
+    return preferences;
+}
+
 /**
  * Snap a value to the nearest grid line.
  */
@@ -390,16 +462,17 @@ function createCardElement(card, wire) {
 }
 
 document.addEventListener('alpine:init', () => {
+    const desktopPreferences = readDesktopPreferences();
 
     // Global store for cross-component state
     Alpine.store('desktop', {
         zoom: 1.0,
         scrollLeft: 0,
         scrollTop: 0,
-        showGrid: false,
-        showGuides: false,
-        snapToGrid: false,
-        showWidgets: false,
+        showGrid: desktopPreferences.showGrid,
+        showGuides: desktopPreferences.showGuides,
+        snapToGrid: desktopPreferences.snapToGrid,
+        showWidgets: desktopPreferences.showWidgets,
         linkingMode: '',
         linkingEntityId: '',
         selectedCardId: '',
@@ -415,18 +488,31 @@ document.addEventListener('alpine:init', () => {
         get showGuides() { return Alpine.store('desktop').showGuides; },
         get snapToGrid() { return Alpine.store('desktop').snapToGrid; },
 
+        persistPreferences() {
+            writeDesktopPreferences({
+                showGrid: Alpine.store('desktop').showGrid,
+                showGuides: Alpine.store('desktop').showGuides,
+                snapToGrid: Alpine.store('desktop').snapToGrid,
+                showWidgets: Alpine.store('desktop').showWidgets,
+            });
+        },
+
         toggleGrid() {
             Alpine.store('desktop').showGrid = !Alpine.store('desktop').showGrid;
+            this.persistPreferences();
         },
         toggleGuides() {
             Alpine.store('desktop').showGuides = !Alpine.store('desktop').showGuides;
             if (!Alpine.store('desktop').showGuides) clearGuideLines();
+            this.persistPreferences();
         },
         toggleSnap() {
             Alpine.store('desktop').snapToGrid = !Alpine.store('desktop').snapToGrid;
+            this.persistPreferences();
         },
         toggleWidgets() {
             Alpine.store('desktop').showWidgets = !Alpine.store('desktop').showWidgets;
+            this.persistPreferences();
         },
         get showWidgets() { return Alpine.store('desktop').showWidgets; },
     }));
@@ -672,6 +758,7 @@ document.addEventListener('alpine:init', () => {
 
                 const el = createCardElement(card, this.$wire);
                 canvas.appendChild(el);
+                window.dispatchEvent(new CustomEvent('desktop-refresh-filters'));
             });
 
             // Post-it inline editing: save on blur via event delegation
@@ -1176,6 +1263,32 @@ document.addEventListener('alpine:init', () => {
         activeTypeFilters: ['diary_entry', 'note', 'postit', 'image', 'reminder'],
         allTypes: ['diary_entry', 'note', 'postit', 'image', 'reminder'],
         showShared: true,
+        _refreshHandler: null,
+
+        init() {
+            const preferences = readDesktopPreferences();
+
+            this.activeTypeFilters = [...preferences.visibleTypes];
+            this.showShared = preferences.showShared;
+            writeDesktopPreferences({
+                visibleTypes: this.activeTypeFilters,
+                showShared: this.showShared,
+            });
+
+            this._refreshHandler = () => this.filterCards();
+            window.addEventListener('desktop-refresh-filters', this._refreshHandler);
+
+            requestAnimationFrame(() => {
+                this.filterCards();
+            });
+        },
+
+        persistPreferences() {
+            writeDesktopPreferences({
+                visibleTypes: [...this.activeTypeFilters],
+                showShared: this.showShared,
+            });
+        },
 
         filterCards() {
             const canvas = document.getElementById('desktop-canvas');
@@ -1226,6 +1339,13 @@ document.addEventListener('alpine:init', () => {
             } else {
                 this.activeTypeFilters.push(type);
             }
+            this.persistPreferences();
+            this.filterCards();
+        },
+
+        toggleShared() {
+            this.showShared = !this.showShared;
+            this.persistPreferences();
             this.filterCards();
         },
 
@@ -1242,7 +1362,15 @@ document.addEventListener('alpine:init', () => {
             this.searchQuery = '';
             this.activeTagFilter = null;
             this.activeTypeFilters = [...this.allTypes];
+            this.showShared = true;
+            this.persistPreferences();
             this.filterCards();
+        },
+
+        destroy() {
+            if (this._refreshHandler) {
+                window.removeEventListener('desktop-refresh-filters', this._refreshHandler);
+            }
         },
     }));
 
