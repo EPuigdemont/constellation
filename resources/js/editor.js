@@ -6,7 +6,6 @@
 
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 
@@ -33,7 +32,6 @@ document.addEventListener('alpine:init', () => {
                     StarterKit.configure({
                         heading: { levels: [1, 2, 3] },
                     }),
-                    Underline,
                     Image.configure({
                         inline: false,
                         allowBase64: false,
