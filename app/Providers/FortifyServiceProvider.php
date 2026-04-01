@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Http\Responses\LoginResponse;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -39,6 +40,7 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureActions(): void
     {
+        Fortify::createUsersUsing(CreateNewUser::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
     }
 
@@ -54,6 +56,15 @@ class FortifyServiceProvider extends ServiceProvider
 
             return view('pages::auth.login');
         });
+
+        Fortify::registerView(function (Request $request) {
+            if ($request->user()) {
+                return redirect()->route('diary');
+            }
+
+            return view('pages::auth.register');
+        });
+
         Fortify::verifyEmailView(fn () => view('pages::auth.verify-email'));
         Fortify::twoFactorChallengeView(fn () => view('pages::auth.two-factor-challenge'));
         Fortify::confirmPasswordView(fn () => view('pages::auth.confirm-password'));
