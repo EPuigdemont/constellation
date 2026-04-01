@@ -8,6 +8,7 @@ use App\Enums\RelationshipType;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
 use App\Models\EntityRelationship;
+use App\Models\Friendship;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
@@ -20,7 +21,7 @@ class DesktopService
     /**
      * Load all entity cards for a user's desktop.
      *
-     * Includes the user's own entities and public entities from others.
+     * Includes the user's own entities and entities shared by friends.
      * Left-joins entity_positions so every card has coordinates.
      *
      * @param  array<string, class-string>|null  $entityTypes  Override which entity types to load
@@ -37,12 +38,35 @@ class DesktopService
             'reminder' => Reminder::class,
         ];
 
+        // Get user's friends (both directions)
+        $sentFriendships = Friendship::where('user_id', $user->id)
+            ->where('status', 'accepted')
+            ->pluck('friend_id')
+            ->toArray();
+
+        $receivedFriendships = Friendship::where('friend_id', $user->id)
+            ->where('status', 'accepted')
+            ->pluck('user_id')
+            ->toArray();
+
+
+        $friendIds = array_unique(array_merge($sentFriendships, $receivedFriendships));
+
         // Collect all entities first
         $allEntities = [];
         foreach ($entityTypes as $morphType => $modelClass) {
             $query = $modelClass::query()
-                ->where('user_id', $user->id)
-                ->orWhere('is_public', true);
+                ->where(function ($q) use ($user, $friendIds) {
+                    // Own entities
+                    $q->where('user_id', $user->id);
+                    // Items from friends marked as public
+                    if (!empty($friendIds)) {
+                        $q->orWhere(function ($nested) use ($friendIds) {
+                            $nested->whereIn('user_id', $friendIds)
+                                ->where('is_public', true);
+                        });
+                    }
+                });
 
             $query->with('user');
 
@@ -344,6 +368,7 @@ class DesktopService
             'image_url' => $imageUrl,
             'is_hidden' => (bool) ($position?->is_hidden ?? false),
             'owner_name' => $entity->user?->name ?? '',
+            'owner_username' => $entity->user?->username ?? '',
         ];
     }
 }

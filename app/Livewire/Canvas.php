@@ -35,6 +35,20 @@ class Canvas extends Component
 
     public bool $showEditorModal = false;
 
+    public bool $showReadonlyModal = false;
+
+    public string $readonlyEntityType = '';
+
+    public string $readonlyOwnerUsername = '';
+
+    public string $readonlyTitle = '';
+
+    public string $readonlyBody = '';
+
+    public string $readonlyImageUrl = '';
+
+    public string $readonlyUpdatedAt = '';
+
     public string $editorMode = 'diary';
 
     public string $editingEntityId = '';
@@ -343,6 +357,35 @@ class Canvas extends Component
             : '';
         $this->loadTagsForEditor($model);
         $this->showEditorModal = true;
+    }
+
+    public function openReadonlyModal(string $entityId, string $entityType): void
+    {
+        $model = $this->resolveEntity($entityId, $entityType);
+        if (! $model) {
+            return;
+        }
+
+        Gate::authorize('view', $model);
+
+        $this->showReadonlyModal = true;
+        $this->readonlyEntityType = $entityType;
+        $this->readonlyOwnerUsername = $model->user?->username ?? $model->user?->name ?? '';
+        $this->readonlyTitle = $model->title ?? '';
+        $this->readonlyBody = $model->body ?? $model->alt ?? '';
+        $this->readonlyImageUrl = $entityType === 'image' ? route('images.serve', $model) : '';
+        $this->readonlyUpdatedAt = $model->updated_at?->format('d/m/Y H:i') ?? '';
+    }
+
+    public function closeReadonlyModal(): void
+    {
+        $this->showReadonlyModal = false;
+        $this->readonlyEntityType = '';
+        $this->readonlyOwnerUsername = '';
+        $this->readonlyTitle = '';
+        $this->readonlyBody = '';
+        $this->readonlyImageUrl = '';
+        $this->readonlyUpdatedAt = '';
     }
 
     public function uploadEditorImage(EditorImageService $service): void

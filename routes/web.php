@@ -14,6 +14,7 @@ use App\Livewire\LoadingScreen;
 use App\Livewire\Notifications;
 use App\Livewire\VisionBoard;
 use App\Livewire\Welcome;
+use App\Livewire\Actions\ManageFriends;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login')->name('home');
@@ -32,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('constellation', Constellation::class)->name('constellation');
     Route::get('reminders', Reminders::class)->name('reminders');
     Route::get('notifications', Notifications::class)->name('notifications');
+    Route::get('friends', ManageFriends::class)->name('friends');
 });
 
 Route::middleware(['auth'])->group(function () {

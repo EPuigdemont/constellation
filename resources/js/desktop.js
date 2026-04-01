@@ -112,6 +112,10 @@ function buildCardInnerHTML(card) {
     const title = card.title || '';
     const preview = card.preview || '';
     const isPublic = card.is_public;
+    const currentUserId = document.querySelector('[data-current-user-id]')?.dataset.currentUserId ?? '';
+    const isOwner = typeof card.is_owner === 'boolean'
+        ? card.is_owner
+        : String(card.owner_id ?? '') === String(currentUserId);
 
     const date = card.updated_at || card.created_at;
     let shortDate = '';
@@ -137,7 +141,7 @@ function buildCardInnerHTML(card) {
         if (shortDate) {
             html += `<div class="desktop-card-header"><span class="desktop-card-date">${shortDate}</span></div>`;
         }
-        html += `<p class="desktop-card-preview postit-editable-text" contenteditable="true">${escapeHtml(preview) || 'Empty post-it'}</p>`;
+        html += `<p class="desktop-card-preview postit-editable-text" contenteditable="${isOwner ? 'true' : 'false'}">${escapeHtml(preview) || 'Empty post-it'}</p>`;
     } else {
         const badge = badgeLabels[type] || type;
         html += `<div class="desktop-card-header"><span class="desktop-card-badge">${badge}</span>`;
@@ -182,10 +186,10 @@ function buildCardInnerHTML(card) {
     }
 
     if (isPublic) {
-        const ownerName = card.owner_name || '';
+        const ownerName = card.owner_username || card.owner_name || '';
         html += '<div class="desktop-card-shared">' +
             '<svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.47.353-2.856.978-4.082" /></svg>' +
-            (ownerName ? '<span>' + escapeHtml(ownerName) + '</span>' : '') +
+            (ownerName ? '<span>@' + escapeHtml(ownerName) + '</span>' : '') +
             '</div>';
     }
 
@@ -197,6 +201,43 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Calculate minimum width/height for a card element based on its content.
+ * Uses scrollWidth/scrollHeight to measure actual content dimensions.
+ */
+function calculateCardMinSize(el) {
+    // Create a temporary container to measure the card at its natural size
+    const cardInner = el.querySelector('.desktop-card-inner');
+    if (!cardInner) {
+        return { minWidth: 180, minHeight: 100 };
+    }
+
+    // Clone the element to measure its natural size without constraints
+    const clone = el.cloneNode(true);
+    clone.style.position = 'absolute';
+    clone.style.visibility = 'hidden';
+    clone.style.left = '-9999px';
+    clone.style.width = 'auto';
+    clone.style.height = 'auto';
+    clone.style.minWidth = 'unset';
+    clone.style.maxWidth = 'unset';
+    clone.style.minHeight = 'unset';
+    clone.style.maxHeight = 'unset';
+
+    document.body.appendChild(clone);
+
+    const contentWidth = Math.ceil(clone.scrollWidth) + 12; // 12px padding
+    const contentHeight = Math.ceil(clone.scrollHeight) + 12; // 12px padding
+
+    document.body.removeChild(clone);
+
+    // Enforce minimum reasonable sizes while allowing natural content size
+    return {
+        minWidth: Math.max(140, contentWidth),
+        minHeight: Math.max(80, contentHeight),
+    };
 }
 
 /**
@@ -621,18 +662,19 @@ function initializeFloatingDesktopWidget(el, options = {}) {
         },
     }).resizable({
         edges: { right: true, bottom: true },
-        modifiers: [
-            interact.modifiers.restrictSize({
-                min: options.min ?? { width: 180, height: 140 },
-                max: options.max ?? { width: 800, height: 600 },
-            }),
-        ],
         listeners: {
             move: (event) => {
                 if (Alpine.store('desktop').autoArrangeGrid) return;
 
-                el.style.width = `${event.rect.width}px`;
-                el.style.height = `${event.rect.height}px`;
+                const minSize = options.min ?? { width: 180, height: 140 };
+                const maxSize = options.max ?? { width: 800, height: 600 };
+
+                // Constrain the width and height
+                const constrainedWidth = Math.max(minSize.width, Math.min(maxSize.width, event.rect.width));
+                const constrainedHeight = Math.max(minSize.height, Math.min(maxSize.height, event.rect.height));
+
+                el.style.width = constrainedWidth + 'px';
+                el.style.height = constrainedHeight + 'px';
             },
         },
     });
@@ -744,25 +786,34 @@ function createCardElement(card, wire) {
     let resizeDebounce = null;
     interact(el).resizable({
         edges: { right: true, bottom: true },
-        modifiers: [
-            interact.modifiers.restrictSize({
-                min: { width: 120, height: 60 },
-                max: { width: 600, height: 800 },
-            }),
-        ],
         listeners: {
             move: (event) => {
                 if (Alpine.store('desktop').autoArrangeGrid) return;
 
-                el.style.width = event.rect.width + 'px';
-                el.style.height = event.rect.height + 'px';
+                const minSize = calculateCardMinSize(el);
+                const maxWidth = 800;
+                const maxHeight = 1000;
+
+                // Constrain the width and height
+                const constrainedWidth = Math.max(minSize.minWidth, Math.min(maxWidth, event.rect.width));
+                const constrainedHeight = Math.max(minSize.minHeight, Math.min(maxHeight, event.rect.height));
+
+                el.style.width = constrainedWidth + 'px';
+                el.style.height = constrainedHeight + 'px';
             },
             end: (event) => {
                 if (Alpine.store('desktop').autoArrangeGrid) return;
 
+                const minSize = calculateCardMinSize(el);
+                const maxWidth = 800;
+                const maxHeight = 1000;
+
+                const constrainedWidth = Math.max(minSize.minWidth, Math.min(maxWidth, event.rect.width));
+                const constrainedHeight = Math.max(minSize.minHeight, Math.min(maxHeight, event.rect.height));
+
                 clearTimeout(resizeDebounce);
                 resizeDebounce = setTimeout(() => {
-                    wire.saveSize(card.id, card.type, Math.round(event.rect.width), Math.round(event.rect.height));
+                    wire.saveSize(card.id, card.type, Math.round(constrainedWidth), Math.round(constrainedHeight));
                 }, 300);
             },
         },
@@ -798,8 +849,12 @@ function createCardElement(card, wire) {
     });
 
     el.addEventListener('dblclick', () => {
-        if (!hasDragged && (card.is_owner ?? false)) {
-            wire.openEditModal(card.id, card.type);
+        if (!hasDragged) {
+            if (card.is_owner ?? false) {
+                wire.openEditModal(card.id, card.type);
+            } else {
+                wire.openReadonlyModal(card.id, card.type);
+            }
         }
     });
 
@@ -1008,28 +1063,38 @@ document.addEventListener('alpine:init', () => {
                 });
             });
 
-            // Double-click to edit
+            // Double-click: owner edits, shared/non-owner opens read-only modal
             this.$el.addEventListener('dblclick', () => {
-                if (!this._hasDragged && this.isOwner) {
-                    this.$wire.openEditModal(this.entityId, this.entityType);
+                if (!this._hasDragged) {
+                    if (this.isOwner) {
+                        this.$wire.openEditModal(this.entityId, this.entityType);
+                    } else {
+                        this.$wire.openReadonlyModal(this.entityId, this.entityType);
+                    }
                 }
             });
 
             // Resizable from right edge and bottom-right corner
             interact(this.$el).resizable({
                 edges: { right: true, bottom: true },
-                modifiers: [
-                    interact.modifiers.restrictSize({
-                        min: { width: 120, height: 60 },
-                        max: { width: 600, height: 800 },
-                    }),
-                ],
                 listeners: {
                     move: (event) => {
                         if (Alpine.store('desktop').autoArrangeGrid) return;
 
-                        this.cardW = Math.round(event.rect.width);
-                        this.cardH = Math.round(event.rect.height);
+                        const minSize = calculateCardMinSize(this.$el);
+                        const maxWidth = 800;
+                        const maxHeight = 1000;
+
+                        // Constrain the width and height
+                        const constrainedWidth = Math.max(minSize.minWidth, Math.min(maxWidth, event.rect.width));
+                        const constrainedHeight = Math.max(minSize.minHeight, Math.min(maxHeight, event.rect.height));
+
+                        this.cardW = Math.round(constrainedWidth);
+                        this.cardH = Math.round(constrainedHeight);
+
+                        // Apply to the element
+                        this.$el.style.width = this.cardW + 'px';
+                        this.$el.style.height = this.cardH + 'px';
                     },
                     end: () => {
                         if (Alpine.store('desktop').autoArrangeGrid) return;

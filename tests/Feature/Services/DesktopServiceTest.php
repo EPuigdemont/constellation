@@ -7,6 +7,7 @@ namespace Tests\Feature\Services;
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
+use App\Models\Friendship;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\User;
@@ -57,6 +58,13 @@ class DesktopServiceTest extends TestCase
         $user = User::factory()->create();
         $other = User::factory()->create();
 
+        // Create friendship between users
+        Friendship::create([
+            'user_id' => $user->id,
+            'friend_id' => $other->id,
+            'status' => 'accepted',
+        ]);
+
         $publicNote = Note::factory()->create([
             'user_id' => $other->id,
             'is_public' => true,
@@ -83,6 +91,22 @@ class DesktopServiceTest extends TestCase
 
         $found = collect($cards)->firstWhere('id', $privateNote->id);
         $this->assertNull($found);
+    }
+
+    public function test_load_cards_excludes_public_entities_from_non_friends(): void
+    {
+        $user = User::factory()->create();
+        $nonFriend = User::factory()->create();
+
+        $publicNote = Note::factory()->create([
+            'user_id' => $nonFriend->id,
+            'is_public' => true,
+        ]);
+
+        $cards = $this->service->loadCards($user);
+
+        $found = collect($cards)->firstWhere('id', $publicNote->id);
+        $this->assertNull($found, 'Public items from non-friends should not be visible');
     }
 
     public function test_save_position_creates_entity_position(): void

@@ -39,6 +39,9 @@
                     <flux:sidebar.item icon="photo" :href="route('images')" :current="request()->routeIs('images')" wire:navigate>
                         {{ __('Images') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="users" :href="route('friends')" :current="request()->routeIs('friends')" wire:navigate>
+                        {{ __('Friends') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 {{-- Collapsed: icon-only navigation with tooltips --}}
@@ -88,6 +91,12 @@
                         <a href="{{ route('images') }}" wire:navigate
                             @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('images'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('images')])>
                             <flux:icon name="photo" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Friends')" position="right">
+                        <a href="{{ route('friends') }}" wire:navigate
+                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('friends'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('friends')])>
+                            <flux:icon name="users" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
                 </div>

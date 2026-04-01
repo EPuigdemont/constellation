@@ -216,4 +216,63 @@ class DesktopTest extends TestCase
             'desktop_zoom' => 1.5,
         ]);
     }
+
+    public function test_non_owner_can_open_readonly_modal_for_shared_note(): void
+    {
+        $owner = User::factory()->create(['username' => 'owner-user']);
+        $viewer = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $owner->id,
+            'title' => 'Shared note',
+            'body' => '<p>Read only body</p>',
+            'is_public' => true,
+        ]);
+
+        Livewire::actingAs($viewer)
+            ->test(Canvas::class)
+            ->call('openReadonlyModal', $note->id, 'note')
+            ->assertSet('showReadonlyModal', true)
+            ->assertSet('readonlyEntityType', 'note')
+            ->assertSet('readonlyOwnerUsername', 'owner-user')
+            ->assertSet('readonlyTitle', 'Shared note');
+    }
+
+    public function test_non_owner_cannot_open_readonly_modal_for_private_note(): void
+    {
+        $owner = User::factory()->create();
+        $viewer = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $owner->id,
+            'is_public' => false,
+        ]);
+
+        Livewire::actingAs($viewer)
+            ->test(Canvas::class)
+            ->call('openReadonlyModal', $note->id, 'note')
+            ->assertForbidden();
+    }
+
+    public function test_close_readonly_modal_resets_state(): void
+    {
+        $owner = User::factory()->create(['username' => 'owner-user']);
+        $viewer = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $owner->id,
+            'title' => 'Shared note',
+            'body' => 'Read only body',
+            'is_public' => true,
+        ]);
+
+        Livewire::actingAs($viewer)
+            ->test(Canvas::class)
+            ->call('openReadonlyModal', $note->id, 'note')
+            ->call('closeReadonlyModal')
+            ->assertSet('showReadonlyModal', false)
+            ->assertSet('readonlyEntityType', '')
+            ->assertSet('readonlyOwnerUsername', '')
+            ->assertSet('readonlyTitle', '')
+            ->assertSet('readonlyBody', '')
+            ->assertSet('readonlyImageUrl', '')
+            ->assertSet('readonlyUpdatedAt', '');
+    }
 }

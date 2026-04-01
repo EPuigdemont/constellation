@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -128,5 +129,61 @@ class User extends Authenticatable implements MustVerifyEmail
     public function entityPositions(): HasMany
     {
         return $this->hasMany(EntityPosition::class);
+    }
+
+    /**
+     * Get all friendships initiated by this user (pending or accepted).
+     */
+    public function friendships(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'user_id');
+    }
+
+    /**
+     * Get all friendships where this user is the friend (incoming requests).
+     */
+    public function friendRequestsReceived(): HasMany
+    {
+        return $this->hasMany(Friendship::class, 'friend_id');
+    }
+
+    /**
+     * Get all accepted friends (users they initiated friendship with).
+     */
+    public function friends(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'friendships',
+            'user_id',
+            'friend_id'
+        )
+            ->wherePivot('status', 'accepted')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all users who have accepted friendship with this user (reverse direction).
+     */
+    public function acceptedByFriends(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'friendships',
+            'friend_id',
+            'user_id'
+        )
+            ->wherePivot('status', 'accepted')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all friends (both directions).
+     */
+    public function allFriends(): BelongsToMany
+    {
+        return $this->friends()->union(
+            $this->acceptedByFriends()->getQuery()
+        );
     }
 }
