@@ -1,6 +1,6 @@
 # Constellation
 
-A private, intimate journaling and note-taking web app built as a birthday gift. Two users only. Not public-facing beyond the login screen.
+A private, intimate journaling and note-taking web app built as a birthday gift.
 
 ## Stack
 
@@ -23,6 +23,7 @@ The main screen is a freeform canvas simulating a desktop. Entities (diary entri
 |------|-------------|
 | Diary Entry | Rich text (Tiptap), supports image embeds, paste from Word/PDF |
 | Note | Lightweight rich text |
+| Reminder | Lightweight text |
 | Post-it | Small note, can be pinned anywhere on the canvas or attached to another entity |
 | Image | Vision board asset, uploadable, linkable to other entities |
 
@@ -55,12 +56,10 @@ A D3.js node-graph toggled from the desktop. Nodes = entities. Edges = relations
 
 ### Out of MVP Scope
 - AI-powered smart linking between entities
-- Mobile native app
-- Full iOS sync (import/share only)
 
 ## Users
 
-Two fixed users. Closed registration. Login throttled. No public content.
+Closed registration. Login throttled. No public content.
 
 ## Local Development
 
