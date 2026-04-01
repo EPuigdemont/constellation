@@ -68,7 +68,7 @@
                         <span class="text-sm font-semibold text-[var(--theme-text)]" x-text="selectedNode.title"></span>
                     </div>
                     <button x-on:click="selectedNode = null" class="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]">
-                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <x-icons.close />
                     </button>
                 </div>
                 <div class="mb-2 flex items-center gap-2 text-xs text-[var(--theme-text-muted)]">

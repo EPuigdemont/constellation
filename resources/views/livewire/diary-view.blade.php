@@ -14,7 +14,7 @@
             @if($search)
                 <button wire:click="$set('search', '')"
                         class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
-                    <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <x-icons.close class="size-3.5" />
                 </button>
             @endif
         </div>
@@ -44,7 +44,7 @@
                     <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">{{ $upliftPreview }}</p>
                 </div>
                 <button wire:click="dismissUplift" class="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]">
-                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <x-icons.close />
                 </button>
             </div>
         </div>
@@ -84,7 +84,7 @@
                         @forelse($filteredNewTags as $tag)
                             <button type="button" wire:click="toggleNewTag('{{ $tag['id'] }}')" class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
                                 @if(in_array($tag['id'], $newTagIds, true))
-                                    <svg class="size-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                    <x-icons.check class="size-4 text-green-500" />
                                 @else
                                     <span class="size-4"></span>
                                 @endif
@@ -127,7 +127,7 @@
                 <button wire:click="previousPage"
                         x-on:click="$dispatch('page-turn', { direction: 'left' })"
                         class="diary-page-arrow diary-page-arrow-left group absolute left-0 top-1/2 z-10 flex h-16 w-8 -translate-y-1/2 items-center justify-center rounded-r-lg bg-black/5 opacity-0 transition-all hover:w-10 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10">
-                    <svg class="size-5 text-zinc-500 transition-transform group-hover:-translate-x-0.5 dark:text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                    <x-icons.chevron-right class="size-5 rotate-180 text-zinc-500 transition-transform group-hover:-translate-x-0.5 dark:text-zinc-400" />
                 </button>
             @endif
 
@@ -136,7 +136,7 @@
                 <button wire:click="nextPage"
                         x-on:click="$dispatch('page-turn', { direction: 'right' })"
                         class="diary-page-arrow diary-page-arrow-right group absolute right-0 top-1/2 z-10 flex h-16 w-8 -translate-y-1/2 items-center justify-center rounded-l-lg bg-black/5 opacity-0 transition-all hover:w-10 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10">
-                    <svg class="size-5 text-zinc-500 transition-transform group-hover:translate-x-0.5 dark:text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                    <x-icons.chevron-right class="size-5 text-zinc-500 transition-transform group-hover:translate-x-0.5 dark:text-zinc-400" />
                 </button>
             @endif
 

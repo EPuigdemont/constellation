@@ -1,105 +1,92 @@
-<div class="page-glitter-wrapper flex h-screen flex-col overflow-hidden">
+<div class="page-glitter-wrapper flex h-screen flex-col overflow-hidden md:min-w-[750px]">
     <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
     {{-- Toolbar --}}
-    <div class="relative z-10 flex min-w-0 items-center gap-2 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
-        {{-- Full buttons (wide screens) --}}
-        <div class="hidden shrink-0 items-center gap-1 lg:flex">
-            <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'diary' })">
-                {{ __('Diary Entry') }}
-            </flux:button>
-            <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'note' })">
-                {{ __('Note') }}
-            </flux:button>
-            <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'postit' })">
-                {{ __('Post-it') }}
-            </flux:button>
-            <flux:button size="sm" icon="plus" x-on:click="$refs.standaloneImageInput.click()">
-                {{ __('Image') }}
-            </flux:button>
-            <flux:button size="sm" icon="bell" x-on:click="$dispatch('create-entity', { mode: 'reminder' })">
-                {{ __('Reminder') }}
-            </flux:button>
-        </div>
+    <div x-data="desktopSearch"
+         data-current-user-id="{{ auth()->id() }}"
+         class="relative z-10 flex flex-col border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
 
-        {{-- Collapsed dropdown (narrow screens) --}}
-        <div class="relative lg:hidden" x-data="{ createOpen: false }">
-            <flux:button size="sm" icon="plus" x-on:click="createOpen = !createOpen">
-                {{ __('New') }}
-            </flux:button>
-            <div x-show="createOpen"
-                 x-on:click.away="createOpen = false"
-                 x-cloak
-                 class="absolute left-0 z-50 mt-1 w-44 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
-                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'diary' }); createOpen = false"
-                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                    {{ __('Diary Entry') }}
-                </button>
-                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'note' }); createOpen = false"
-                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                    {{ __('Note') }}
-                </button>
-                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'postit' }); createOpen = false"
-                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                    {{ __('Post-it') }}
-                </button>
-                <button type="button" x-on:click="$refs.standaloneImageInput.click(); createOpen = false"
-                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                    {{ __('Image') }}
-                </button>
-                <button type="button" x-on:click="$dispatch('create-entity', { mode: 'reminder' }); createOpen = false"
-                        class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                    {{ __('Reminder') }}
-                </button>
-            </div>
-        </div>
+        {{-- Row 1: primary toolbar actions --}}
+        <div class="flex min-w-0 flex-wrap items-center gap-1 px-2 py-1.5">
 
-        <input type="file"
-               x-ref="standaloneImageInput"
-               accept="image/jpeg,image/png,image/gif,image/webp"
-               class="hidden"
-               wire:model="imageUpload" />
-
-        <flux:spacer />
-
-        {{-- Search & Filter --}}
-        <div x-data="desktopSearch" data-current-user-id="{{ auth()->id() }}" class="flex items-center gap-2">
-            {{-- Entity type multi-select filter (icons) --}}
-            <div class="hidden items-center gap-0.5 rounded-md border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800 md:flex">
-                {{-- Diary --}}
-                <button type="button"
-                        x-on:click="toggleType('diary_entry')"
-                        :class="isTypeActive('diary_entry') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
-                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
-                        title="{{ __('Diary Entries') }}">
-                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
-                </button>
-                {{-- Notes --}}
-                <button type="button"
-                        x-on:click="toggleType('note')"
-                        :class="isTypeActive('note') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
-                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
-                        title="{{ __('Notes') }}">
-                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
-                </button>
-                {{-- Post-its --}}
-                <button type="button"
-                        x-on:click="toggleType('postit')"
-                        :class="isTypeActive('postit') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
-                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
-                        title="{{ __('Post-its') }}">
-                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" /></svg>
-                </button>
-                {{-- Images --}}
-                <button type="button"
-                        x-on:click="toggleType('image')"
-                        :class="isTypeActive('image') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
-                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
-                        title="{{ __('Images') }}">
-                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
-                </button>
+            {{-- Mobile: single + button with create dropdown --}}
+            <div class="relative md:hidden" x-data="{ mobileCreateOpen: false }">
+                <flux:button size="sm" icon="plus" x-on:click="mobileCreateOpen = !mobileCreateOpen" />
+                <div x-show="mobileCreateOpen"
+                     x-cloak
+                     x-on:click.away="mobileCreateOpen = false"
+                     class="absolute left-0 top-full z-50 mt-1 min-w-44 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                    <button type="button"
+                            x-on:click="$dispatch('create-entity', { mode: 'diary' }); mobileCreateOpen = false"
+                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
+                        {{ __('Diary Entry') }}
+                    </button>
+                    <button type="button"
+                            x-on:click="$dispatch('create-entity', { mode: 'note' }); mobileCreateOpen = false"
+                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                        {{ __('Note') }}
+                    </button>
+                    <button type="button"
+                            x-on:click="$dispatch('create-entity', { mode: 'postit' }); mobileCreateOpen = false"
+                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" /></svg>
+                        {{ __('Post-it') }}
+                    </button>
+                    <button type="button"
+                            x-on:click="document.getElementById('standaloneImageInput').click(); mobileCreateOpen = false"
+                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                        {{ __('Image') }}
+                    </button>
+                    <button type="button"
+                            x-on:click="$dispatch('create-entity', { mode: 'reminder' }); mobileCreateOpen = false"
+                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                        <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
+                        {{ __('Reminder') }}
+                    </button>
+                </div>
             </div>
 
-            <div class="relative">
+            {{-- Desktop: individual create buttons (hidden on mobile) --}}
+            <div class="hidden shrink-0 items-center gap-1 md:flex">
+                <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'diary' })">
+                    <span class="hidden 2xl:inline">{{ __('Diary Entry') }}</span>
+                </flux:button>
+                <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'note' })">
+                    <span class="hidden 2xl:inline">{{ __('Note') }}</span>
+                </flux:button>
+                <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'postit' })">
+                    <span class="hidden 2xl:inline">{{ __('Post-it') }}</span>
+                </flux:button>
+                <flux:button size="sm" icon="plus" x-on:click="$refs.standaloneImageInput.click()">
+                    <span class="hidden 2xl:inline">{{ __('Image') }}</span>
+                </flux:button>
+                <flux:button size="sm" icon="bell" x-on:click="$dispatch('create-entity', { mode: 'reminder' })">
+                    <span class="hidden 2xl:inline">{{ __('Reminder') }}</span>
+                </flux:button>
+            </div>
+
+            <input type="file"
+                   id="standaloneImageInput"
+                   x-ref="standaloneImageInput"
+                   accept="image/jpeg,image/png,image/gif,image/webp"
+                   class="hidden"
+                   wire:model="imageUpload" />
+
+            {{-- Mobile: search icon toggle (hidden on desktop) --}}
+            <button type="button"
+                    class="inline-flex items-center rounded-md px-2 py-1.5 text-zinc-700 transition-colors hover:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-zinc-700 md:hidden"
+                    :class="mobileSearchOpen ? 'bg-zinc-200 dark:bg-zinc-700' : ''"
+                    x-on:click="mobileSearchOpen = !mobileSearchOpen; $nextTick(() => { if (mobileSearchOpen && $refs.mobileSearchInput) $refs.mobileSearchInput.focus() })"
+                    title="{{ __('Search') }}">
+                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+            </button>
+
+            {{-- Desktop: search text input (hidden on mobile) --}}
+            <div class="relative hidden md:block">
                 <input type="text"
                        x-model="searchQuery"
                        x-on:input.debounce.250ms="filterCards()"
@@ -115,6 +102,39 @@
                 </button>
             </div>
 
+            {{-- Entity type multi-select filter (icons) — desktop only --}}
+            <div class="hidden items-center gap-0.5 rounded-md border border-zinc-200 bg-white p-0.5 dark:border-zinc-700 dark:bg-zinc-800 md:flex">
+                <button type="button"
+                        x-on:click="toggleType('diary_entry')"
+                        :class="isTypeActive('diary_entry') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                        title="{{ __('Diary Entries') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
+                </button>
+                <button type="button"
+                        x-on:click="toggleType('note')"
+                        :class="isTypeActive('note') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                        title="{{ __('Notes') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                </button>
+                <button type="button"
+                        x-on:click="toggleType('postit')"
+                        :class="isTypeActive('postit') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                        title="{{ __('Post-its') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" /></svg>
+                </button>
+                <button type="button"
+                        x-on:click="toggleType('image')"
+                        :class="isTypeActive('image') ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="rounded p-1.5 text-zinc-700 transition-opacity dark:text-zinc-300"
+                        title="{{ __('Images') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" /></svg>
+                </button>
+            </div>
+
+            {{-- Tag filter (visible on all screen sizes) --}}
             <div class="relative" x-data="{ tagFilterOpen: false }">
                 <button type="button"
                         x-on:click="tagFilterOpen = !tagFilterOpen"
@@ -144,7 +164,7 @@
                 </div>
             </div>
 
-            {{-- Toggle shared elements visibility --}}
+            {{-- Toggle shared elements visibility (visible on all screen sizes) --}}
             <button type="button"
                     x-on:click="toggleShared()"
                     :class="showShared ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
@@ -152,54 +172,92 @@
                     title="{{ __('Show shared') }}">
                 <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.47.353-2.856.978-4.082" /></svg>
             </button>
+
+            <span class="hidden h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600 lg:block"></span>
+
+            {{-- Canvas view toggles --}}
+            <div x-data="desktopToggles" class="flex shrink-0 flex-wrap items-center gap-1">
+                <button type="button" x-on:click="toggleAutoArrangeGrid()"
+                        :class="autoArrangeGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                        title="{{ __('Auto Arrange as Grid') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <rect x="3" y="3" width="8" height="8" rx="1.5" />
+                        <rect x="13" y="3" width="8" height="8" rx="1.5" />
+                        <rect x="3" y="13" width="8" height="8" rx="1.5" />
+                        <rect x="13" y="13" width="8" height="8" rx="1.5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18.5 7h-3m0 0 1.25-1.25M15.5 7l1.25 1.25" />
+                    </svg>
+                </button>
+                <button type="button" x-on:click="toggleGridBackground()"
+                        :class="showGridBackground ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
+                        title="{{ __('Show Grid Background') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" /></svg>
+                </button>
+                {{-- Guide lines: hidden on mobile --}}
+                <button type="button" x-on:click="toggleGuides()"
+                        :class="showGuides ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="hidden items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 md:inline-flex"
+                        title="{{ __('Show Guide Lines') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                </button>
+                {{-- Snap to grid: hidden on mobile --}}
+                <button type="button" x-on:click="toggleSnap()"
+                        :class="snapToGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="hidden items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 md:inline-flex"
+                        title="{{ __('Snap to Grid') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
+                </button>
+                {{-- Widgets: hidden on mobile --}}
+                <button type="button" x-on:click="toggleWidgets()"
+                        :class="showWidgets ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
+                        class="hidden items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300 md:inline-flex"
+                        title="{{ __('Widgets') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75l-5.571-3m11.142 0L21.75 12l-4.179 2.25m0 0L12 17.25l-5.571-3m11.142 0L21.75 16.5 12 21.75 2.25 16.5l4.179-2.25" /></svg>
+                </button>
+
+                <span class="mx-1 hidden h-5 w-px bg-zinc-300 dark:bg-zinc-600 md:block"></span>
+
+                <flux:button size="sm" x-on:click="$dispatch('center-canvas')" title="{{ __('Center Canvas') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" /></svg>
+                </flux:button>
+                <flux:button size="sm" x-on:click="$dispatch('zoom-to-fit')" title="{{ __('Zoom to Fit') }}">
+                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
+                </flux:button>
+            </div>
+
+            <span class="hidden h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600 lg:block"></span>
+
+            {{-- Zoom controls: hidden on mobile --}}
+            <div x-data="desktopZoom" class="ml-auto hidden shrink-0 items-center gap-2 md:flex">
+                <flux:button size="sm" icon="minus" x-on:click="zoomOut" />
+                <span class="w-12 text-center text-sm text-zinc-600 dark:text-zinc-400"
+                      x-text="Math.round(zoom * 100) + '%'"></span>
+                <flux:button size="sm" icon="plus" x-on:click="zoomIn" />
+            </div>
         </div>
 
-        <span class="h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600"></span>
-
-        {{-- Canvas view toggles --}}
-        <div x-data="desktopToggles" class="flex shrink-0 items-center gap-1">
-            <button type="button" x-on:click="toggleGrid()"
-                    :class="showGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
-                    title="{{ __('Show as Grid') }}">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" /></svg>
-            </button>
-            <button type="button" x-on:click="toggleGuides()"
-                    :class="showGuides ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
-                    title="{{ __('Show Guide Lines') }}">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
-            </button>
-            <button type="button" x-on:click="toggleSnap()"
-                    :class="snapToGrid ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
-                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
-                    title="{{ __('Snap to Grid') }}">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
-            </button>
-            <button type="button" x-on:click="toggleWidgets()"
-                    :class="showWidgets ? 'bg-zinc-200 dark:bg-zinc-700' : 'opacity-40 hover:opacity-70'"
-                    class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
-                    title="{{ __('Widgets') }}">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L12 12.75l-5.571-3m11.142 0L21.75 12l-4.179 2.25m0 0L12 17.25l-5.571-3m11.142 0L21.75 16.5 12 21.75 2.25 16.5l4.179-2.25" /></svg>
-            </button>
-
-            <span class="mx-1 h-5 w-px bg-zinc-300 dark:bg-zinc-600"></span>
-
-            <flux:button size="sm" x-on:click="$dispatch('center-canvas')" title="{{ __('Center Canvas') }}">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" /></svg>
-            </flux:button>
-            <flux:button size="sm" x-on:click="$dispatch('zoom-to-fit')" title="{{ __('Zoom to Fit') }}">
-                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" /></svg>
-            </flux:button>
-        </div>
-
-        <span class="h-5 w-px shrink-0 bg-zinc-300 dark:bg-zinc-600"></span>
-
-        <div x-data="desktopZoom" class="flex shrink-0 items-center gap-2">
-            <flux:button size="sm" icon="minus" x-on:click="zoomOut" />
-            <span class="w-12 text-center text-sm text-zinc-600 dark:text-zinc-400"
-                  x-text="Math.round(zoom * 100) + '%'"></span>
-            <flux:button size="sm" icon="plus" x-on:click="zoomIn" />
+        {{-- Row 2 (mobile only): search input, shown when search icon is toggled --}}
+        <div class="flex items-center gap-2 px-2 pb-1.5 md:hidden"
+             x-show="mobileSearchOpen"
+             x-cloak>
+            <div class="relative flex-1">
+                <input type="text"
+                       x-model="searchQuery"
+                       x-on:input.debounce.250ms="filterCards()"
+                       x-ref="mobileSearchInput"
+                       placeholder="{{ __('Search cards...') }}"
+                       class="w-full rounded-lg border border-zinc-200 bg-white px-2 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">
+                <button x-show="searchQuery !== '' || activeTagFilter !== null || activeTypeFilters.length < allTypes.length || !showShared"
+                        x-on:click="clearFilters()"
+                        x-cloak
+                        type="button"
+                        class="absolute inset-y-0 right-1 flex items-center px-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+                        title="{{ __('Clear filters') }}">
+                    <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -242,7 +300,7 @@
         <div wire:ignore
              x-data="{ get zoom() { return Alpine.store('desktop').zoom } }"
              :style="'transform: scale(' + zoom + '); transform-origin: 0 0; width: 4000px; height: 4000px;'"
-             :class="Alpine.store('desktop').showGrid ? 'desktop-grid-bg' : ''"
+             :class="Alpine.store('desktop').showGridBackground ? 'desktop-grid-bg' : ''"
              class="relative"
              id="desktop-canvas"
              x-on:contextmenu.prevent="$dispatch('desktop-context', { x: $event.clientX, y: $event.clientY })">
@@ -254,6 +312,8 @@
                 <div wire:key="card-{{ $card['id'] }}"
                      data-card-id="{{ $card['id'] }}"
                      data-card-type="{{ $card['type'] }}"
+                     data-grid-item="entity"
+                     data-grid-key="{{ $card['type'] }}:{{ $card['id'] }}"
                      x-data="desktopCard({{ Js::from(array_merge($card, ['is_owner' => $card['owner_id'] === auth()->id()])) }})"
                      x-init="initDrag()"
                      :style="'position: absolute; left: ' + cardX + 'px; top: ' + cardY + 'px; z-index: ' + cardZ + ';{{ $card['color_override'] ? ' background-color: ' . $card['color_override'] . ';' : '' }}' + (cardW ? ' width: ' + cardW + 'px;' : '') + (cardH ? ' height: ' + cardH + 'px;' : '')"

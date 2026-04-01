@@ -11,9 +11,11 @@ const GRID_SIZE = 40;
 
 /** Padding between cards in grid layout mode */
 const GRID_LAYOUT_GAP = 20;
+const GRID_LAYOUT_PADDING = 48;
+const GRID_ITEM_SELECTOR = '[data-grid-item]';
 
 /** Card approximate dimensions for grid layout */
-const CARD_WIDTHS = { postit: 192, diary_entry: 256, note: 256, image: 224 };
+const CARD_WIDTHS = { postit: 192, diary_entry: 256, note: 256, image: 224, reminder: 240, diary_notebook: 200, vision_board_widget: 280 };
 const CARD_HEIGHT_ESTIMATE = 120;
 
 /** Device-persisted desktop display preferences cookie */
@@ -26,7 +28,8 @@ function getDefaultDesktopPreferences() {
         version: DESKTOP_PREFERENCES_VERSION,
         visibleTypes: [...FILTERABLE_CARD_TYPES],
         showShared: true,
-        showGrid: false,
+        showGridBackground: false,
+        autoArrangeGrid: false,
         showGuides: false,
         snapToGrid: false,
         showWidgets: false,
@@ -43,7 +46,12 @@ function normalizeDesktopPreferences(preferences = {}) {
         version: DESKTOP_PREFERENCES_VERSION,
         visibleTypes: visibleTypes.length > 0 ? visibleTypes : defaults.visibleTypes,
         showShared: typeof preferences.showShared === 'boolean' ? preferences.showShared : defaults.showShared,
-        showGrid: typeof preferences.showGrid === 'boolean' ? preferences.showGrid : defaults.showGrid,
+        showGridBackground: typeof preferences.showGridBackground === 'boolean'
+            ? preferences.showGridBackground
+            : (typeof preferences.showGrid === 'boolean' ? preferences.showGrid : defaults.showGridBackground),
+        autoArrangeGrid: typeof preferences.autoArrangeGrid === 'boolean'
+            ? preferences.autoArrangeGrid
+            : (typeof preferences.showGrid === 'boolean' ? preferences.showGrid : defaults.autoArrangeGrid),
         showGuides: typeof preferences.showGuides === 'boolean' ? preferences.showGuides : defaults.showGuides,
         snapToGrid: typeof preferences.snapToGrid === 'boolean' ? preferences.snapToGrid : defaults.snapToGrid,
         showWidgets: typeof preferences.showWidgets === 'boolean' ? preferences.showWidgets : defaults.showWidgets,
@@ -308,6 +316,328 @@ function clearGuideLines() {
     if (guidesContainer) guidesContainer.innerHTML = '';
 }
 
+function getDesktopCanvasElement() {
+    return document.getElementById('desktop-canvas');
+}
+
+function getDesktopViewportElement() {
+    return document.getElementById('desktop-viewport');
+}
+
+function isGridItemVisible(el) {
+    if (!el) return false;
+
+    const styles = window.getComputedStyle(el);
+
+    return styles.display !== 'none'
+        && styles.visibility !== 'hidden'
+        && !el.classList.contains('desktop-card-hidden');
+}
+
+function getGridItemKey(el) {
+    return el?.dataset.gridKey || '';
+}
+
+function getGridItemDimensions(el) {
+    const type = el?.dataset.cardType || el?.dataset.gridKey || 'note';
+
+    return {
+        width: parseFloat(el.style.width) || el.offsetWidth || CARD_WIDTHS[type] || 256,
+        height: parseFloat(el.style.height) || el.offsetHeight || CARD_HEIGHT_ESTIMATE,
+    };
+}
+
+function captureGridItemPosition(el) {
+    return {
+        left: parseFloat(el.style.left) || 0,
+        top: parseFloat(el.style.top) || 0,
+        zIndex: parseInt(el.style.zIndex, 10) || 0,
+    };
+}
+
+function rememberGridItemPosition(el) {
+    const key = getGridItemKey(el);
+    if (!key) return;
+
+    const store = Alpine.store('desktop');
+    if (!store.gridSavedPositions[key]) {
+        store.gridSavedPositions[key] = captureGridItemPosition(el);
+    }
+}
+
+function getDesktopGridItems({ visibleOnly = false } = {}) {
+    const canvas = getDesktopCanvasElement();
+    if (!canvas) return [];
+
+    const items = Array.from(canvas.querySelectorAll(GRID_ITEM_SELECTOR));
+
+    return visibleOnly ? items.filter(isGridItemVisible) : items;
+}
+
+function sortGridItemsBySavedPosition(items) {
+    const store = Alpine.store('desktop');
+
+    return [...items].sort((a, b) => {
+        const aKey = getGridItemKey(a);
+        const bKey = getGridItemKey(b);
+        const aPosition = store.gridSavedPositions[aKey] ?? captureGridItemPosition(a);
+        const bPosition = store.gridSavedPositions[bKey] ?? captureGridItemPosition(b);
+
+        if (aPosition.top !== bPosition.top) {
+            return aPosition.top - bPosition.top;
+        }
+
+        if (aPosition.left !== bPosition.left) {
+            return aPosition.left - bPosition.left;
+        }
+
+        return aKey.localeCompare(bKey);
+    });
+}
+
+function syncDesktopGridOrder(items) {
+    const store = Alpine.store('desktop');
+    const visibleKeys = items.map(getGridItemKey).filter(Boolean);
+    const currentOrder = store.gridOrder.filter((key) => visibleKeys.includes(key));
+    const missingItems = sortGridItemsBySavedPosition(
+        items.filter((item) => !currentOrder.includes(getGridItemKey(item))),
+    );
+
+    store.gridOrder = [...currentOrder, ...missingItems.map(getGridItemKey)];
+
+    return store.gridOrder;
+}
+
+function applyDesktopGridLayout() {
+    const store = Alpine.store('desktop');
+    if (!store.autoArrangeGrid) return;
+
+    const allItems = getDesktopGridItems();
+    allItems.forEach(rememberGridItemPosition);
+
+    const visibleItems = allItems.filter(isGridItemVisible);
+    if (visibleItems.length === 0) {
+        store.gridOrder = [];
+        return;
+    }
+
+    const itemsByKey = new Map(visibleItems.map((item) => [getGridItemKey(item), item]));
+    const orderedItems = syncDesktopGridOrder(visibleItems)
+        .map((key) => itemsByKey.get(key))
+        .filter(Boolean);
+
+    const viewport = getDesktopViewportElement();
+    const zoom = store.zoom || 1;
+    const maxWidth = Math.max(...orderedItems.map((item) => getGridItemDimensions(item).width));
+    const maxHeight = Math.max(...orderedItems.map((item) => getGridItemDimensions(item).height));
+    const columnWidth = Math.max(220, Math.round(maxWidth));
+    const rowHeight = Math.max(CARD_HEIGHT_ESTIMATE, Math.round(maxHeight));
+    const availableWidth = Math.max(
+        columnWidth,
+        Math.round(((viewport?.clientWidth || 1200) / zoom) - (GRID_LAYOUT_PADDING * 2)),
+    );
+    const columns = Math.max(1, Math.floor((availableWidth + GRID_LAYOUT_GAP) / (columnWidth + GRID_LAYOUT_GAP)));
+    const gridWidth = (columns * columnWidth) + ((columns - 1) * GRID_LAYOUT_GAP);
+    const startX = Math.round(((viewport?.scrollLeft || 0) / zoom) + GRID_LAYOUT_PADDING + Math.max(0, (availableWidth - gridWidth) / 2));
+    const startY = Math.round(((viewport?.scrollTop || 0) / zoom) + GRID_LAYOUT_PADDING);
+
+    orderedItems.forEach((item, index) => {
+        const column = index % columns;
+        const row = Math.floor(index / columns);
+
+        item.style.left = `${startX + (column * (columnWidth + GRID_LAYOUT_GAP))}px`;
+        item.style.top = `${startY + (row * (rowHeight + GRID_LAYOUT_GAP))}px`;
+        item.style.zIndex = String(100 + index);
+    });
+}
+
+function restoreDesktopGridLayout() {
+    const store = Alpine.store('desktop');
+
+    getDesktopGridItems().forEach((item) => {
+        const savedPosition = store.gridSavedPositions[getGridItemKey(item)];
+        if (!savedPosition) return;
+
+        item.style.left = `${savedPosition.left}px`;
+        item.style.top = `${savedPosition.top}px`;
+        item.style.zIndex = String(savedPosition.zIndex);
+        item.style.transform = '';
+    });
+
+    store.gridOrder = [];
+    store.gridDraggedKey = '';
+    store.gridSavedPositions = {};
+}
+
+function findGridSwapTarget(dragEl) {
+    const dragRect = dragEl.getBoundingClientRect();
+    const dragCenterX = dragRect.left + (dragRect.width / 2);
+    const dragCenterY = dragRect.top + (dragRect.height / 2);
+    let nearestTarget = null;
+    let nearestDistance = Infinity;
+
+    for (const item of getDesktopGridItems({ visibleOnly: true })) {
+        if (item === dragEl) continue;
+
+        const rect = item.getBoundingClientRect();
+        const centerX = rect.left + (rect.width / 2);
+        const centerY = rect.top + (rect.height / 2);
+        const distance = Math.hypot(dragCenterX - centerX, dragCenterY - centerY);
+        const maxDistance = Math.max(rect.width, rect.height) * 0.9;
+
+        if (distance < nearestDistance && distance <= maxDistance) {
+            nearestTarget = item;
+            nearestDistance = distance;
+        }
+    }
+
+    return nearestTarget;
+}
+
+function swapDesktopGridItems(sourceEl, targetEl) {
+    const store = Alpine.store('desktop');
+    const sourceKey = getGridItemKey(sourceEl);
+    const targetKey = getGridItemKey(targetEl);
+
+    if (!sourceKey || !targetKey || sourceKey === targetKey) return false;
+
+    const sourceIndex = store.gridOrder.indexOf(sourceKey);
+    const targetIndex = store.gridOrder.indexOf(targetKey);
+
+    if (sourceIndex === -1 || targetIndex === -1) return false;
+
+    [store.gridOrder[sourceIndex], store.gridOrder[targetIndex]] = [store.gridOrder[targetIndex], store.gridOrder[sourceIndex]];
+
+    return true;
+}
+
+function beginGridDrag(el, state) {
+    state.gridDragX = 0;
+    state.gridDragY = 0;
+    Alpine.store('desktop').gridDraggedKey = getGridItemKey(el);
+}
+
+function moveGridDrag(el, event, state) {
+    const zoom = Alpine.store('desktop').zoom || 1;
+    state.gridDragX += event.dx / zoom;
+    state.gridDragY += event.dy / zoom;
+    el.style.transform = `translate(${Math.round(state.gridDragX)}px, ${Math.round(state.gridDragY)}px)`;
+
+    const target = findGridSwapTarget(el);
+    if (target && swapDesktopGridItems(el, target)) {
+        applyDesktopGridLayout();
+        el.style.transform = `translate(${Math.round(state.gridDragX)}px, ${Math.round(state.gridDragY)}px)`;
+    }
+}
+
+function endGridDrag(el, state) {
+    state.gridDragX = 0;
+    state.gridDragY = 0;
+    Alpine.store('desktop').gridDraggedKey = '';
+    el.style.transform = '';
+    applyDesktopGridLayout();
+}
+
+function refreshDesktopGridLayout() {
+    if (Alpine.store('desktop').autoArrangeGrid) {
+        requestAnimationFrame(() => {
+            applyDesktopGridLayout();
+        });
+    }
+}
+
+function initializeFloatingDesktopWidget(el, options = {}) {
+    if (!el || el.dataset.desktopWidgetReady === 'true') return;
+
+    el.dataset.desktopWidgetReady = 'true';
+
+    let itemX = parseFloat(el.style.left) || options.defaultX || 100;
+    let itemY = parseFloat(el.style.top) || options.defaultY || 100;
+    let itemZ = parseInt(el.style.zIndex, 10) || 1;
+    const dragState = { gridDragX: 0, gridDragY: 0, hasDragged: false };
+
+    el.addEventListener('mousedown', () => {
+        if (Alpine.store('desktop').autoArrangeGrid) return;
+
+        const canvas = getDesktopCanvasElement();
+        if (!canvas) return;
+
+        let maxZ = 0;
+        canvas.querySelectorAll(GRID_ITEM_SELECTOR).forEach((item) => {
+            const zIndex = parseInt(item.style.zIndex, 10) || 0;
+            if (zIndex > maxZ) maxZ = zIndex;
+        });
+
+        itemZ = maxZ + 1;
+        el.style.zIndex = String(itemZ);
+    });
+
+    interact(el).draggable({
+        inertia: false,
+        modifiers: [
+            interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }),
+        ],
+        listeners: {
+            start: () => {
+                dragState.hasDragged = false;
+
+                if (Alpine.store('desktop').autoArrangeGrid) {
+                    beginGridDrag(el, dragState);
+                    return;
+                }
+
+                itemX = parseFloat(el.style.left) || itemX;
+                itemY = parseFloat(el.style.top) || itemY;
+            },
+            move: (event) => {
+                if (Alpine.store('desktop').autoArrangeGrid) {
+                    moveGridDrag(el, event, dragState);
+                    if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
+                        dragState.hasDragged = true;
+                    }
+
+                    return;
+                }
+
+                const zoom = Alpine.store('desktop').zoom || 1;
+                itemX += event.dx / zoom;
+                itemY += event.dy / zoom;
+                el.style.left = `${itemX}px`;
+                el.style.top = `${itemY}px`;
+
+                if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
+                    dragState.hasDragged = true;
+                }
+            },
+            end: () => {
+                if (Alpine.store('desktop').autoArrangeGrid) {
+                    endGridDrag(el, dragState);
+                    return;
+                }
+
+                itemX = parseFloat(el.style.left) || itemX;
+                itemY = parseFloat(el.style.top) || itemY;
+            },
+        },
+    }).resizable({
+        edges: { right: true, bottom: true },
+        modifiers: [
+            interact.modifiers.restrictSize({
+                min: options.min ?? { width: 180, height: 140 },
+                max: options.max ?? { width: 800, height: 600 },
+            }),
+        ],
+        listeners: {
+            move: (event) => {
+                if (Alpine.store('desktop').autoArrangeGrid) return;
+
+                el.style.width = `${event.rect.width}px`;
+                el.style.height = `${event.rect.height}px`;
+            },
+        },
+    });
+}
+
 /**
  * Create a card DOM element and initialize it with interact.js
  */
@@ -315,6 +645,8 @@ function createCardElement(card, wire) {
     const el = document.createElement('div');
     el.setAttribute('data-card-id', card.id);
     el.setAttribute('data-card-type', card.type);
+    el.setAttribute('data-grid-item', 'entity');
+    el.setAttribute('data-grid-key', `${card.type}:${card.id}`);
     el.style.position = 'absolute';
     el.style.left = card.x + 'px';
     el.style.top = card.y + 'px';
@@ -338,6 +670,7 @@ function createCardElement(card, wire) {
     let cardX = card.x ?? 0;
     let cardY = card.y ?? 0;
     let cardZ = card.z_index ?? 0;
+    const dragState = { gridDragX: 0, gridDragY: 0 };
 
     interact(el).draggable({
         inertia: false,
@@ -348,8 +681,24 @@ function createCardElement(card, wire) {
             }),
         ],
         listeners: {
-            start: () => { hasDragged = false; },
+            start: () => {
+                hasDragged = false;
+
+                if (Alpine.store('desktop').autoArrangeGrid) {
+                    beginGridDrag(el, dragState);
+                }
+            },
             move: (event) => {
+                if (Alpine.store('desktop').autoArrangeGrid) {
+                    moveGridDrag(el, event, dragState);
+
+                    if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
+                        hasDragged = true;
+                    }
+
+                    return;
+                }
+
                 const zoom = Alpine.store('desktop').zoom || 1;
                 cardX += event.dx / zoom;
                 cardY += event.dy / zoom;
@@ -369,6 +718,11 @@ function createCardElement(card, wire) {
                 }
             },
             end: () => {
+                if (Alpine.store('desktop').autoArrangeGrid) {
+                    endGridDrag(el, dragState);
+                    return;
+                }
+
                 clearGuideLines();
 
                 if (Alpine.store('desktop').snapToGrid) {
@@ -398,10 +752,14 @@ function createCardElement(card, wire) {
         ],
         listeners: {
             move: (event) => {
+                if (Alpine.store('desktop').autoArrangeGrid) return;
+
                 el.style.width = event.rect.width + 'px';
                 el.style.height = event.rect.height + 'px';
             },
             end: (event) => {
+                if (Alpine.store('desktop').autoArrangeGrid) return;
+
                 clearTimeout(resizeDebounce);
                 resizeDebounce = setTimeout(() => {
                     wire.saveSize(card.id, card.type, Math.round(event.rect.width), Math.round(event.rect.height));
@@ -426,6 +784,10 @@ function createCardElement(card, wire) {
         store.selectedCardIsOwner = card.is_owner ?? false;
         document.querySelectorAll('.desktop-card.desktop-card-selected').forEach(s => s.classList.remove('desktop-card-selected'));
         el.classList.add('desktop-card-selected');
+
+        if (store.autoArrangeGrid) {
+            return;
+        }
 
         wire.bringToFront(card.id, card.type).then((newZ) => {
             if (newZ) {
@@ -469,7 +831,8 @@ document.addEventListener('alpine:init', () => {
         zoom: 1.0,
         scrollLeft: 0,
         scrollTop: 0,
-        showGrid: desktopPreferences.showGrid,
+        showGridBackground: desktopPreferences.showGridBackground,
+        autoArrangeGrid: desktopPreferences.autoArrangeGrid,
         showGuides: desktopPreferences.showGuides,
         snapToGrid: desktopPreferences.snapToGrid,
         showWidgets: desktopPreferences.showWidgets,
@@ -478,28 +841,43 @@ document.addEventListener('alpine:init', () => {
         selectedCardId: '',
         selectedCardType: '',
         selectedCardIsOwner: false,
+        gridSavedPositions: {},
+        gridOrder: [],
+        gridDraggedKey: '',
     });
 
     /**
-     * desktopToggles — toolbar toggle buttons for grid/guides/snap
+     * desktopToggles — toolbar toggle buttons for display/layout/snap
      */
     Alpine.data('desktopToggles', () => ({
-        get showGrid() { return Alpine.store('desktop').showGrid; },
+        open: false,
+        get showGridBackground() { return Alpine.store('desktop').showGridBackground; },
+        get autoArrangeGrid() { return Alpine.store('desktop').autoArrangeGrid; },
         get showGuides() { return Alpine.store('desktop').showGuides; },
         get snapToGrid() { return Alpine.store('desktop').snapToGrid; },
 
         persistPreferences() {
             writeDesktopPreferences({
-                showGrid: Alpine.store('desktop').showGrid,
+                showGridBackground: Alpine.store('desktop').showGridBackground,
+                autoArrangeGrid: Alpine.store('desktop').autoArrangeGrid,
                 showGuides: Alpine.store('desktop').showGuides,
                 snapToGrid: Alpine.store('desktop').snapToGrid,
                 showWidgets: Alpine.store('desktop').showWidgets,
             });
         },
 
-        toggleGrid() {
-            Alpine.store('desktop').showGrid = !Alpine.store('desktop').showGrid;
+        toggleGridBackground() {
+            Alpine.store('desktop').showGridBackground = !Alpine.store('desktop').showGridBackground;
             this.persistPreferences();
+        },
+
+        toggleAutoArrangeGrid() {
+            Alpine.store('desktop').autoArrangeGrid = !Alpine.store('desktop').autoArrangeGrid;
+            this.persistPreferences();
+
+            window.dispatchEvent(new CustomEvent('desktop-grid-mode-changed', {
+                detail: { enabled: Alpine.store('desktop').autoArrangeGrid },
+            }));
         },
         toggleGuides() {
             Alpine.store('desktop').showGuides = !Alpine.store('desktop').showGuides;
@@ -513,6 +891,7 @@ document.addEventListener('alpine:init', () => {
         toggleWidgets() {
             Alpine.store('desktop').showWidgets = !Alpine.store('desktop').showWidgets;
             this.persistPreferences();
+            refreshDesktopGridLayout();
         },
         get showWidgets() { return Alpine.store('desktop').showWidgets; },
     }));
@@ -529,6 +908,8 @@ document.addEventListener('alpine:init', () => {
         entityId: card.id,
         entityType: card.type,
         isOwner: card.is_owner ?? false,
+        gridDragX: 0,
+        gridDragY: 0,
         _debounceTimer: null,
         _hasDragged: false,
 
@@ -544,8 +925,22 @@ document.addEventListener('alpine:init', () => {
                 listeners: {
                     start: () => {
                         this._hasDragged = false;
+
+                        if (Alpine.store('desktop').autoArrangeGrid) {
+                            beginGridDrag(this.$el, this);
+                        }
                     },
                     move: (event) => {
+                        if (Alpine.store('desktop').autoArrangeGrid) {
+                            moveGridDrag(this.$el, event, this);
+
+                            if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
+                                this._hasDragged = true;
+                            }
+
+                            return;
+                        }
+
                         const zoom = Alpine.store('desktop').zoom || 1;
                         this.cardX += event.dx / zoom;
                         this.cardY += event.dy / zoom;
@@ -565,6 +960,11 @@ document.addEventListener('alpine:init', () => {
                         }
                     },
                     end: () => {
+                        if (Alpine.store('desktop').autoArrangeGrid) {
+                            endGridDrag(this.$el, this);
+                            return;
+                        }
+
                         clearGuideLines();
 
                         if (Alpine.store('desktop').snapToGrid) {
@@ -597,6 +997,10 @@ document.addEventListener('alpine:init', () => {
                 document.querySelectorAll('.desktop-card.desktop-card-selected').forEach(el => el.classList.remove('desktop-card-selected'));
                 this.$el.classList.add('desktop-card-selected');
 
+                if (dStore.autoArrangeGrid) {
+                    return;
+                }
+
                 this.$wire.bringToFront(this.entityId, this.entityType).then((newZ) => {
                     if (newZ) {
                         this.cardZ = newZ;
@@ -622,10 +1026,14 @@ document.addEventListener('alpine:init', () => {
                 ],
                 listeners: {
                     move: (event) => {
+                        if (Alpine.store('desktop').autoArrangeGrid) return;
+
                         this.cardW = Math.round(event.rect.width);
                         this.cardH = Math.round(event.rect.height);
                     },
                     end: () => {
+                        if (Alpine.store('desktop').autoArrangeGrid) return;
+
                         this._debouncedSaveSize(this.cardW, this.cardH);
                     },
                 },
@@ -663,11 +1071,26 @@ document.addEventListener('alpine:init', () => {
      * desktopViewport — tracks scroll position + handles canvas events
      */
     Alpine.data('desktopViewport', () => ({
-        /** Stores original positions before grid layout to allow reverting */
-        _savedPositions: null,
-
         init() {
             this.updateScroll();
+
+            window.addEventListener('desktop-grid-mode-changed', (event) => {
+                if (event.detail?.enabled) {
+                    applyDesktopGridLayout();
+                } else {
+                    restoreDesktopGridLayout();
+                }
+            });
+
+            window.addEventListener('desktop-grid-refresh', () => {
+                refreshDesktopGridLayout();
+            });
+
+            this.$nextTick(() => {
+                if (Alpine.store('desktop').autoArrangeGrid) {
+                    applyDesktopGridLayout();
+                }
+            });
 
             window.addEventListener('create-entity', (e) => {
                 const viewport = this.$el;
@@ -728,6 +1151,7 @@ document.addEventListener('alpine:init', () => {
                 // Apply zoom
                 Alpine.store('desktop').zoom = optimalZoom;
                 this.$wire.saveZoom(optimalZoom);
+                refreshDesktopGridLayout();
 
                 // Then center on content
                 setTimeout(() => {
@@ -759,6 +1183,8 @@ document.addEventListener('alpine:init', () => {
                 const el = createCardElement(card, this.$wire);
                 canvas.appendChild(el);
                 window.dispatchEvent(new CustomEvent('desktop-refresh-filters'));
+                rememberGridItemPosition(el);
+                refreshDesktopGridLayout();
             });
 
             // Post-it inline editing: save on blur via event delegation
@@ -794,8 +1220,14 @@ document.addEventListener('alpine:init', () => {
 
                 const el = canvas.querySelector(`[data-card-id="${entityId}"]`);
                 if (el) {
+                    const key = getGridItemKey(el);
                     interact(el).unset();
                     el.remove();
+
+                    const store = Alpine.store('desktop');
+                    store.gridOrder = store.gridOrder.filter((gridKey) => gridKey !== key);
+                    delete store.gridSavedPositions[key];
+                    refreshDesktopGridLayout();
                 }
             });
 
@@ -887,8 +1319,13 @@ document.addEventListener('alpine:init', () => {
                     if (canvas) {
                         const el = canvas.querySelector(`[data-card-id="${cardId}"]`);
                         if (el) {
+                            const key = getGridItemKey(el);
                             interact(el).unset();
                             el.remove();
+
+                            dStore.gridOrder = dStore.gridOrder.filter((gridKey) => gridKey !== key);
+                            delete dStore.gridSavedPositions[key];
+                            refreshDesktopGridLayout();
                         }
                     }
 
@@ -913,54 +1350,20 @@ document.addEventListener('alpine:init', () => {
             // Make diary notebook draggable, resizable, and bring-to-front on click
             this.$nextTick(() => {
                 const notebook = document.querySelector('.diary-notebook');
-                if (notebook) {
-                    let nbX = parseFloat(notebook.style.left) || 100;
-                    let nbY = parseFloat(notebook.style.top) || 100;
-                    let nbZ = parseInt(notebook.style.zIndex) || 1;
+                initializeFloatingDesktopWidget(notebook, {
+                    min: { width: 180, height: 140 },
+                    max: { width: 800, height: 600 },
+                });
 
-                    notebook.addEventListener('mousedown', () => {
-                        // Find max z-index among all elements on canvas
-                        const canvas = document.getElementById('desktop-canvas');
-                        if (!canvas) return;
-                        let maxZ = 0;
-                        canvas.querySelectorAll('[data-card-id], .diary-notebook').forEach(el => {
-                            const z = parseInt(el.style.zIndex) || 0;
-                            if (z > maxZ) maxZ = z;
-                        });
-                        nbZ = maxZ + 1;
-                        notebook.style.zIndex = nbZ;
-                    });
+                const visionBoardWidget = document.querySelector('.vb-widget');
+                initializeFloatingDesktopWidget(visionBoardWidget, {
+                    defaultX: 350,
+                    defaultY: 100,
+                    min: { width: 220, height: 180 },
+                    max: { width: 900, height: 700 },
+                });
 
-                    interact(notebook).draggable({
-                        inertia: false,
-                        modifiers: [
-                            interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }),
-                        ],
-                        listeners: {
-                            move: (event) => {
-                                const zoom = Alpine.store('desktop').zoom || 1;
-                                nbX += event.dx / zoom;
-                                nbY += event.dy / zoom;
-                                notebook.style.left = nbX + 'px';
-                                notebook.style.top = nbY + 'px';
-                            },
-                        },
-                    }).resizable({
-                        edges: { right: true, bottom: true },
-                        modifiers: [
-                            interact.modifiers.restrictSize({
-                                min: { width: 180, height: 140 },
-                                max: { width: 800, height: 600 },
-                            }),
-                        ],
-                        listeners: {
-                            move: (event) => {
-                                notebook.style.width = event.rect.width + 'px';
-                                notebook.style.height = event.rect.height + 'px';
-                            },
-                        },
-                    });
-                }
+                refreshDesktopGridLayout();
             });
 
             // Trashcan drop zone
@@ -1020,6 +1423,7 @@ document.addEventListener('alpine:init', () => {
                 }
 
                 el.innerHTML = buildCardInnerHTML(card);
+                refreshDesktopGridLayout();
             });
         },
 
@@ -1074,6 +1478,7 @@ document.addEventListener('alpine:init', () => {
      * desktopZoom — zoom controls with Livewire entangle
      */
     Alpine.data('desktopZoom', () => ({
+        open: false,
         zoom: Alpine.$persist ? 1.0 : 1.0,
 
         init() {
@@ -1094,6 +1499,7 @@ document.addEventListener('alpine:init', () => {
         _apply() {
             Alpine.store('desktop').zoom = this.zoom;
             this.$wire.saveZoom(this.zoom);
+            refreshDesktopGridLayout();
         },
     }));
 
@@ -1227,6 +1633,8 @@ document.addEventListener('alpine:init', () => {
             if (this.isOpen) {
                 this.currentPage = 0;
             }
+
+            refreshDesktopGridLayout();
         },
 
         nextPage() {
@@ -1259,10 +1667,12 @@ document.addEventListener('alpine:init', () => {
      */
     Alpine.data('desktopSearch', () => ({
         searchQuery: '',
-        activeTagFilter: null,
+        activeTagFilters: [],
         activeTypeFilters: ['diary_entry', 'note', 'postit', 'image', 'reminder'],
         allTypes: ['diary_entry', 'note', 'postit', 'image', 'reminder'],
         showShared: true,
+        toolbarGroup: '',
+        tagSearchQuery: '',
         _refreshHandler: null,
 
         init() {
@@ -1290,13 +1700,36 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
+        toggleGroup(group) {
+            this.toolbarGroup = this.toolbarGroup === group ? '' : group;
+
+            if (this.toolbarGroup === 'search') {
+                this.$nextTick(() => {
+                    this.$refs.toolbarSearchInput?.focus();
+                });
+            }
+
+            if (this.toolbarGroup !== 'tags') {
+                this.tagSearchQuery = '';
+            }
+        },
+
+        closeGroups() {
+            this.toolbarGroup = '';
+            this.tagSearchQuery = '';
+        },
+
+        isGroupOpen(group) {
+            return this.toolbarGroup === group;
+        },
+
         filterCards() {
             const canvas = document.getElementById('desktop-canvas');
             if (!canvas) return;
 
             const cards = this.$wire.cards || [];
             const query = this.searchQuery.toLowerCase().trim();
-            const tagFilter = this.activeTagFilter;
+            const tagFilters = this.activeTagFilters;
             const typeFilters = this.activeTypeFilters;
 
             canvas.querySelectorAll('[data-card-id]').forEach(el => {
@@ -1316,9 +1749,9 @@ document.addEventListener('alpine:init', () => {
                     visible = title.includes(query) || preview.includes(query);
                 }
 
-                if (visible && tagFilter) {
+                if (visible && tagFilters.length > 0) {
                     const tagIds = cardData.tag_ids || [];
-                    visible = tagIds.includes(tagFilter);
+                    visible = tagIds.some(tagId => tagFilters.includes(tagId));
                 }
 
                 const currentUserId = this.$el.dataset.currentUserId || '';
@@ -1328,6 +1761,8 @@ document.addEventListener('alpine:init', () => {
 
                 el.style.display = visible ? '' : 'none';
             });
+
+            refreshDesktopGridLayout();
         },
 
         toggleType(type) {
@@ -1353,16 +1788,34 @@ document.addEventListener('alpine:init', () => {
             return this.activeTypeFilters.includes(type);
         },
 
-        filterByTag(tagId) {
-            this.activeTagFilter = tagId;
+        isTagActive(tagId) {
+            return this.activeTagFilters.includes(tagId);
+        },
+
+        toggleTagFilter(tagId) {
+            const index = this.activeTagFilters.indexOf(tagId);
+
+            if (index >= 0) {
+                this.activeTagFilters.splice(index, 1);
+            } else {
+                this.activeTagFilters.push(tagId);
+            }
+
+            this.filterCards();
+        },
+
+        clearTagFilters() {
+            this.activeTagFilters = [];
+            this.tagSearchQuery = '';
             this.filterCards();
         },
 
         clearFilters() {
             this.searchQuery = '';
-            this.activeTagFilter = null;
+            this.activeTagFilters = [];
             this.activeTypeFilters = [...this.allTypes];
             this.showShared = true;
+            this.tagSearchQuery = '';
             this.persistPreferences();
             this.filterCards();
         },

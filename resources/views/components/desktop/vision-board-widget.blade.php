@@ -1,4 +1,6 @@
 <div data-card-type="vision_board_widget"
+     data-grid-item="widget"
+     data-grid-key="vision_board_widget"
      x-show="Alpine.store('desktop').showWidgets"
      x-data="{
          isOpen: false,
@@ -10,6 +12,10 @@
                  this.images = await $wire.getVisionBoardImages();
                  this.loaded = true;
              }
+
+              if (Alpine.store('desktop').showGrid) {
+                  window.dispatchEvent(new CustomEvent('desktop-grid-refresh'));
+              }
          }
      }"
      x-on:dblclick="toggle()"

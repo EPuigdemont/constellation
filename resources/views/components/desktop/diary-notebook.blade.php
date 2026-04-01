@@ -1,4 +1,6 @@
 <div data-card-type="diary_notebook"
+     data-grid-item="widget"
+     data-grid-key="diary_notebook"
      x-show="Alpine.store('desktop').showWidgets"
      x-data="diaryNotebook"
      x-on:dblclick="toggle()"
