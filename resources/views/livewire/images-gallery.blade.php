@@ -1,7 +1,7 @@
 <div class="page-glitter-wrapper flex h-screen flex-col overflow-hidden">
     <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
     {{-- Toolbar --}}
-    <div class="relative z-10 flex items-center gap-3 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
+    <div class="relative z-10 flex items-center gap-3 border-b border-(--theme-border,var(--color-zinc-200)) bg-(--theme-header-bg,var(--color-zinc-50)) px-2 py-1.5 dark:border-(--theme-border,var(--color-zinc-700)) dark:bg-(--theme-header-bg,var(--color-zinc-900))">
         <flux:heading size="lg">{{ __('Images') }}</flux:heading>
 
         <flux:spacer />
@@ -42,26 +42,26 @@
     @if($showImageModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4" x-data x-on:keydown.escape.window="$wire.closeImageModal()">
             <div class="absolute inset-0 bg-black/60" wire:click="closeImageModal"></div>
-            <div class="relative z-10 flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-[var(--theme-border)] shadow-2xl"
+            <div class="relative z-10 flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-(--theme-border) shadow-2xl"
                  style="background: var(--theme-bg);">
                 {{-- Image preview --}}
-                <div class="flex-1 overflow-hidden rounded-t-xl bg-[var(--theme-bg-secondary)]">
+                <div class="flex-1 overflow-hidden rounded-t-xl bg-(--theme-bg-secondary)">
                     <img src="{{ $modalImageUrl }}" alt="{{ $modalImageAlt }}" class="mx-auto max-h-[60vh] object-contain" />
                 </div>
 
                 {{-- Info + Actions --}}
-                <div class="flex items-center justify-between border-t border-[var(--theme-border)] px-5 py-3">
-                    <div class="text-sm font-medium text-[var(--theme-text)]">
+                <div class="flex items-center justify-between border-t border-(--theme-border) px-5 py-3">
+                    <div class="text-sm font-medium text-(--theme-text)">
                         {{ $modalImageAlt ?: __('Untitled') }}
                     </div>
                     <div class="flex items-center gap-2">
                         <a href="{{ $modalImageUrl }}" target="_blank"
-                           class="inline-flex items-center gap-1.5 rounded-md border border-[var(--theme-border)] px-3 py-1.5 text-sm text-[var(--theme-text)] hover:bg-[var(--theme-accent)]/10">
+                           class="inline-flex items-center gap-1.5 rounded-md border border-(--theme-border) px-3 py-1.5 text-sm text-(--theme-text) hover:bg-(--theme-accent)/10">
                             <flux:icon name="eye" variant="outline" class="size-4" />
                             {{ __('View') }}
                         </a>
                         <a href="{{ $modalImageUrl }}" download
-                           class="inline-flex items-center gap-1.5 rounded-md border border-[var(--theme-border)] px-3 py-1.5 text-sm text-[var(--theme-text)] hover:bg-[var(--theme-accent)]/10">
+                           class="inline-flex items-center gap-1.5 rounded-md border border-(--theme-border) px-3 py-1.5 text-sm text-(--theme-text) hover:bg-(--theme-accent)/10">
                             <flux:icon name="arrow-down-tray" variant="outline" class="size-4" />
                             {{ __('Download') }}
                         </a>
