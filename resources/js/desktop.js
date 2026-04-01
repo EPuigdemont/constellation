@@ -1667,6 +1667,7 @@ document.addEventListener('alpine:init', () => {
      */
     Alpine.data('desktopSearch', () => ({
         searchQuery: '',
+        mobileSearchOpen: false,
         activeTagFilters: [],
         activeTypeFilters: ['diary_entry', 'note', 'postit', 'image', 'reminder'],
         allTypes: ['diary_entry', 'note', 'postit', 'image', 'reminder'],
@@ -1790,6 +1791,19 @@ document.addEventListener('alpine:init', () => {
 
         isTagActive(tagId) {
             return this.activeTagFilters.includes(tagId);
+        },
+
+        get activeTagFilter() {
+            return this.activeTagFilters.length > 0 ? this.activeTagFilters[0] : null;
+        },
+
+        set activeTagFilter(tagId) {
+            this.activeTagFilters = tagId ? [tagId] : [];
+        },
+
+        filterByTag(tagId) {
+            this.activeTagFilter = tagId;
+            this.filterCards();
         },
 
         toggleTagFilter(tagId) {
