@@ -561,7 +561,7 @@
 
     {{-- Editor Modal --}}
     <flux:modal wire:model="showEditorModal" class="w-full max-w-3xl" flyout>
-        <div class="desktop-editor-modal space-y-4" x-data="tiptapEditor" x-on:keydown.escape.window="syncToWire()"
+        <div class="desktop-editor-modal space-y-5" x-data="tiptapEditor" x-on:keydown.escape.window="syncToWire()"
              :class="'mood-' + ($wire.editorMood || 'plain')"
              :style="$wire.editorColorOverride ? 'background-color: ' + $wire.editorColorOverride : ''"
              x-effect="
@@ -684,7 +684,7 @@
             </div>
 
             {{-- Metadata Row --}}
-            <div class="grid grid-cols-1 gap-4 {{ $editorMood === 'custom' ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }}">
+            <div class="grid grid-cols-1 gap-5 {{ $editorMood === 'custom' ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }}">
                 {{-- Mood --}}
                 <flux:field>
                     <flux:label>{{ __('Mood') }}</flux:label>
@@ -841,7 +841,6 @@
                         @endif
                     </p>
                 </div>
-                <flux:button size="sm" icon="x-mark" wire:click="closeReadonlyModal"/>
             </div>
 
             @if($readonlyEntityType !== 'image' && $readonlyTitle !== '')

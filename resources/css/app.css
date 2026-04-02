@@ -384,12 +384,35 @@ select:focus[data-flux-control] {
 .desktop-editor-modal {
     background: var(--card-bg, var(--theme-bg, var(--color-zinc-50)));
     border-radius: 0.5rem;
-    padding: 1px;
+    border: 1px solid var(--card-border, var(--color-zinc-200));
+    padding: 1rem 1.25rem 1.25rem;
     transition: background-color 0.3s ease;
 }
 
 .dark .desktop-editor-modal {
     background: var(--card-bg, var(--theme-bg, var(--color-zinc-800)));
+}
+
+.desktop-editor-modal > [data-flux-heading],
+.desktop-editor-modal > h1,
+.desktop-editor-modal > h2,
+.desktop-editor-modal > h3 {
+    margin-top: 0.125rem;
+    padding-right: 2rem;
+}
+
+.desktop-editor-modal .tiptap-editor-content {
+    margin-top: 0.25rem;
+}
+
+.desktop-editor-modal .grid {
+    margin-top: 0.25rem;
+}
+
+.desktop-editor-modal > .flex.items-center.justify-between {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--card-border, var(--color-zinc-200));
 }
 
 /* ─── Trashcan Drop Zone ─── */

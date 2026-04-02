@@ -365,6 +365,30 @@ function getDesktopViewportElement() {
     return document.getElementById('desktop-viewport');
 }
 
+function getHighestCanvasZIndex() {
+    const canvas = getDesktopCanvasElement();
+    if (!canvas) return 0;
+
+    let maxZ = 0;
+    canvas.querySelectorAll('[data-grid-item]').forEach((item) => {
+        const zIndex = parseInt(item.style.zIndex, 10) || 0;
+        if (zIndex > maxZ) {
+            maxZ = zIndex;
+        }
+    });
+
+    return maxZ;
+}
+
+function bringElementToFrontLocally(el) {
+    if (!el) return 1;
+
+    const nextZ = getHighestCanvasZIndex() + 1;
+    el.style.zIndex = String(nextZ);
+
+    return nextZ;
+}
+
 function isGridItemVisible(el) {
     if (!el) return false;
 
@@ -708,7 +732,7 @@ function createCardElement(card, wire) {
 
     // Set up interact.js drag
     let debounceTimer = null;
-    let hasDragged = false;
+    let isDragging = false;
     let cardX = card.x ?? 0;
     let cardY = card.y ?? 0;
     let cardZ = card.z_index ?? 0;
@@ -724,8 +748,6 @@ function createCardElement(card, wire) {
         ],
         listeners: {
             start: () => {
-                hasDragged = false;
-
                 if (Alpine.store('desktop').autoArrangeGrid) {
                     beginGridDrag(el, dragState);
                 }
@@ -756,7 +778,7 @@ function createCardElement(card, wire) {
                 showGuideLines(el);
 
                 if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
-                    hasDragged = true;
+                    isDragging = true;
                 }
             },
             end: () => {
@@ -778,6 +800,11 @@ function createCardElement(card, wire) {
                 debounceTimer = setTimeout(() => {
                     wire.savePosition(card.id, card.type, Math.round(cardX), Math.round(cardY), cardZ);
                 }, 300);
+
+                // Reset after drag completes so future dblclicks are not blocked.
+                setTimeout(() => {
+                    isDragging = false;
+                }, 0);
             },
         },
     });
@@ -840,21 +867,18 @@ function createCardElement(card, wire) {
             return;
         }
 
-        wire.bringToFront(card.id, card.type).then((newZ) => {
-            if (newZ) {
-                cardZ = newZ;
-                el.style.zIndex = newZ;
-            }
-        });
+        cardZ = bringElementToFrontLocally(el);
     });
 
     el.addEventListener('dblclick', () => {
-        if (!hasDragged) {
-            if (card.is_owner ?? false) {
-                wire.openEditModal(card.id, card.type);
-            } else {
-                wire.openReadonlyModal(card.id, card.type);
-            }
+        if (isDragging) {
+            return;
+        }
+
+        if (card.is_owner ?? false) {
+            wire.openEditModal(card.id, card.type);
+        } else {
+            wire.openReadonlyModal(card.id, card.type);
         }
     });
 
@@ -966,7 +990,7 @@ document.addEventListener('alpine:init', () => {
         gridDragX: 0,
         gridDragY: 0,
         _debounceTimer: null,
-        _hasDragged: false,
+        _isDragging: false,
 
         initDrag() {
             interact(this.$el).draggable({
@@ -979,8 +1003,6 @@ document.addEventListener('alpine:init', () => {
                 ],
                 listeners: {
                     start: () => {
-                        this._hasDragged = false;
-
                         if (Alpine.store('desktop').autoArrangeGrid) {
                             beginGridDrag(this.$el, this);
                         }
@@ -990,7 +1012,7 @@ document.addEventListener('alpine:init', () => {
                             moveGridDrag(this.$el, event, this);
 
                             if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
-                                this._hasDragged = true;
+                                this._isDragging = true;
                             }
 
                             return;
@@ -1011,7 +1033,7 @@ document.addEventListener('alpine:init', () => {
                         showGuideLines(this.$el);
 
                         if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
-                            this._hasDragged = true;
+                            this._isDragging = true;
                         }
                     },
                     end: () => {
@@ -1028,6 +1050,11 @@ document.addEventListener('alpine:init', () => {
                         }
 
                         this._debouncedSave();
+
+                        // Reset after drag completes so future dblclicks are not blocked.
+                        setTimeout(() => {
+                            this._isDragging = false;
+                        }, 0);
                     },
                 },
             });
@@ -1056,21 +1083,19 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
 
-                this.$wire.bringToFront(this.entityId, this.entityType).then((newZ) => {
-                    if (newZ) {
-                        this.cardZ = newZ;
-                    }
-                });
+                this.cardZ = bringElementToFrontLocally(this.$el);
             });
 
             // Double-click: owner edits, shared/non-owner opens read-only modal
             this.$el.addEventListener('dblclick', () => {
-                if (!this._hasDragged) {
-                    if (this.isOwner) {
-                        this.$wire.openEditModal(this.entityId, this.entityType);
-                    } else {
-                        this.$wire.openReadonlyModal(this.entityId, this.entityType);
-                    }
+                if (this._isDragging) {
+                    return;
+                }
+
+                if (this.isOwner) {
+                    this.$wire.openEditModal(this.entityId, this.entityType);
+                } else {
+                    this.$wire.openReadonlyModal(this.entityId, this.entityType);
                 }
             });
 
