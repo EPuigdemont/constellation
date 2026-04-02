@@ -15,6 +15,7 @@ use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\Tag;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
@@ -65,81 +66,81 @@ class DataExportService
                 'vision_board_zoom' => $user->vision_board_zoom,
                 'diary_display_mode' => $user->diary_display_mode,
             ],
-            'tags' => $tags->map(fn (Tag $t) => [
+            'tags' => $tags->map(fn (Tag $t): array => [
                 'id' => $t->id,
                 'name' => $t->name,
                 'color' => $t->color,
                 'created_at' => $t->created_at?->toIso8601String(),
                 'updated_at' => $t->updated_at?->toIso8601String(),
             ])->values()->all(),
-            'diary_entries' => $diaryEntries->map(fn (DiaryEntry $e) => [
+            'diary_entries' => $diaryEntries->map(fn (DiaryEntry $e): array => [
                 'id' => $e->id,
                 'title' => $e->title,
                 'body' => $e->body,
-                'mood' => $e->mood?->value,
+                'mood' => $this->enumValue($e->mood),
                 'color_override' => $e->color_override,
                 'is_public' => $e->is_public,
                 'created_at' => $e->created_at?->toIso8601String(),
                 'updated_at' => $e->updated_at?->toIso8601String(),
                 'deleted_at' => $e->deleted_at?->toIso8601String(),
             ])->values()->all(),
-            'notes' => $notes->map(fn (Note $e) => [
+            'notes' => $notes->map(fn (Note $e): array => [
                 'id' => $e->id,
                 'title' => $e->title,
                 'body' => $e->body,
-                'mood' => $e->mood?->value,
+                'mood' => $this->enumValue($e->mood),
                 'color_override' => $e->color_override,
                 'is_public' => $e->is_public,
                 'created_at' => $e->created_at?->toIso8601String(),
                 'updated_at' => $e->updated_at?->toIso8601String(),
                 'deleted_at' => $e->deleted_at?->toIso8601String(),
             ])->values()->all(),
-            'postits' => $postits->map(fn (Postit $e) => [
+            'postits' => $postits->map(fn (Postit $e): array => [
                 'id' => $e->id,
                 'body' => $e->body,
-                'mood' => $e->mood?->value,
+                'mood' => $this->enumValue($e->mood),
                 'color_override' => $e->color_override,
                 'is_public' => $e->is_public,
                 'created_at' => $e->created_at?->toIso8601String(),
                 'updated_at' => $e->updated_at?->toIso8601String(),
                 'deleted_at' => $e->deleted_at?->toIso8601String(),
             ])->values()->all(),
-            'images' => $images->map(fn (Image $e) => [
+            'images' => $images->map(fn (Image $e): array => [
                 'id' => $e->id,
                 'path' => $e->path,
                 'disk' => $e->disk,
                 'alt' => $e->alt,
                 'title' => $e->title,
-                'mood' => $e->mood?->value,
+                'mood' => $this->enumValue($e->mood),
                 'color_override' => $e->color_override,
                 'is_public' => $e->is_public,
                 'created_at' => $e->created_at?->toIso8601String(),
                 'updated_at' => $e->updated_at?->toIso8601String(),
                 'deleted_at' => $e->deleted_at?->toIso8601String(),
             ])->values()->all(),
-            'important_dates' => $importantDates->map(fn (ImportantDate $d) => [
+            'important_dates' => $importantDates->map(fn (ImportantDate $d): array => [
                 'id' => $d->id,
                 'label' => $d->label,
-                'date' => $d->date->toDateString(),
+                'date' => Carbon::parse((string) $d->date)->toDateString(),
                 'recurs_annually' => $d->recurs_annually,
                 'is_done' => $d->is_done,
                 'created_at' => $d->created_at?->toIso8601String(),
                 'updated_at' => $d->updated_at?->toIso8601String(),
                 'deleted_at' => $d->deleted_at?->toIso8601String(),
             ])->values()->all(),
-            'reminders' => $reminders->map(fn (Reminder $r) => [
+            'reminders' => $reminders->map(fn (Reminder $r): array => [
                 'id' => $r->id,
                 'title' => $r->title,
                 'body' => $r->body,
-                'remind_at' => $r->remind_at->toIso8601String(),
-                'mood' => $r->mood?->value,
-                'reminder_type' => $r->reminder_type?->value,
+                'remind_at' => Carbon::parse((string) $r->remind_at)->toIso8601String(),
+                'mood' => $this->enumValue($r->mood),
+                'reminder_type' => $this->enumValue($r->reminder_type),
                 'is_completed' => $r->is_completed,
                 'created_at' => $r->created_at?->toIso8601String(),
                 'updated_at' => $r->updated_at?->toIso8601String(),
                 'deleted_at' => $r->deleted_at?->toIso8601String(),
             ])->values()->all(),
-            'entity_positions' => $positions->map(fn (EntityPosition $p) => [
+            'entity_positions' => $positions->map(fn (EntityPosition $p): array => [
                 'id' => $p->id,
                 'entity_id' => $p->entity_id,
                 'entity_type' => $p->entity_type,
@@ -151,21 +152,21 @@ class DataExportService
                 'height' => $p->height,
                 'is_hidden' => $p->is_hidden,
             ])->values()->all(),
-            'calendar_day_moods' => $calendarMoods->map(fn (CalendarDayMood $m) => [
+            'calendar_day_moods' => $calendarMoods->map(fn (CalendarDayMood $m): array => [
                 'id' => $m->id,
-                'date' => $m->date->toDateString(),
+                'date' => Carbon::parse((string) $m->date)->toDateString(),
                 'mood' => $m->mood,
             ])->values()->all(),
-            'entity_relationships' => $relationships->map(fn (EntityRelationship $r) => [
+            'entity_relationships' => $relationships->map(fn (EntityRelationship $r): array => [
                 'id' => $r->id,
                 'entity_a_id' => $r->entity_a_id,
                 'entity_a_type' => $r->entity_a_type,
                 'entity_b_id' => $r->entity_b_id,
                 'entity_b_type' => $r->entity_b_type,
-                'relationship_type' => $r->relationship_type->value,
-                'direction' => $r->direction->value,
+                'relationship_type' => $this->enumValue($r->relationship_type) ?? '',
+                'direction' => $this->enumValue($r->direction) ?? '',
             ])->values()->all(),
-            'taggables' => $taggables->map(fn (object $t) => [
+            'taggables' => $taggables->map(fn (object $t): array => [
                 'tag_id' => $t->tag_id,
                 'taggable_id' => $t->taggable_id,
                 'taggable_type' => $t->taggable_type,
@@ -253,5 +254,18 @@ class DataExportService
         }
 
         rmdir($dir);
+    }
+
+    private function enumValue(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_object($value) && property_exists($value, 'value') && is_string($value->value)) {
+            return $value->value;
+        }
+
+        return null;
     }
 }

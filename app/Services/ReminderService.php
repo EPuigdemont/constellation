@@ -8,6 +8,8 @@ use App\Models\DiaryEntry;
 use App\Models\ImportantDate;
 use App\Models\Reminder;
 use App\Models\User;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 class ReminderService
@@ -37,10 +39,12 @@ class ReminderService
         ImportantDate::where('user_id', $user->id)
             ->get()
             ->filter(function (ImportantDate $d) use ($today) {
-                if ($d->date->isSameDay($today)) {
+                $date = Carbon::parse((string) $d->date);
+
+                if ($date->isSameDay($today)) {
                     return true;
                 }
-                if ($d->recurs_annually && $d->date->month === $today->month && $d->date->day === $today->day) {
+                if ($d->recurs_annually && $date->month === $today->month && $date->day === $today->day) {
                     return true;
                 }
 
@@ -65,12 +69,17 @@ class ReminderService
         $happyTags = ['happy', 'grateful', 'excited'];
 
         $windows = [
-            now()->subWeek()->subDays(2) => now()->subWeek()->addDays(2),
-            now()->subMonth()->subDays(3) => now()->subMonth()->addDays(3),
-            now()->subYear()->subDays(7) => now()->subYear()->addDays(7),
+            ['from' => now()->subWeek()->subDays(2), 'to' => now()->subWeek()->addDays(2)],
+            ['from' => now()->subMonth()->subDays(3), 'to' => now()->subMonth()->addDays(3)],
+            ['from' => now()->subYear()->subDays(7), 'to' => now()->subYear()->addDays(7)],
         ];
 
-        foreach ($windows as $from => $to) {
+        foreach ($windows as $window) {
+            /** @var CarbonInterface $from */
+            $from = $window['from'];
+            /** @var CarbonInterface $to */
+            $to = $window['to'];
+
             $entry = DiaryEntry::where('user_id', $user->id)
                 ->whereHas('tags', fn ($q) => $q->whereIn('name', $happyTags))
                 ->whereBetween('created_at', [$from, $to])

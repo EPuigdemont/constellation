@@ -6,6 +6,7 @@ namespace App\Livewire;
 
 use App\Models\ImportantDate;
 use App\Models\Reminder;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -49,11 +50,13 @@ class Notifications extends Component
             ->get();
 
         $todayDates = $allDates->filter(function (ImportantDate $date): bool {
-            return $date->date->month === now()->month && $date->date->day === now()->day;
+            $eventDate = Carbon::parse((string) $date->date);
+
+            return $eventDate->month === now()->month && $eventDate->day === now()->day;
         });
 
         $upcomingDates = $allDates->filter(function (ImportantDate $date) {
-            $thisYear = $date->date->copy()->year(now()->year);
+            $thisYear = Carbon::parse((string) $date->date)->setYear(now()->year);
             if ($thisYear->isPast() && !$thisYear->isToday()) {
                 $thisYear->addYear();
             }

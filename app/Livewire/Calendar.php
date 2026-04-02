@@ -13,6 +13,7 @@ use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\Tag;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -112,7 +113,7 @@ class Calendar extends Component
         $this->modalEntityType = $type;
         $this->modalEntityTitle = $type === 'postit' ? 'Post-it' : ($entity->title ?: 'Untitled');
         $this->modalEntityBody = $entity->body ?? '';
-        $this->modalEntityMood = $entity->mood?->value ?? 'summer';
+        $this->modalEntityMood = $this->moodValue($entity->mood);
         $this->modalEntityTime = $entity->created_at->format('H:i');
         $this->showEntityModal = true;
     }
@@ -153,7 +154,7 @@ class Calendar extends Component
             $createdAt = Carbon::parse($this->createDate);
         }
 
-        match ($this->createType) {
+        $entity = match ($this->createType) {
             'diary' => $entity = DiaryEntry::create([
                 'user_id' => $user->id,
                 'title' => $this->createTitle ?: 'Untitled',
@@ -182,7 +183,12 @@ class Calendar extends Component
                 'mood' => $mood,
                 'created_at' => $createdAt,
             ]),
+            default => null,
         };
+
+        if (! $entity instanceof Model) {
+            return;
+        }
 
         if (!empty($this->createTags)) {
             if (in_array('menstruation', $this->createTags) && $this->selectedDate !== '') {
@@ -275,7 +281,7 @@ class Calendar extends Component
         $dayMoods = CalendarDayMood::where('user_id', $userId)
             ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
             ->get()
-            ->keyBy(fn ($dm) => $dm->date->toDateString());
+            ->keyBy(fn (CalendarDayMood $dm): string => Carbon::parse((string) $dm->date)->toDateString());
 
         return view('livewire.calendar-view', [
             'calendarDays' => $calendarDays,
@@ -361,7 +367,7 @@ class Calendar extends Component
                 'type' => 'diary',
                 'id' => $e->id,
                 'title' => $e->title ?: 'Untitled',
-                'mood' => $e->mood?->value ?? 'summer',
+                'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
@@ -371,7 +377,7 @@ class Calendar extends Component
                 'type' => 'note',
                 'id' => $e->id,
                 'title' => $e->title ?: 'Untitled',
-                'mood' => $e->mood?->value ?? 'summer',
+                'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
@@ -381,7 +387,7 @@ class Calendar extends Component
                 'type' => 'postit',
                 'id' => $e->id,
                 'title' => 'Post-it',
-                'mood' => $e->mood?->value ?? 'summer',
+                'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
@@ -408,11 +414,16 @@ class Calendar extends Component
                 'type' => 'reminder',
                 'id' => $r->id,
                 'title' => $r->title,
-                'mood' => $r->mood?->value ?? 'summer',
+                'mood' => $this->moodValue($r->mood),
                 'preview' => str(strip_tags($r->body ?? ''))->limit(80)->toString(),
                 'created_at' => $r->remind_at,
             ]));
 
         return $entities->sortBy('created_at')->values();
+    }
+
+    private function moodValue(mixed $mood): string
+    {
+        return $mood instanceof Mood ? $mood->value : (is_string($mood) && $mood !== '' ? $mood : 'summer');
     }
 }

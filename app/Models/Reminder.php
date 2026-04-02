@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\Mood;
 use App\Enums\ReminderType;
 use App\Models\Concerns\HasEntityDefaults;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -65,6 +66,7 @@ class Reminder extends Model
 
     public function isDue(): bool
     {
-        return ! $this->is_completed && $this->remind_at->startOfDay()->lte(now()->startOfDay());
+        return ! $this->is_completed
+            && Carbon::parse((string) $this->remind_at)->startOfDay()->lte(now()->startOfDay());
     }
 }

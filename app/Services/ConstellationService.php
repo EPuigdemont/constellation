@@ -110,7 +110,7 @@ class ConstellationService
                 'type' => $type,
                 'title' => $title,
                 'preview' => str(strip_tags($entity->body ?? ''))->limit(120)->toString(),
-                'mood' => $entity->mood?->value ?? 'summer',
+                'mood' => $this->enumValue($entity->mood) ?? 'summer',
                 'color_override' => $entity->color_override,
                 'tags' => $entity->tags->pluck('name')->all(),
                 'created_at' => $entity->created_at->toIso8601String(),
@@ -137,10 +137,10 @@ class ConstellationService
             ->whereIn('entity_a_id', $entityIds)
             ->whereIn('entity_b_id', $entityIds)
             ->get()
-            ->map(fn ($rel) => [
+            ->map(fn (EntityRelationship $rel): array => [
                 'source' => $rel->entity_a_id,
                 'target' => $rel->entity_b_id,
-                'type' => $rel->relationship_type->value,
+                'type' => $this->enumValue($rel->relationship_type) ?? '',
                 'strength' => 1.0,
             ])
             ->all();
@@ -248,5 +248,18 @@ class ConstellationService
     private function edgeKey(string $a, string $b): string
     {
         return $a < $b ? "{$a}:{$b}" : "{$b}:{$a}";
+    }
+
+    private function enumValue(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_object($value) && property_exists($value, 'value') && is_string($value->value)) {
+            return $value->value;
+        }
+
+        return null;
     }
 }

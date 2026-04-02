@@ -228,7 +228,7 @@ class Canvas extends Component
             'type' => 'reminder',
             'title' => '',
             'preview' => '',
-            'mood' => $reminder->mood?->value ?? 'summer',
+            'mood' => $this->moodValue($reminder->mood),
             'color_override' => null,
             'x' => $position->x,
             'y' => $position->y,
@@ -354,7 +354,7 @@ class Canvas extends Component
         $this->editorMode = $entityType === 'diary_entry' ? 'diary' : $entityType;
         $this->editorTitle = $model->title ?? '';
         $this->editorBody = $model->body ?? '';
-        $this->editorMood = $model->mood?->value ?? 'plain';
+        $this->editorMood = $this->moodValue($model->mood, 'plain');
         $this->editorColorOverride = $model->color_override ?? null;
         $this->editorRemindAt = ($entityType === 'reminder' && $model->remind_at)
             ? $model->remind_at->format('Y-m-d\TH:i')
@@ -374,7 +374,7 @@ class Canvas extends Component
 
         $this->showReadonlyModal = true;
         $this->readonlyEntityType = $entityType;
-        $this->readonlyOwnerUsername = $model->user?->username ?? $model->user?->name ?? '';
+        $this->readonlyOwnerUsername = $model->user->username ?? $model->user->name ?? '';
         $this->readonlyTitle = $model->title ?? '';
         $this->readonlyBody = $model->body ?? $model->alt ?? '';
         $this->readonlyImageUrl = $entityType === 'image' ? route('images.serve', $model) : '';
@@ -438,7 +438,7 @@ class Canvas extends Component
 
         $model->update($data);
 
-        if (method_exists($model, 'tags')) {
+        if ($model instanceof DiaryEntry || $model instanceof Note || $model instanceof Reminder) {
             $model->tags()->sync($this->editorTagIds);
         }
 
@@ -835,7 +835,7 @@ class Canvas extends Component
             $type = 'note';
         }
 
-        if (method_exists($entity, 'tags') && ! empty($this->editorTagIds)) {
+        if (! empty($this->editorTagIds)) {
             $entity->tags()->sync($this->editorTagIds);
         }
 
@@ -925,5 +925,10 @@ class Canvas extends Component
                 break;
             }
         }
+    }
+
+    private function moodValue(mixed $mood, string $fallback = 'summer'): string
+    {
+        return $mood instanceof Mood ? $mood->value : (is_string($mood) && $mood !== '' ? $mood : $fallback);
     }
 }

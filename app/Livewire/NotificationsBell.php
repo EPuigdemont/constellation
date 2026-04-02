@@ -6,6 +6,7 @@ namespace App\Livewire;
 
 use App\Models\ImportantDate;
 use App\Models\Reminder;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -25,8 +26,10 @@ class NotificationsBell extends Component
             ->where('is_done', false)
             ->get()
             ->filter(function (ImportantDate $date): bool {
-                return ($date->date->month === now()->month && $date->date->day === now()->day)
-                    || ($date->recurs_annually && $date->date->month === now()->month && $date->date->day === now()->day);
+                $eventDate = Carbon::parse((string) $date->date);
+
+                return ($eventDate->month === now()->month && $eventDate->day === now()->day)
+                    || ($date->recurs_annually && $eventDate->month === now()->month && $eventDate->day === now()->day);
             })
             ->count();
 

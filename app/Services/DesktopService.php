@@ -308,21 +308,21 @@ class DesktopService
     {
         // Find parent (this entity is entity_b in a parent_child relationship)
         $parentRel = $relationships->first(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
-            return $rel->relationship_type === RelationshipType::ParentChild
+            return $this->relationshipTypeValue($rel->relationship_type) === RelationshipType::ParentChild->value
                 && $rel->entity_b_id === $entityId
                 && $rel->entity_b_type === $entityType;
         });
 
         // Count children (this entity is entity_a in parent_child relationships)
         $childrenCount = $relationships->filter(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
-            return $rel->relationship_type === RelationshipType::ParentChild
+            return $this->relationshipTypeValue($rel->relationship_type) === RelationshipType::ParentChild->value
                 && $rel->entity_a_id === $entityId
                 && $rel->entity_a_type === $entityType;
         })->count();
 
         // Count siblings (this entity appears as either side in sibling relationships)
         $siblingsCount = $relationships->filter(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
-            return $rel->relationship_type === RelationshipType::Sibling
+            return $this->relationshipTypeValue($rel->relationship_type) === RelationshipType::Sibling->value
                 && (
                     ($rel->entity_a_id === $entityId && $rel->entity_a_type === $entityType)
                     || ($rel->entity_b_id === $entityId && $rel->entity_b_type === $entityType)
@@ -350,14 +350,16 @@ class DesktopService
             'postit' => '',
             'image' => $entity->title ?? $entity->alt ?? '',
             'reminder' => $entity->title ?? '',
+            default => '',
         };
 
         $preview = match ($type) {
             'diary_entry', 'note', 'postit', 'reminder' => Str::limit(strip_tags($entity->body ?? ''), 120),
             'image' => $entity->alt ?? '',
+            default => '',
         };
 
-        $mood = $entity->mood?->value ?? null;
+        $mood = $this->enumValue($entity->mood);
 
         $relData = $relationships
             ? $this->getRelationshipData($entity->id, $type, $relationships)
@@ -376,14 +378,14 @@ class DesktopService
             'preview' => $preview,
             'mood' => $mood,
             'color_override' => $entity->color_override ?? null,
-            'x' => $position?->x ?? 0.0,
-            'y' => $position?->y ?? 0.0,
-            'z_index' => $position?->z_index ?? 0,
+            'x' => $position->x ?? 0.0,
+            'y' => $position->y ?? 0.0,
+            'z_index' => $position->z_index ?? 0,
             'width' => $position?->width,
             'height' => $position?->height,
             'owner_id' => $entity->user_id,
-            'owner_name' => $entity->user?->name ?? '',
-            'owner_username' => $entity->user?->username ?? '',
+            'owner_name' => $entity->user->name ?? '',
+            'owner_username' => $entity->user->username ?? '',
             'created_at' => $entity->created_at?->toIso8601String(),
             'updated_at' => $entity->updated_at?->toIso8601String(),
             'parent_id' => $relData['parent_id'],
@@ -392,7 +394,25 @@ class DesktopService
             'siblings_count' => $relData['siblings_count'],
             'tag_ids' => $tagIds,
             'image_url' => $imageUrl,
-            'is_hidden' => (bool) ($position?->is_hidden ?? false),
+            'is_hidden' => (bool) ($position->is_hidden ?? false),
         ];
+    }
+
+    private function relationshipTypeValue(mixed $type): ?string
+    {
+        return $type instanceof RelationshipType ? $type->value : (is_string($type) ? $type : null);
+    }
+
+    private function enumValue(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_object($value) && property_exists($value, 'value') && is_string($value->value)) {
+            return $value->value;
+        }
+
+        return null;
     }
 }

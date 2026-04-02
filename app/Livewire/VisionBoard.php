@@ -226,7 +226,7 @@ class VisionBoard extends Component
         $this->editingImageId = $image->id;
         $this->editorTitle = $image->title ?? '';
         $this->editorAlt = $image->alt ?? '';
-        $this->editorMood = $image->mood?->value ?? 'plain';
+        $this->editorMood = $this->moodValue($image->mood, 'plain');
         $this->editorColorOverride = $image->color_override;
         $this->editorTagIds = $image->tags()->pluck('tags.id')->all();
 
@@ -507,5 +507,10 @@ class VisionBoard extends Component
                 break;
             }
         }
+    }
+
+    private function moodValue(mixed $mood, string $fallback = 'summer'): string
+    {
+        return $mood instanceof Mood ? $mood->value : (is_string($mood) && $mood !== '' ? $mood : $fallback);
     }
 }

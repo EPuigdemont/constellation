@@ -15,7 +15,7 @@ class LoginResponse implements LoginResponseContract
     {
         /** @var Request $request */
         $user = $request->user();
-        $name = $user?->name ?? '';
+        $name = $user->name ?? '';
 
         session()->flash('status', __('Welcome back, :name!', ['name' => $name]));
 

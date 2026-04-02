@@ -8,6 +8,7 @@ use App\Enums\Mood;
 use App\Enums\ReminderType;
 use App\Models\ImportantDate;
 use App\Models\Reminder;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -57,7 +58,7 @@ class Reminders extends Component
             $date = ImportantDate::where('user_id', Auth::id())->findOrFail($id);
             $this->editingDateId = $date->id;
             $this->dateLabel = $date->label;
-            $this->dateValue = $date->date->format('Y-m-d');
+            $this->dateValue = Carbon::parse((string) $date->date)->format('Y-m-d');
             $this->dateRecurs = $date->recurs_annually;
         } else {
             $this->editingDateId = '';
@@ -123,8 +124,8 @@ class Reminders extends Component
             $this->editingReminderId = $reminder->id;
             $this->reminderTitle = $reminder->title;
             $this->reminderBody = $reminder->body ?? '';
-            $this->reminderAt = $reminder->remind_at->format('Y-m-d\TH:i');
-            $this->reminderType = $reminder->reminder_type?->value ?? 'general';
+            $this->reminderAt = Carbon::parse((string) $reminder->remind_at)->format('Y-m-d\TH:i');
+            $this->reminderType = $this->reminderTypeValue($reminder->reminder_type);
         } else {
             $this->editingReminderId = '';
             $this->reminderTitle = '';
@@ -201,5 +202,10 @@ class Reminders extends Component
             'importantDates' => $importantDates,
             'reminders' => $reminders,
         ]);
+    }
+
+    private function reminderTypeValue(mixed $type): string
+    {
+        return $type instanceof ReminderType ? $type->value : (is_string($type) && $type !== '' ? $type : 'general');
     }
 }

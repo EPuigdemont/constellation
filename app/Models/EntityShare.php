@@ -9,9 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EntityShare extends Model
 {
-    /**
-     * @var array<int, string>
-     */
+    /** @var list<string> */
     protected $fillable = ['owner_id', 'friend_id', 'entity_id', 'entity_type'];
 
     public function owner(): BelongsTo
