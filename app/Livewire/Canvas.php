@@ -10,6 +10,7 @@ use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\Tag;
+use App\Models\User;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -95,6 +96,12 @@ class Canvas extends Component
     /** @var array<int, array{id: string, name: string}> */
     public array $filterAvailableTags = [];
 
+    /** @var array<int, array{id: string, username: string, name: string}> */
+    public array $userFriends = [];
+
+    /** @var array<int, string> */
+    public array $currentEntitySharedFriends = [];
+
     public function mount(DesktopService $service): void
     {
         $user = Auth::user();
@@ -170,7 +177,6 @@ class Canvas extends Component
             'user_id' => $user->id,
             'body' => '',
             'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
-            'is_public' => false,
         ]);
 
         $position = $service->assignDefaultPosition($user, $postit->id, 'postit', $centerX, $centerY);
@@ -182,7 +188,6 @@ class Canvas extends Component
             'preview' => '',
             'mood' => 'summer',
             'color_override' => null,
-            'is_public' => false,
             'x' => $position->x,
             'y' => $position->y,
             'z_index' => $position->z_index,
@@ -225,7 +230,6 @@ class Canvas extends Component
             'preview' => '',
             'mood' => $reminder->mood?->value ?? 'summer',
             'color_override' => null,
-            'is_public' => false,
             'x' => $position->x,
             'y' => $position->y,
             'z_index' => $position->z_index,
@@ -283,7 +287,6 @@ class Canvas extends Component
                 'preview' => $image->alt ?? '',
                 'mood' => null,
                 'color_override' => null,
-                'is_public' => false,
                 'x' => $position->x,
                 'y' => $position->y,
                 'z_index' => $position->z_index,
@@ -319,6 +322,7 @@ class Canvas extends Component
 
     public function saveEditor(DesktopService $service): void
     {
+        /** @var User $user */
         $user = Auth::user();
         $mood = Mood::tryFrom($this->editorMood) ?? Mood::Plain;
 
@@ -719,7 +723,23 @@ class Canvas extends Component
         $this->dispatch('card-visibility-changed', entityId: $entityId, isHidden: $position->is_hidden);
     }
 
-    public function togglePublic(string $entityId, string $entityType): void
+
+    public function loadFriendsForSharing(\App\Services\ShareEntityService $service): void
+    {
+        $user = Auth::user();
+        $this->userFriends = $service->getFriendsForUser($user);
+    }
+
+    public function loadCurrentShares(\App\Services\ShareEntityService $service, string $entityId, string $entityType): void
+    {
+        $user = Auth::user();
+        $this->currentEntitySharedFriends = array_map(
+            'strval',
+            $service->getSharedFriendIds($user, $entityId, $entityType),
+        );
+    }
+
+    public function toggleShareWithFriend(\App\Services\ShareEntityService $service, string $entityId, string $entityType, string $friendId): void
     {
         $model = $this->resolveEntity($entityId, $entityType);
         if (! $model) {
@@ -728,9 +748,18 @@ class Canvas extends Component
 
         Gate::authorize('update', $model);
 
-        $model->update(['is_public' => ! $model->is_public]);
+        $user = Auth::user();
 
-        $this->updateCardInList($entityId, ['is_public' => ! $model->is_public]);
+        if (in_array($friendId, $this->currentEntitySharedFriends, true)) {
+            $service->unshareWithFriend($user, $entityId, $entityType, $friendId);
+            $this->currentEntitySharedFriends = array_values(array_filter(
+                $this->currentEntitySharedFriends,
+                fn (string $id): bool => $id !== $friendId,
+            ));
+        } else {
+            $service->shareWithFriend($user, $entityId, $entityType, $friendId);
+            $this->currentEntitySharedFriends[] = $friendId;
+        }
     }
 
     /**
@@ -786,13 +815,16 @@ class Canvas extends Component
 
     private function createNewEntity(object $user, Mood $mood, DesktopService $service): void
     {
+        if (! $user instanceof User) {
+            return;
+        }
+
         $data = [
             'user_id' => $user->id,
             'title' => $this->editorTitle,
             'body' => $this->editorBody,
             'mood' => $mood,
             'color_override' => $this->editorColorOverride,
-            'is_public' => false,
         ];
 
         if ($this->editorMode === 'diary') {
@@ -816,7 +848,6 @@ class Canvas extends Component
             'preview' => \Illuminate\Support\Str::limit(strip_tags($entity->body ?? ''), 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
-            'is_public' => false,
             'x' => $position->x,
             'y' => $position->y,
             'z_index' => $position->z_index,

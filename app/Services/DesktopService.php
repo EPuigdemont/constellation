@@ -8,7 +8,7 @@ use App\Enums\RelationshipType;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
 use App\Models\EntityRelationship;
-use App\Models\Friendship;
+use App\Models\EntityShare;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
@@ -21,7 +21,7 @@ class DesktopService
     /**
      * Load all entity cards for a user's desktop.
      *
-     * Includes the user's own entities and entities shared by friends.
+     * Includes the user's own entities and entities shared via EntityShare.
      * Left-joins entity_positions so every card has coordinates.
      *
      * @param  array<string, class-string>|null  $entityTypes  Override which entity types to load
@@ -38,35 +38,12 @@ class DesktopService
             'reminder' => Reminder::class,
         ];
 
-        // Get user's friends (both directions)
-        $sentFriendships = Friendship::where('user_id', $user->id)
-            ->where('status', 'accepted')
-            ->pluck('friend_id')
-            ->toArray();
-
-        $receivedFriendships = Friendship::where('friend_id', $user->id)
-            ->where('status', 'accepted')
-            ->pluck('user_id')
-            ->toArray();
-
-
-        $friendIds = array_unique(array_merge($sentFriendships, $receivedFriendships));
-
         // Collect all entities first
         $allEntities = [];
         foreach ($entityTypes as $morphType => $modelClass) {
+            // Get all entities owned by user
             $query = $modelClass::query()
-                ->where(function ($q) use ($user, $friendIds) {
-                    // Own entities
-                    $q->where('user_id', $user->id);
-                    // Items from friends marked as public
-                    if (!empty($friendIds)) {
-                        $q->orWhere(function ($nested) use ($friendIds) {
-                            $nested->whereIn('user_id', $friendIds)
-                                ->where('is_public', true);
-                        });
-                    }
-                });
+                ->where('user_id', $user->id);
 
             $query->with('user');
 
@@ -81,14 +58,60 @@ class DesktopService
             }
         }
 
+        // Get entities shared with this user via EntityShare
+        $sharedEntities = EntityShare::where('friend_id', $user->id)
+            ->get()
+            ->groupBy(function ($share) {
+                return $share->entity_type;
+            });
+
+        foreach ($entityTypes as $morphType => $modelClass) {
+            if (!isset($sharedEntities[$morphType])) {
+                continue;
+            }
+
+            $entityIds = $sharedEntities[$morphType]->pluck('entity_id')->toArray();
+            if (empty($entityIds)) {
+                continue;
+            }
+
+            $query = $modelClass::query()
+                ->whereIn('id', $entityIds);
+
+            $query->with('user');
+
+            if (method_exists($modelClass, 'tags')) {
+                $query->with('tags');
+            }
+
+            $entities = $query->get();
+
+            foreach ($entities as $entity) {
+                $allEntities[] = ['entity' => $entity, 'morphType' => $morphType];
+            }
+        }
+
+        $deduplicatedEntities = [];
+        foreach ($allEntities as $item) {
+            $entity = $item['entity'];
+            $deduplicatedEntities[$item['morphType'] . ':' . $entity->id] = $item;
+        }
+
+        $allEntities = array_values($deduplicatedEntities);
+
         // Batch load all positions for this user+context instead of N+1 queries
         $entityIds = array_map(fn ($item) => $item['entity']->id, $allEntities);
-        $positions = EntityPosition::query()
+        $positionRecords = EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('context', $context)
             ->whereIn('entity_id', $entityIds)
-            ->get()
-            ->keyBy(fn ($pos) => $pos->entity_id . ':' . $pos->entity_type);
+            ->get();
+
+        /** @var array<string, EntityPosition> $positions */
+        $positions = [];
+        foreach ($positionRecords as $position) {
+            $positions[$position->entity_id . ':' . $position->entity_type] = $position;
+        }
 
         // Load only relationships involving the collected entity IDs
         $relationships = EntityRelationship::query()
@@ -101,7 +124,7 @@ class DesktopService
         foreach ($allEntities as $item) {
             $entity = $item['entity'];
             $morphType = $item['morphType'];
-            $position = $positions->get($entity->id . ':' . $morphType);
+            $position = $positions[$entity->id . ':' . $morphType] ?? null;
 
             $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
         }
@@ -317,8 +340,10 @@ class DesktopService
     /**
      * Normalize an entity model into a card array for the frontend.
      */
-    private function normalizeCard(object $entity, string $type, ?EntityPosition $position, $relationships = null): array
+    private function normalizeCard(object $entity, string $type, mixed $position, $relationships = null): array
     {
+        $position = $position instanceof EntityPosition ? $position : null;
+
         $title = match ($type) {
             'diary_entry' => $entity->title ?? '',
             'note' => $entity->title ?? '',
@@ -351,13 +376,14 @@ class DesktopService
             'preview' => $preview,
             'mood' => $mood,
             'color_override' => $entity->color_override ?? null,
-            'is_public' => (bool) $entity->is_public,
             'x' => $position?->x ?? 0.0,
             'y' => $position?->y ?? 0.0,
             'z_index' => $position?->z_index ?? 0,
             'width' => $position?->width,
             'height' => $position?->height,
             'owner_id' => $entity->user_id,
+            'owner_name' => $entity->user?->name ?? '',
+            'owner_username' => $entity->user?->username ?? '',
             'created_at' => $entity->created_at?->toIso8601String(),
             'updated_at' => $entity->updated_at?->toIso8601String(),
             'parent_id' => $relData['parent_id'],
@@ -367,8 +393,6 @@ class DesktopService
             'tag_ids' => $tagIds,
             'image_url' => $imageUrl,
             'is_hidden' => (bool) ($position?->is_hidden ?? false),
-            'owner_name' => $entity->user?->name ?? '',
-            'owner_username' => $entity->user?->username ?? '',
         ];
     }
 }

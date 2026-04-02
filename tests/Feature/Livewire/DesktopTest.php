@@ -8,6 +8,7 @@ use App\Enums\Mood;
 use App\Livewire\Canvas;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
+use App\Models\EntityShare;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\User;
@@ -147,7 +148,7 @@ class DesktopTest extends TestCase
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
-        $note = Note::factory()->create(['user_id' => $other->id, 'is_public' => true]);
+        $note = Note::factory()->create(['user_id' => $other->id]);
 
         Livewire::actingAs($user)
             ->test(Canvas::class)
@@ -173,21 +174,50 @@ class DesktopTest extends TestCase
         ]);
     }
 
-    public function test_toggle_public_flips_flag(): void
+    public function test_toggle_share_with_friend_creates_share_record(): void
     {
         $user = User::factory()->create();
+        $friend = User::factory()->create();
         $note = Note::factory()->create([
             'user_id' => $user->id,
-            'is_public' => false,
         ]);
 
         Livewire::actingAs($user)
             ->test(Canvas::class)
-            ->call('togglePublic', $note->id, 'note');
+            ->call('toggleShareWithFriend', $note->id, 'note', $friend->id);
 
-        $this->assertDatabaseHas('notes', [
-            'id' => $note->id,
-            'is_public' => true,
+        $this->assertDatabaseHas('entity_shares', [
+            'owner_id' => $user->id,
+            'friend_id' => $friend->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
+        ]);
+    }
+
+    public function test_toggle_share_with_friend_removes_share_record(): void
+    {
+        $user = User::factory()->create();
+        $friend = User::factory()->create();
+        $note = Note::factory()->create(['user_id' => $user->id]);
+
+        EntityShare::create([
+            'owner_id' => $user->id,
+            'friend_id' => $friend->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
+        ]);
+
+        // Load shares first, then unshare
+        Livewire::actingAs($user)
+            ->test(Canvas::class)
+            ->call('loadCurrentShares', $note->id, 'note')
+            ->call('toggleShareWithFriend', $note->id, 'note', $friend->id);
+
+        $this->assertDatabaseMissing('entity_shares', [
+            'owner_id' => $user->id,
+            'friend_id' => $friend->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
         ]);
     }
 
@@ -195,7 +225,7 @@ class DesktopTest extends TestCase
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
-        $note = Note::factory()->create(['user_id' => $other->id, 'is_public' => true]);
+        $note = Note::factory()->create(['user_id' => $other->id]);
 
         Livewire::actingAs($user)
             ->test(Canvas::class)
@@ -225,7 +255,13 @@ class DesktopTest extends TestCase
             'user_id' => $owner->id,
             'title' => 'Shared note',
             'body' => '<p>Read only body</p>',
-            'is_public' => true,
+        ]);
+
+        EntityShare::create([
+            'owner_id' => $owner->id,
+            'friend_id' => $viewer->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
         ]);
 
         Livewire::actingAs($viewer)
@@ -243,7 +279,6 @@ class DesktopTest extends TestCase
         $viewer = User::factory()->create();
         $note = Note::factory()->create([
             'user_id' => $owner->id,
-            'is_public' => false,
         ]);
 
         Livewire::actingAs($viewer)
@@ -260,7 +295,13 @@ class DesktopTest extends TestCase
             'user_id' => $owner->id,
             'title' => 'Shared note',
             'body' => 'Read only body',
-            'is_public' => true,
+        ]);
+
+        EntityShare::create([
+            'owner_id' => $owner->id,
+            'friend_id' => $viewer->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
         ]);
 
         Livewire::actingAs($viewer)

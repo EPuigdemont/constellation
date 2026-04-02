@@ -111,11 +111,11 @@ function buildCardInnerHTML(card) {
     const type = card.type;
     const title = card.title || '';
     const preview = card.preview || '';
-    const isPublic = card.is_public;
     const currentUserId = document.querySelector('[data-current-user-id]')?.dataset.currentUserId ?? '';
     const isOwner = typeof card.is_owner === 'boolean'
         ? card.is_owner
         : String(card.owner_id ?? '') === String(currentUserId);
+    const isShared = !isOwner && String(card.owner_id ?? '') !== '';
 
     const date = card.updated_at || card.created_at;
     let shortDate = '';
@@ -185,7 +185,7 @@ function buildCardInnerHTML(card) {
         html += '</div>';
     }
 
-    if (isPublic) {
+    if (isShared) {
         const ownerName = card.owner_username || card.owner_name || '';
         html += '<div class="desktop-card-shared">' +
             '<svg class="size-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5a17.92 17.92 0 0 1-8.716-2.247m0 0A9 9 0 0 1 3 12c0-1.47.353-2.856.978-4.082" /></svg>' +
@@ -534,29 +534,26 @@ function restoreDesktopGridLayout() {
     store.gridSavedPositions = {};
 }
 
-function findGridSwapTarget(dragEl) {
-    const dragRect = dragEl.getBoundingClientRect();
-    const dragCenterX = dragRect.left + (dragRect.width / 2);
-    const dragCenterY = dragRect.top + (dragRect.height / 2);
-    let nearestTarget = null;
-    let nearestDistance = Infinity;
-
+/**
+ * Find the grid item whose bounding box contains the cursor.
+ * Using the cursor position (rather than the dragged element's visual centre)
+ * prevents cascading swaps: a swap only fires when the pointer physically
+ * crosses into another card's area.
+ */
+function findGridSwapTarget(dragEl, cursorX, cursorY) {
     for (const item of getDesktopGridItems({ visibleOnly: true })) {
         if (item === dragEl) continue;
 
         const rect = item.getBoundingClientRect();
-        const centerX = rect.left + (rect.width / 2);
-        const centerY = rect.top + (rect.height / 2);
-        const distance = Math.hypot(dragCenterX - centerX, dragCenterY - centerY);
-        const maxDistance = Math.max(rect.width, rect.height) * 0.9;
-
-        if (distance < nearestDistance && distance <= maxDistance) {
-            nearestTarget = item;
-            nearestDistance = distance;
+        if (
+            cursorX >= rect.left && cursorX <= rect.right &&
+            cursorY >= rect.top  && cursorY <= rect.bottom
+        ) {
+            return item;
         }
     }
 
-    return nearestTarget;
+    return null;
 }
 
 function swapDesktopGridItems(sourceEl, targetEl) {
@@ -588,9 +585,28 @@ function moveGridDrag(el, event, state) {
     state.gridDragY += event.dy / zoom;
     el.style.transform = `translate(${Math.round(state.gridDragX)}px, ${Math.round(state.gridDragY)}px)`;
 
-    const target = findGridSwapTarget(el);
+    // Use cursor position for swap detection so a swap only fires when the pointer
+    // physically enters another card's bounding box (not based on the dragged
+    // element's visual centre, which includes the accumulated transform offset).
+    const target = findGridSwapTarget(el, event.clientX, event.clientY);
     if (target && swapDesktopGridItems(el, target)) {
+        // Capture the element's grid position before the layout moves it.
+        const oldLeft = parseFloat(el.style.left) || 0;
+        const oldTop  = parseFloat(el.style.top)  || 0;
+
         applyDesktopGridLayout();
+
+        // After the swap the element's left/top has changed to the target's former
+        // slot.  Compensate the accumulated translate so the element's visual
+        // position (left + translateX, top + translateY) stays pinned at the
+        // cursor.  Without this, the transform causes the card to jump to a
+        // completely different position, which then immediately triggers further
+        // swaps from minor mouse movements.
+        const newLeft = parseFloat(el.style.left) || 0;
+        const newTop  = parseFloat(el.style.top)  || 0;
+        state.gridDragX += (oldLeft - newLeft);
+        state.gridDragY += (oldTop  - newTop);
+
         el.style.transform = `translate(${Math.round(state.gridDragX)}px, ${Math.round(state.gridDragY)}px)`;
     }
 }
@@ -757,7 +773,7 @@ function createCardElement(card, wire) {
                     moveGridDrag(el, event, dragState);
 
                     if (Math.abs(event.dx) > 2 || Math.abs(event.dy) > 2) {
-                        hasDragged = true;
+                        dragState.hasDragged = true;
                     }
 
                     return;
@@ -892,7 +908,6 @@ function createCardElement(card, wire) {
                 entityId: card.id,
                 entityType: card.type,
                 isOwner: card.is_owner ?? false,
-                isPublic: card.is_public ?? false,
                 mood: card.mood ?? 'plain',
                 hasParent: !!(card.parent_id),
             },
@@ -1494,17 +1509,17 @@ document.addEventListener('alpine:init', () => {
                 const el = canvas.querySelector(`[data-card-id="${entityId}"]`);
                 if (!el) return;
 
-                const currentType = el.className.match(/card-type-(\S+)/)?.[1] || '';
-                const card = {
-                    type: currentType,
-                    title: updates.title ?? '',
-                    preview: updates.preview ?? '',
-                    mood: updates.mood ?? 'plain',
-                    is_public: updates.is_public ?? false,
+                const cards = this.$wire.cards || [];
+                const card = cards.find(c => c.id === entityId);
+                if (!card) return;
+
+                const nextCard = {
+                    ...card,
+                    ...updates,
                     updated_at: new Date().toISOString(),
                 };
 
-                el.className = el.className.replace(/mood-\S+/, `mood-${card.mood}`);
+                el.className = el.className.replace(/mood-\S+/, `mood-${nextCard.mood ?? 'plain'}`);
 
                 if (updates.color_override) {
                     el.style.backgroundColor = updates.color_override;
@@ -1512,7 +1527,7 @@ document.addEventListener('alpine:init', () => {
                     el.style.backgroundColor = '';
                 }
 
-                el.innerHTML = buildCardInnerHTML(card);
+                el.innerHTML = buildCardInnerHTML(nextCard);
                 refreshDesktopGridLayout();
             });
         },
@@ -1603,7 +1618,6 @@ document.addEventListener('alpine:init', () => {
         entityId: null,
         entityType: null,
         isOwner: false,
-        isPublic: false,
         isHidden: false,
         currentMood: 'plain',
         hasParent: false,
@@ -1621,7 +1635,6 @@ document.addEventListener('alpine:init', () => {
             this.entityId = detail.entityId ?? null;
             this.entityType = detail.entityType ?? null;
             this.isOwner = detail.isOwner ?? false;
-            this.isPublic = detail.isPublic ?? false;
             this.isHidden = detail.isHidden ?? false;
             this.currentMood = detail.mood ?? 'plain';
             this.hasParent = detail.hasParent ?? false;
@@ -1649,13 +1662,6 @@ document.addEventListener('alpine:init', () => {
         changeMood(mood) {
             if (this.entityId && this.entityType) {
                 this.$wire.changeMood(this.entityId, this.entityType, mood);
-            }
-            this.close();
-        },
-
-        togglePublic() {
-            if (this.entityId && this.entityType) {
-                this.$wire.togglePublic(this.entityId, this.entityType);
             }
             this.close();
         },
@@ -1846,7 +1852,7 @@ document.addEventListener('alpine:init', () => {
                 }
 
                 const currentUserId = this.$el.dataset.currentUserId || '';
-                if (visible && !this.showShared && cardData.is_public && cardData.owner_id !== currentUserId) {
+                if (visible && !this.showShared && String(cardData.owner_id ?? '') !== String(currentUserId)) {
                     visible = false;
                 }
 

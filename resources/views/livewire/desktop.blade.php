@@ -445,7 +445,6 @@
                          entityId: '{{ $card['id'] }}',
                          entityType: '{{ $card['type'] }}',
                          isOwner: {{ $card['owner_id'] === auth()->id() ? 'true' : 'false' }},
-                         isPublic: {{ $card['is_public'] ? 'true' : 'false' }},
                          isHidden: {{ !empty($card['is_hidden']) ? 'true' : 'false' }},
                          mood: '{{ $card['mood'] ?? 'plain' }}',
                          hasParent: {{ !empty($card['parent_id']) ? 'true' : 'false' }}
@@ -490,10 +489,39 @@
                             {{ __('Edit') }}
                         </button>
 
-                        <button x-on:click="togglePublic()"
-                                class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                            <span x-text="isPublic ? '{{ __('Make Private') }}' : '{{ __('Make Public') }}'"></span>
-                        </button>
+                        {{-- Share with submenu --}}
+                        <div class="relative" x-data="{ shareOpen: false }">
+                            <button x-on:click.stop="shareOpen = !shareOpen; $wire.loadFriendsForSharing(); $wire.loadCurrentShares(entityId, entityType)"
+                                    class="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                {{ __('Share with') }}
+                                <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                     stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+                                </svg>
+                            </button>
+                            <div x-show="shareOpen" x-cloak
+                                 class="absolute left-full top-0 ml-1 min-w-48 rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900 max-h-48 overflow-y-auto">
+                                <template x-if="$wire.userFriends.length === 0">
+                                    <div class="px-3 py-1.5 text-sm text-zinc-400">
+                                        {{ __('No friends to share with') }}
+                                    </div>
+                                </template>
+                                <template x-if="$wire.userFriends.length > 0">
+                                    <template x-for="friend in $wire.userFriends" :key="friend.id">
+                                        <button type="button"
+                                                x-on:click.stop="$wire.toggleShareWithFriend(entityId, entityType, friend.id)"
+                                                class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                            <span class="inline-flex w-4 items-center justify-center">
+                                                <svg x-show="$wire.currentEntitySharedFriends.includes(String(friend.id))" x-cloak class="size-3.5 text-zinc-600 dark:text-zinc-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                                </svg>
+                                            </span>
+                                            <span x-text="'@' + friend.username"></span>
+                                        </button>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
 
                         <button x-on:click="toggleHidden()"
                                 class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Policies;
 
+use App\Models\EntityShare;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,20 +22,27 @@ class NotePolicyTest extends TestCase
         $this->assertTrue($user->can('view', $note));
     }
 
-    public function test_non_owner_cannot_view_private_note(): void
+    public function test_non_owner_cannot_view_unshared_note(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $note = Note::factory()->create(['user_id' => $owner->id, 'is_public' => false]);
+        $note = Note::factory()->create(['user_id' => $owner->id]);
 
         $this->assertFalse($other->can('view', $note));
     }
 
-    public function test_non_owner_can_view_public_note(): void
+    public function test_non_owner_can_view_shared_note(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $note = Note::factory()->create(['user_id' => $owner->id, 'is_public' => true]);
+        $note = Note::factory()->create(['user_id' => $owner->id]);
+
+        EntityShare::create([
+            'owner_id' => $owner->id,
+            'friend_id' => $other->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
+        ]);
 
         $this->assertTrue($other->can('view', $note));
     }

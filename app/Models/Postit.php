@@ -23,7 +23,6 @@ class Postit extends Model
         'body',
         'mood',
         'color_override',
-        'is_public',
         'created_at',
     ];
 
@@ -31,7 +30,6 @@ class Postit extends Model
     {
         return [
             'mood' => Mood::class,
-            'is_public' => 'boolean',
         ];
     }
 

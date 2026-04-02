@@ -159,7 +159,6 @@ class Calendar extends Component
                 'title' => $this->createTitle ?: 'Untitled',
                 'body' => $this->createBody,
                 'mood' => $mood,
-                'is_public' => false,
                 'created_at' => $createdAt,
             ]),
             'note' => $entity = Note::create([
@@ -167,14 +166,12 @@ class Calendar extends Component
                 'title' => $this->createTitle ?: 'Untitled',
                 'body' => $this->createBody,
                 'mood' => $mood,
-                'is_public' => false,
                 'created_at' => $createdAt,
             ]),
             'postit' => $entity = Postit::create([
                 'user_id' => $user->id,
                 'body' => $this->createBody,
                 'mood' => $mood,
-                'is_public' => false,
                 'created_at' => $createdAt,
             ]),
             'reminder' => $entity = Reminder::create([

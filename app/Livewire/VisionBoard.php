@@ -12,6 +12,7 @@ use App\Models\Note;
 use App\Models\Tag;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
+use App\Services\ShareEntityService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
@@ -62,6 +63,12 @@ class VisionBoard extends Component
 
     /** @var array<int, array{id: string, name: string}> */
     public array $filterAvailableTags = [];
+
+    /** @var array<int, array{id: string, username: string, name: string}> */
+    public array $userFriends = [];
+
+    /** @var array<int, string> */
+    public array $currentEntitySharedFriends = [];
 
     public float $viewportCenterX = 2000.0;
 
@@ -174,7 +181,6 @@ class VisionBoard extends Component
                 'preview' => $image->alt ?? '',
                 'mood' => null,
                 'color_override' => null,
-                'is_public' => false,
                 'x' => $position->x,
                 'y' => $position->y,
                 'z_index' => $position->z_index,
@@ -314,7 +320,22 @@ class VisionBoard extends Component
         $this->updateCardInList($imageId, ['mood' => $mood]);
     }
 
-    public function togglePublic(string $imageId): void
+    public function loadFriendsForSharing(ShareEntityService $service): void
+    {
+        $user = Auth::user();
+        $this->userFriends = $service->getFriendsForUser($user);
+    }
+
+    public function loadCurrentShares(ShareEntityService $service, string $imageId): void
+    {
+        $user = Auth::user();
+        $this->currentEntitySharedFriends = array_map(
+            'strval',
+            $service->getSharedFriendIds($user, $imageId, 'image'),
+        );
+    }
+
+    public function toggleShareWithFriend(ShareEntityService $service, string $imageId, string $friendId): void
     {
         $image = Image::find($imageId);
         if (! $image) {
@@ -323,9 +344,20 @@ class VisionBoard extends Component
 
         Gate::authorize('update', $image);
 
-        $image->update(['is_public' => ! $image->is_public]);
+        $user = Auth::user();
 
-        $this->updateCardInList($imageId, ['is_public' => ! $image->is_public]);
+        if (in_array($friendId, $this->currentEntitySharedFriends, true)) {
+            $service->unshareWithFriend($user, $imageId, 'image', $friendId);
+            $this->currentEntitySharedFriends = array_values(array_filter(
+                $this->currentEntitySharedFriends,
+                fn (string $id): bool => $id !== $friendId,
+            ));
+
+            return;
+        }
+
+        $service->shareWithFriend($user, $imageId, 'image', $friendId);
+        $this->currentEntitySharedFriends[] = $friendId;
     }
 
     /** Open the link search modal to link an image to a diary entry or note. */

@@ -26,14 +26,12 @@ class Image extends Model
         'title',
         'mood',
         'color_override',
-        'is_public',
     ];
 
     protected function casts(): array
     {
         return [
             'mood' => Mood::class,
-            'is_public' => 'boolean',
         ];
     }
 

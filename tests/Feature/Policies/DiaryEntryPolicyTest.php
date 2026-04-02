@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Policies;
 
 use App\Models\DiaryEntry;
+use App\Models\EntityShare;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -21,20 +22,27 @@ class DiaryEntryPolicyTest extends TestCase
         $this->assertTrue($user->can('view', $entry));
     }
 
-    public function test_non_owner_cannot_view_private_entry(): void
+    public function test_non_owner_cannot_view_unshared_entry(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $entry = DiaryEntry::factory()->create(['user_id' => $owner->id, 'is_public' => false]);
+        $entry = DiaryEntry::factory()->create(['user_id' => $owner->id]);
 
         $this->assertFalse($other->can('view', $entry));
     }
 
-    public function test_non_owner_can_view_public_entry(): void
+    public function test_non_owner_can_view_shared_entry(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $entry = DiaryEntry::factory()->create(['user_id' => $owner->id, 'is_public' => true]);
+        $entry = DiaryEntry::factory()->create(['user_id' => $owner->id]);
+
+        EntityShare::create([
+            'owner_id' => $owner->id,
+            'friend_id' => $other->id,
+            'entity_id' => $entry->id,
+            'entity_type' => 'diary_entry',
+        ]);
 
         $this->assertTrue($other->can('view', $entry));
     }

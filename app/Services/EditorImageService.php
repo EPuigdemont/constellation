@@ -71,7 +71,6 @@ class EditorImageService
             'path' => $path,
             'disk' => 'private',
             'alt' => $file->getClientOriginalName(),
-            'is_public' => false,
         ]);
     }
 }

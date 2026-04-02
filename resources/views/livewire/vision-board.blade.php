@@ -162,7 +162,6 @@
                          y: $event.clientY,
                          entityId: '{{ $card['id'] }}',
                          isOwner: {{ $card['owner_id'] === auth()->id() ? 'true' : 'false' }},
-                         isPublic: {{ $card['is_public'] ? 'true' : 'false' }},
                          mood: '{{ $card['mood'] ?? 'plain' }}'
                      })"
                      class="vb-card {{ $card['mood'] ? 'mood-' . $card['mood'] : 'mood-plain' }} touch-none select-none">
@@ -239,11 +238,38 @@
                         </div>
                     </div>
 
-                    <button x-on:click="togglePublic()"
-                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                        <x-icons.globe/>
-                        <span x-text="isPublic ? '{{ __('Make Private') }}' : '{{ __('Make Public') }}'"></span>
-                    </button>
+                    <div class="relative" x-data="{ shareOpen: false }">
+                        <button x-on:click.stop="shareOpen = !shareOpen; $wire.loadFriendsForSharing(); $wire.loadCurrentShares(entityId)"
+                                class="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                            <span class="flex items-center gap-2">
+                                <x-icons.globe/>
+                                {{ __('Share with') }}
+                            </span>
+                            <x-icons.chevron-right class="size-3"/>
+                        </button>
+                        <div x-show="shareOpen" x-cloak
+                             class="absolute left-full top-0 ml-1 max-h-48 min-w-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                            <template x-if="$wire.userFriends.length === 0">
+                                <div class="px-3 py-1.5 text-sm text-zinc-400">
+                                    {{ __('No friends to share with') }}
+                                </div>
+                            </template>
+                            <template x-if="$wire.userFriends.length > 0">
+                                <template x-for="friend in $wire.userFriends" :key="friend.id">
+                                    <button type="button"
+                                            x-on:click.stop="$wire.toggleShareWithFriend(entityId, friend.id)"
+                                            class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                                        <span class="inline-flex w-4 items-center justify-center">
+                                            <svg x-show="$wire.currentEntitySharedFriends.includes(String(friend.id))" x-cloak class="size-3.5 text-zinc-600 dark:text-zinc-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                            </svg>
+                                        </span>
+                                        <span x-text="'@' + friend.username"></span>
+                                    </button>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
 
                     <div class="my-1 border-t border-zinc-200 dark:border-zinc-700"></div>
 

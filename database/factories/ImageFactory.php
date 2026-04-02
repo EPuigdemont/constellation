@@ -20,12 +20,6 @@ class ImageFactory extends Factory
             'path' => 'images/' . fake()->uuid() . '.jpg',
             'disk' => 'private',
             'alt' => fake()->optional()->sentence(),
-            'is_public' => false,
         ];
-    }
-
-    public function public(): static
-    {
-        return $this->state(['is_public' => true]);
     }
 }

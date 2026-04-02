@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Models\EntityShare;
 use App\Models\Image;
 use App\Models\User;
 
@@ -16,7 +17,16 @@ class ImagePolicy
 
     public function view(User $user, Image $image): bool
     {
-        return $image->user_id === $user->id || $image->is_public;
+        if ($image->user_id === $user->id) {
+            return true;
+        }
+
+        return EntityShare::query()
+            ->where('owner_id', $image->user_id)
+            ->where('friend_id', $user->id)
+            ->where('entity_id', $image->id)
+            ->where('entity_type', 'image')
+            ->exists();
     }
 
     public function create(User $user): bool

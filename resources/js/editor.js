@@ -62,15 +62,24 @@ document.addEventListener('alpine:init', () => {
                 this._createEditor();
             });
 
-            // Re-create editor when content changes from Livewire (e.g. opening edit modal)
+            // Re-create editor when editing entity changes (e.g., opening edit modal for a different note)
+            this.$watch('$wire.editingEntityId', (newId, oldId) => {
+                // When switching to a different entity, recreate the editor with new content
+                if (newId !== oldId) {
+                    this.$nextTick(() => this._createEditor());
+                }
+            });
+
+            // Handle content updates from Livewire while editor is active
             this.$watch('$wire.editorBody', (value) => {
                 if (!this.editor || !this.editor.view?.dom?.isConnected) {
                     // Editor was destroyed or disconnected, recreate it
                     this.$nextTick(() => this._createEditor());
                     return;
                 }
-                if (value !== this.editor.getHTML()) {
-                    this.editor.commands.setContent(value || '', false);
+                // Only update if content actually differs to avoid unnecessary transactions
+                if (value && value !== this.editor.getHTML()) {
+                    this.editor.commands.setContent(value, false);
                 }
             });
 

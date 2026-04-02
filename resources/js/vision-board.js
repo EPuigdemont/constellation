@@ -820,7 +820,6 @@ document.addEventListener('alpine:init', () => {
             this.y = detail.y;
             this.entityId = detail.entityId || null;
             this.isOwner = detail.isOwner ?? false;
-            this.isPublic = detail.isPublic ?? false;
             this.mood = detail.mood || 'plain';
             this.open = true;
         },
@@ -846,13 +845,6 @@ document.addEventListener('alpine:init', () => {
         changeMood(mood) {
             if (this.entityId) {
                 this.$wire.changeMood(this.entityId, mood);
-            }
-            this.close();
-        },
-
-        togglePublic() {
-            if (this.entityId) {
-                this.$wire.togglePublic(this.entityId);
             }
             this.close();
         },
