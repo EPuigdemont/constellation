@@ -50,7 +50,13 @@ class DataImportService
             throw new \RuntimeException(__('Invalid export file: missing data.json.'));
         }
 
-        $data = json_decode(file_get_contents($jsonPath), true);
+        $json = file_get_contents($jsonPath);
+        if ($json === false) {
+            $this->deleteDirectory($tempDir);
+            throw new \RuntimeException(__('Invalid export file: unreadable data.json.'));
+        }
+
+        $data = json_decode($json, true);
         if (! is_array($data) || ! isset($data['version'])) {
             $this->deleteDirectory($tempDir);
             throw new \RuntimeException(__('Invalid export file: corrupt data.'));
@@ -60,6 +66,7 @@ class DataImportService
             $entityCount = 0;
             $imageCount = 0;
             $settingsApplied = false;
+            $userId = max(1, (int) $user->id);
 
             // 1. Apply user settings
             if (! empty($data['user_settings'])) {
@@ -78,7 +85,10 @@ class DataImportService
                     $avatarFile = $tempDir . '/avatar/' . $settings['avatar_filename'];
                     if (file_exists($avatarFile)) {
                         $avatarPath = 'avatars/' . $user->id . '/' . $settings['avatar_filename'];
-                        Storage::disk('private')->put($avatarPath, file_get_contents($avatarFile));
+                        $avatarContents = file_get_contents($avatarFile);
+                        if ($avatarContents !== false) {
+                            Storage::disk('private')->put($avatarPath, $avatarContents);
+                        }
                         $user->update(['avatar_path' => $avatarPath, 'avatar_disk' => 'private']);
                     }
                 }
@@ -92,7 +102,7 @@ class DataImportService
                 } else {
                     $newTag = new Tag();
                     $newTag->id = Str::uuid()->toString();
-                    $newTag->user_id = $user->id;
+                    $newTag->user_id = $userId;
                     $newTag->name = $tag['name'];
                     $newTag->color = $tag['color'] ?? null;
                     $newTag->timestamps = false;
@@ -110,7 +120,7 @@ class DataImportService
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->title = $entry['title'];
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
@@ -130,7 +140,7 @@ class DataImportService
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->title = $entry['title'];
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
@@ -150,7 +160,7 @@ class DataImportService
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
                 $new->color_override = $entry['color_override'] ?? null;
@@ -169,7 +179,7 @@ class DataImportService
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->path = $entry['path'];
                 $new->disk = $entry['disk'] ?? 'private';
                 $new->alt = $entry['alt'] ?? null;
@@ -185,8 +195,11 @@ class DataImportService
                 // Copy image file from export
                 $sourceFile = $tempDir . '/images/' . $entry['path'];
                 if (file_exists($sourceFile)) {
-                    Storage::disk($new->disk)->put($entry['path'], file_get_contents($sourceFile));
-                    $imageCount++;
+                    $imageContents = file_get_contents($sourceFile);
+                    if ($imageContents !== false) {
+                        Storage::disk($new->disk)->put($entry['path'], $imageContents);
+                        $imageCount++;
+                    }
                 }
 
                 $new->save();
@@ -199,7 +212,7 @@ class DataImportService
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->label = $entry['label'];
                 $new->date = Carbon::parse($entry['date'])->toDateString();
                 $new->recurs_annually = $entry['recurs_annually'] ?? false;
@@ -218,7 +231,7 @@ class DataImportService
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->title = $entry['title'];
                 $new->body = $entry['body'] ?? null;
                 $new->remind_at = Carbon::parse($entry['remind_at'])->toDateTimeString();

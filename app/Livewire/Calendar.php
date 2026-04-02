@@ -57,6 +57,7 @@ class Calendar extends Component
 
     public string $createBody = '';
 
+    /** @var list<string> */
     public array $createTags = [];
 
     public string $createDate = '';
@@ -111,7 +112,11 @@ class Calendar extends Component
         }
 
         $this->modalEntityType = $type;
-        $this->modalEntityTitle = $type === 'postit' ? 'Post-it' : ($entity->title ?: 'Untitled');
+        if ($type === 'postit') {
+            $this->modalEntityTitle = 'Post-it';
+        } else {
+            $this->modalEntityTitle = (string) (data_get($entity, 'title') ?: 'Untitled');
+        }
         $this->modalEntityBody = $entity->body ?? '';
         $this->modalEntityMood = $this->moodValue($entity->mood);
         $this->modalEntityTime = $entity->created_at->format('H:i');
@@ -298,7 +303,12 @@ class Calendar extends Component
     }
 
     /**
-     * @return array<int, array{date: string, day: int, inMonth: bool, isToday: bool, entities: Collection}>
+     * @param Collection<int, DiaryEntry> $diaryEntries
+     * @param Collection<int, Note> $notes
+     * @param Collection<int, Postit> $postits
+     * @param Collection<int, ImportantDate> $importantDates
+     * @param Collection<int, Reminder> $reminders
+     * @return array<int, array{date: string, day: int, inMonth: bool, isToday: bool, entities: Collection<int, array<string, mixed>>}>
      */
     private function buildCalendarGrid(Carbon $startOfMonth, Collection $diaryEntries, Collection $notes, Collection $postits, Collection $importantDates, Collection $reminders): array
     {
@@ -357,6 +367,14 @@ class Calendar extends Component
         return $grid;
     }
 
+    /**
+     * @param Collection<int, DiaryEntry> $diaryEntries
+     * @param Collection<int, Note> $notes
+     * @param Collection<int, Postit> $postits
+     * @param Collection<int, ImportantDate> $importantDates
+     * @param Collection<int, Reminder> $reminders
+     * @return Collection<int, array<string, mixed>>
+     */
     private function getEntitiesForDate(string $date, Collection $diaryEntries, Collection $notes, Collection $postits, Collection $importantDates, Collection $reminders): Collection
     {
         $entities = collect();
@@ -393,30 +411,32 @@ class Calendar extends Component
             ]));
 
         // Important dates (exact match or recurring annual match)
-        $importantDates->filter(function ($d) use ($parsedDate) {
-            if ($d->date->toDateString() === $parsedDate->toDateString()) {
+        $importantDates->filter(function (ImportantDate $d) use ($parsedDate): bool {
+            $importantDate = Carbon::parse((string) $d->date);
+
+            if ($importantDate->toDateString() === $parsedDate->toDateString()) {
                 return true;
             }
 
-            return $d->recurs_annually && $d->date->month === $parsedDate->month && $d->date->day === $parsedDate->day;
+            return $d->recurs_annually && $importantDate->month === $parsedDate->month && $importantDate->day === $parsedDate->day;
         })->each(fn ($d) => $entities->push([
             'type' => 'important_date',
             'id' => $d->id,
             'title' => $d->label,
             'mood' => 'love',
             'preview' => $d->recurs_annually ? __('Yearly') : '',
-            'created_at' => $d->date->setYear($parsedDate->year),
+            'created_at' => Carbon::parse((string) $d->date)->setYear($parsedDate->year),
         ]));
 
         // Reminders
-        $reminders->filter(fn ($r) => $r->remind_at->toDateString() === $date)
+        $reminders->filter(fn (Reminder $r): bool => Carbon::parse((string) $r->remind_at)->toDateString() === $date)
             ->each(fn ($r) => $entities->push([
                 'type' => 'reminder',
                 'id' => $r->id,
                 'title' => $r->title,
                 'mood' => $this->moodValue($r->mood),
                 'preview' => str(strip_tags($r->body ?? ''))->limit(80)->toString(),
-                'created_at' => $r->remind_at,
+                'created_at' => Carbon::parse((string) $r->remind_at),
             ]));
 
         return $entities->sortBy('created_at')->values();

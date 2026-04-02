@@ -8,10 +8,10 @@ parameters:
         - app/
 
     # Level 10 is the highest level
-    level: 5
+    level: 7
 
-#    ignoreErrors:
-#        - '#PHPDoc tag @var#'
-#
+    ignoreErrors:
+        - '#Call to function method_exists\(\) with.*and .tags. will always evaluate to true#'
+
 #    excludePaths:
 #        - ./*/*/FileToBeExcluded.php

@@ -12,11 +12,13 @@ class EntityShare extends Model
     /** @var list<string> */
     protected $fillable = ['owner_id', 'friend_id', 'entity_id', 'entity_type'];
 
+    /** @return BelongsTo<User, $this> */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function friend(): BelongsTo
     {
         return $this->belongsTo(User::class, 'friend_id');

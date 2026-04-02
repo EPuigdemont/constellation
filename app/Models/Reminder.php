@@ -8,6 +8,7 @@ use App\Enums\Mood;
 use App\Enums\ReminderType;
 use App\Models\Concerns\HasEntityDefaults;
 use Carbon\Carbon;
+use Database\Factories\ReminderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Reminder extends Model
 {
+    /** @use HasFactory<ReminderFactory> */
     use HasEntityDefaults, HasFactory;
 
     protected $fillable = [
@@ -39,26 +41,31 @@ class Reminder extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return MorphToMany<Tag, $this> */
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }
 
+    /** @return MorphMany<EntityPosition, $this> */
     public function positions(): MorphMany
     {
         return $this->morphMany(EntityPosition::class, 'entity');
     }
 
+    /** @return MorphMany<EntityRelationship, $this> */
     public function relationshipsAsA(): MorphMany
     {
         return $this->morphMany(EntityRelationship::class, 'entity_a');
     }
 
+    /** @return MorphMany<EntityRelationship, $this> */
     public function relationshipsAsB(): MorphMany
     {
         return $this->morphMany(EntityRelationship::class, 'entity_b');

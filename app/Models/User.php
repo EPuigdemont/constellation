@@ -91,41 +91,49 @@ class User extends Authenticatable implements MustVerifyEmail
             ->implode('');
     }
 
+    /** @return HasMany<DiaryEntry, $this> */
     public function diaryEntries(): HasMany
     {
         return $this->hasMany(DiaryEntry::class);
     }
 
+    /** @return HasMany<Note, $this> */
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class);
     }
 
+    /** @return HasMany<Postit, $this> */
     public function postits(): HasMany
     {
         return $this->hasMany(Postit::class);
     }
 
+    /** @return HasMany<Image, $this> */
     public function images(): HasMany
     {
         return $this->hasMany(Image::class);
     }
 
+    /** @return HasMany<Tag, $this> */
     public function tags(): HasMany
     {
         return $this->hasMany(Tag::class);
     }
 
+    /** @return HasMany<ImportantDate, $this> */
     public function importantDates(): HasMany
     {
         return $this->hasMany(ImportantDate::class);
     }
 
+    /** @return HasMany<Reminder, $this> */
     public function reminders(): HasMany
     {
         return $this->hasMany(Reminder::class);
     }
 
+    /** @return HasMany<EntityPosition, $this> */
     public function entityPositions(): HasMany
     {
         return $this->hasMany(EntityPosition::class);
@@ -134,6 +142,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all friendships initiated by this user (pending or accepted).
      */
+    /** @return HasMany<Friendship, $this> */
     public function friendships(): HasMany
     {
         return $this->hasMany(Friendship::class, 'user_id');
@@ -142,6 +151,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all friendships where this user is the friend (incoming requests).
      */
+    /** @return HasMany<Friendship, $this> */
     public function friendRequestsReceived(): HasMany
     {
         return $this->hasMany(Friendship::class, 'friend_id');
@@ -150,6 +160,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all accepted friends (users they initiated friendship with).
      */
+    /** @return BelongsToMany<User, $this> */
     public function friends(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -165,6 +176,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all users who have accepted friendship with this user (reverse direction).
      */
+    /** @return BelongsToMany<User, $this> */
     public function acceptedByFriends(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -180,6 +192,7 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get all friends (both directions).
      */
+    /** @return BelongsToMany<User, $this> */
     public function allFriends(): BelongsToMany
     {
         return $this->friends()->union(

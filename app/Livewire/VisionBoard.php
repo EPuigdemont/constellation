@@ -499,6 +499,7 @@ class VisionBoard extends Component
         $this->tagSearch = '';
     }
 
+    /** @param array<string, mixed> $updates */
     private function updateCardInList(string $entityId, array $updates): void
     {
         foreach ($this->cards as $i => $card) {

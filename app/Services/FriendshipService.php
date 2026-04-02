@@ -115,6 +115,8 @@ class FriendshipService
 
     /**
      * Get all accepted friends for a user.
+     *
+     * @return Collection<int, User>
      */
     public function getFriendsForUser(User $user): Collection
     {
@@ -133,6 +135,8 @@ class FriendshipService
 
     /**
      * Get pending friend requests for a user.
+     *
+     * @return Collection<int, Friendship>
      */
     public function getPendingRequests(User $user): Collection
     {
@@ -144,6 +148,8 @@ class FriendshipService
 
     /**
      * Get pending outgoing friend requests.
+     *
+     * @return Collection<int, Friendship>
      */
     public function getPendingOutgoing(User $user): Collection
     {

@@ -14,11 +14,13 @@ class Friendship extends Model
 
     protected $fillable = ['user_id', 'friend_id', 'status'];
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function friend(): BelongsTo
     {
         return $this->belongsTo(User::class, 'friend_id');

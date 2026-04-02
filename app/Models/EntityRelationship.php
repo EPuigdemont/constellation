@@ -31,11 +31,13 @@ class EntityRelationship extends Model
         ];
     }
 
+    /** @return MorphTo<Model, $this> */
     public function entityA(): MorphTo
     {
         return $this->morphTo('entity_a');
     }
 
+    /** @return MorphTo<Model, $this> */
     public function entityB(): MorphTo
     {
         return $this->morphTo('entity_b');

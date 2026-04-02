@@ -14,6 +14,8 @@ use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class DesktopService
@@ -25,6 +27,7 @@ class DesktopService
      * Left-joins entity_positions so every card has coordinates.
      *
      * @param  array<string, class-string>|null  $entityTypes  Override which entity types to load
+     * @return list<array<string, mixed>>
      */
     public function loadCards(User $user, string $context = 'desktop', ?array $entityTypes = null): array
     {
@@ -302,9 +305,10 @@ class DesktopService
     /**
      * Get relationship counts and parent info for card enrichment.
      *
+     * @param Collection<int, EntityRelationship> $relationships
      * @return array{parent_id: string|null, parent_type: string|null, children_count: int, siblings_count: int}
      */
-    public function getRelationshipData(string $entityId, string $entityType, $relationships): array
+    public function getRelationshipData(string $entityId, string $entityType, Collection $relationships): array
     {
         // Find parent (this entity is entity_b in a parent_child relationship)
         $parentRel = $relationships->first(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
@@ -339,8 +343,12 @@ class DesktopService
 
     /**
      * Normalize an entity model into a card array for the frontend.
+     *
+     * @param DiaryEntry|Note|Postit|Image|Reminder $entity
+     * @param Collection<int, EntityRelationship>|null $relationships
+     * @return array<string, mixed>
      */
-    private function normalizeCard(object $entity, string $type, mixed $position, $relationships = null): array
+    private function normalizeCard(Model $entity, string $type, mixed $position, ?Collection $relationships = null): array
     {
         $position = $position instanceof EntityPosition ? $position : null;
 
@@ -365,7 +373,10 @@ class DesktopService
             ? $this->getRelationshipData($entity->id, $type, $relationships)
             : ['parent_id' => null, 'parent_type' => null, 'children_count' => 0, 'siblings_count' => 0];
 
-        $tagIds = method_exists($entity, 'tags') && $entity->relationLoaded('tags')
+        // All entity types in the union support tags relation
+        /** @phpstan-ignore-next-line */
+        $tagIds = ($entity instanceof DiaryEntry || $entity instanceof Note || $entity instanceof Postit || $entity instanceof Image || $entity instanceof Reminder)
+            && method_exists($entity, 'tags') && $entity->relationLoaded('tags')
             ? $entity->tags->pluck('id')->all()
             : [];
 

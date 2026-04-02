@@ -35,26 +35,31 @@ class Image extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return MorphToMany<Tag, $this> */
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }
 
+    /** @return MorphMany<EntityPosition, $this> */
     public function positions(): MorphMany
     {
         return $this->morphMany(EntityPosition::class, 'entity');
     }
 
+    /** @return MorphMany<EntityRelationship, $this> */
     public function relationshipsAsA(): MorphMany
     {
         return $this->morphMany(EntityRelationship::class, 'entity_a');
     }
 
+    /** @return MorphMany<EntityRelationship, $this> */
     public function relationshipsAsB(): MorphMany
     {
         return $this->morphMany(EntityRelationship::class, 'entity_b');

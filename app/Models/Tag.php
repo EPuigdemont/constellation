@@ -23,41 +23,53 @@ class Tag extends Model
         'color',
     ];
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return MorphToMany<DiaryEntry, $this> */
     public function diaryEntries(): MorphToMany
     {
         return $this->morphedByMany(DiaryEntry::class, 'taggable');
     }
 
+    /** @return MorphToMany<Note, $this> */
     public function notes(): MorphToMany
     {
         return $this->morphedByMany(Note::class, 'taggable');
     }
 
+    /** @return MorphToMany<Postit, $this> */
     public function postits(): MorphToMany
     {
         return $this->morphedByMany(Postit::class, 'taggable');
     }
 
+    /** @return MorphToMany<Image, $this> */
     public function images(): MorphToMany
     {
         return $this->morphedByMany(Image::class, 'taggable');
     }
 
+    /** @return MorphToMany<ImportantDate, $this> */
     public function importantDates(): MorphToMany
     {
         return $this->morphedByMany(ImportantDate::class, 'taggable');
     }
 
+    /** @param Builder<Tag> $query
+     *  @return Builder<Tag>
+     */
     public function scopeSystem(Builder $query): Builder
     {
         return $query->whereNull('user_id');
     }
 
+    /** @param Builder<Tag> $query
+     *  @return Builder<Tag>
+     */
     public function scopeForUser(Builder $query, int|string $userId): Builder
     {
         return $query->where('user_id', $userId)->orWhereNull('user_id');

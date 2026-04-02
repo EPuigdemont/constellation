@@ -13,6 +13,8 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -352,12 +354,12 @@ class Canvas extends Component
         $this->resetEditor();
         $this->editingEntityId = $entityId;
         $this->editorMode = $entityType === 'diary_entry' ? 'diary' : $entityType;
-        $this->editorTitle = $model->title ?? '';
-        $this->editorBody = $model->body ?? '';
-        $this->editorMood = $this->moodValue($model->mood, 'plain');
-        $this->editorColorOverride = $model->color_override ?? null;
-        $this->editorRemindAt = ($entityType === 'reminder' && $model->remind_at)
-            ? $model->remind_at->format('Y-m-d\TH:i')
+        $this->editorTitle = (string) (data_get($model, 'title') ?? '');
+        $this->editorBody = (string) (data_get($model, 'body') ?? '');
+        $this->editorMood = $this->moodValue(data_get($model, 'mood'), 'plain');
+        $this->editorColorOverride = data_get($model, 'color_override') ?? null;
+        $this->editorRemindAt = ($entityType === 'reminder' && data_get($model, 'remind_at'))
+            ? Carbon::parse((string) data_get($model, 'remind_at'))->format('Y-m-d\TH:i')
             : '';
         $this->loadTagsForEditor($model);
         $this->showEditorModal = true;
@@ -378,7 +380,7 @@ class Canvas extends Component
         $this->readonlyTitle = $model->title ?? '';
         $this->readonlyBody = $model->body ?? $model->alt ?? '';
         $this->readonlyImageUrl = $entityType === 'image' ? route('images.serve', $model) : '';
-        $this->readonlyUpdatedAt = $model->updated_at?->format('d/m/Y H:i') ?? '';
+        $this->readonlyUpdatedAt = data_get($model, 'updated_at') ? Carbon::parse((string) data_get($model, 'updated_at'))->format('d/m/Y H:i') : '';
     }
 
     public function closeReadonlyModal(): void
@@ -433,7 +435,7 @@ class Canvas extends Component
         }
 
         if ($card['type'] === 'reminder' && $this->editorRemindAt !== '') {
-            $data['remind_at'] = $this->editorRemindAt;
+            $data['remind_at'] = Carbon::parse($this->editorRemindAt);
         }
 
         $model->update($data);
@@ -450,7 +452,7 @@ class Canvas extends Component
         ]);
     }
 
-    public function loadTagsForEditor(?object $model = null): void
+    public function loadTagsForEditor(?Model $model = null): void
     {
         $user = Auth::user();
         $this->availableTags = Tag::forUser($user->id)
@@ -801,7 +803,7 @@ class Canvas extends Component
         $this->availableTags = [];
     }
 
-    private function resolveEntity(string $entityId, string $entityType): ?object
+    private function resolveEntity(string $entityId, string $entityType): ?Model
     {
         $morphMap = Relation::morphMap();
         $class = $morphMap[$entityType] ?? null;
@@ -813,12 +815,8 @@ class Canvas extends Component
         return $class::find($entityId);
     }
 
-    private function createNewEntity(object $user, Mood $mood, DesktopService $service): void
+    private function createNewEntity(User $user, Mood $mood, DesktopService $service): void
     {
-        if (! $user instanceof User) {
-            return;
-        }
-
         $data = [
             'user_id' => $user->id,
             'title' => $this->editorTitle,
@@ -870,7 +868,7 @@ class Canvas extends Component
         $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
     }
 
-    private function updateExistingEntity(object $user, Mood $mood): void
+    private function updateExistingEntity(User $user, Mood $mood): void
     {
         $card = collect($this->cards)->firstWhere('id', $this->editingEntityId);
         if (! $card) {
@@ -917,6 +915,7 @@ class Canvas extends Component
         $this->dispatch('card-updated', entityId: $this->editingEntityId, updates: $updates);
     }
 
+    /** @param array<string, mixed> $updates */
     private function updateCardInList(string $entityId, array $updates): void
     {
         foreach ($this->cards as $i => $card) {
