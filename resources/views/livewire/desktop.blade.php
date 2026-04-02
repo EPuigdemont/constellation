@@ -212,7 +212,7 @@
             <div class="relative" x-data="{ tagFilterOpen: false }">
                 <button type="button"
                         x-on:click="tagFilterOpen = !tagFilterOpen"
-                        :class="activeTagFilter ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        :class="activeTagFilters.length > 0 ? 'bg-zinc-200 dark:bg-zinc-700' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                         class="inline-flex items-center rounded-md px-2 py-1.5 text-sm text-zinc-700 dark:text-zinc-300"
                         title="{{ __('Filter by Tag') }}">
                     <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -227,16 +227,26 @@
                      x-cloak
                      class="absolute right-0 z-50 mt-1 max-h-48 w-48 overflow-y-auto rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
                     <button type="button"
-                            x-on:click="filterByTag(null); tagFilterOpen = false"
+                            x-on:click="clearTagFilters()"
                             class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                            :class="!activeTagFilter ? 'font-semibold' : ''">
+                            :class="activeTagFilters.length === 0 ? 'font-semibold' : ''">
+                        <span class="inline-flex w-4 items-center justify-center">
+                            <svg x-show="activeTagFilters.length === 0" x-cloak class="size-3.5 text-zinc-600 dark:text-zinc-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                        </span>
                         {{ __('All Tags') }}
                     </button>
                     @foreach($filterAvailableTags as $tag)
                         <button type="button"
-                                x-on:click="filterByTag('{{ $tag['id'] }}'); tagFilterOpen = false"
+                                x-on:click="toggleTagFilter('{{ $tag['id'] }}')"
                                 class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                                :class="activeTagFilter === '{{ $tag['id'] }}' ? 'font-semibold' : ''">
+                                :class="isTagActive('{{ $tag['id'] }}') ? 'font-semibold' : ''">
+                            <span class="inline-flex w-4 items-center justify-center">
+                                <svg x-show="isTagActive('{{ $tag['id'] }}')" x-cloak class="size-3.5 text-zinc-600 dark:text-zinc-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                            </span>
                             {{ $tag['name'] }}
                         </button>
                     @endforeach
