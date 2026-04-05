@@ -13,7 +13,7 @@
     <div class="flex-1 overflow-y-auto">
         @if($images->isEmpty())
             <div class="flex items-center justify-center py-20 text-zinc-400">
-                {{ __('No images yet. Upload one from the Desktop.') }}
+                {{ __('No images yet. Upload one from the Canvas.') }}
             </div>
         @else
             <div class="grid grid-cols-2 gap-4 p-0 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
