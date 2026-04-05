@@ -106,6 +106,10 @@
         </div>
     </div>
 
+    @php
+        $selectedDayMood = $selectedDate !== '' ? ($dayMoods[$selectedDate] ?? null) : null;
+    @endphp
+
     {{-- Selected Day Panel --}}
     @if ($selectedDate !== '')
         <div class="calendar-day-panel rounded-xl border border-(--theme-border) p-4"
@@ -181,7 +185,10 @@
                             <div class="flex flex-wrap gap-1">
                                 <button type="button" wire:click="setDayMood('{{ $selectedDate }}', '')"
                                         x-on:click="moodOpen = false"
-                                        class="rounded-full border border-(--theme-border) p-1.5 text-xs hover:bg-(--theme-accent)/10"
+                                        @class([
+                                            'rounded-full border border-(--theme-border) p-1.5 text-xs transition-all hover:bg-(--theme-accent)/10',
+                                            'ring-2 ring-(--theme-accent) ring-offset-2 ring-offset-(--theme-bg)' => $selectedDayMood === null,
+                                        ])
                                         title="{{ __('Reset color') }}">
                                     <flux:icon name="x-mark" variant="outline" class="size-3"/>
                                 </button>
@@ -190,7 +197,12 @@
                                         <button type="button"
                                                 wire:click="setDayMood('{{ $selectedDate }}', '{{ $m->value }}')"
                                                 x-on:click="moodOpen = false"
-                                                class="mood-{{ $m->value }} size-6 rounded-full border transition-transform hover:scale-110"
+                                                @class([
+                                                    'size-6 rounded-full border transition-all hover:scale-110',
+                                                    'ring-2 ring-(--theme-accent) ring-offset-2 ring-offset-(--theme-bg)' => $selectedDayMood?->mood === $m->value,
+                                                ])
+                                                style="background: var(--mood-{{ $m->value }}-bg, var(--theme-bg-secondary)); border-color: var(--mood-{{ $m->value }}-border, var(--theme-border));"
+                                                aria-label="{{ ucfirst($m->value) }}"
                                                 title="{{ ucfirst($m->value) }}"></button>
                                     @endif
                                 @endforeach
