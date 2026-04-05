@@ -7,6 +7,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $owner_id
+ * @property int $friend_id
+ * @property string $entity_id
+ * @property string $entity_type
+ */
 class EntityShare extends Model
 {
     /** @var list<string> */

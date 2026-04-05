@@ -106,8 +106,8 @@ class DataImportService
                     $newTag->name = $tag['name'];
                     $newTag->color = $tag['color'] ?? null;
                     $newTag->timestamps = false;
-                    $newTag->created_at = $tag['created_at'] ? Carbon::parse($tag['created_at'])->toDateTimeString() : now()->toDateTimeString();
-                    $newTag->updated_at = $tag['updated_at'] ? Carbon::parse($tag['updated_at'])->toDateTimeString() : now()->toDateTimeString();
+                    $newTag->created_at = ! empty($tag['created_at']) ? Carbon::parse((string) $tag['created_at']) : now();
+                    $newTag->updated_at = ! empty($tag['updated_at']) ? Carbon::parse((string) $tag['updated_at']) : now();
                     $newTag->save();
                     $this->idMap[$tag['id']] = $newTag->id;
                     $entityCount++;
@@ -127,9 +127,9 @@ class DataImportService
                 $new->color_override = $entry['color_override'] ?? null;
                 $new->is_public = $entry['is_public'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at'])->toDateTimeString() : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }
@@ -147,9 +147,9 @@ class DataImportService
                 $new->color_override = $entry['color_override'] ?? null;
                 $new->is_public = $entry['is_public'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at'])->toDateTimeString() : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }
@@ -166,9 +166,9 @@ class DataImportService
                 $new->color_override = $entry['color_override'] ?? null;
                 $new->is_public = $entry['is_public'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at'])->toDateTimeString() : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }
@@ -188,9 +188,9 @@ class DataImportService
                 $new->color_override = $entry['color_override'] ?? null;
                 $new->is_public = $entry['is_public'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at'])->toDateTimeString() : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
 
                 // Copy image file from export
                 $sourceFile = $tempDir . '/images/' . $entry['path'];
@@ -214,13 +214,13 @@ class DataImportService
                 $new->id = $newId;
                 $new->user_id = $userId;
                 $new->label = $entry['label'];
-                $new->date = Carbon::parse($entry['date'])->toDateString();
+                $new->date = Carbon::parse((string) $entry['date']);
                 $new->recurs_annually = $entry['recurs_annually'] ?? false;
                 $new->is_done = $entry['is_done'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at'])->toDateTimeString() : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }
@@ -234,14 +234,14 @@ class DataImportService
                 $new->user_id = $userId;
                 $new->title = $entry['title'];
                 $new->body = $entry['body'] ?? null;
-                $new->remind_at = Carbon::parse($entry['remind_at'])->toDateTimeString();
+                $new->remind_at = Carbon::parse((string) $entry['remind_at']);
                 $new->mood = $entry['mood'];
                 $new->reminder_type = $entry['reminder_type'] ?? null;
                 $new->is_completed = $entry['is_completed'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at'])->toDateTimeString() : now()->toDateTimeString();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at'])->toDateTimeString() : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }

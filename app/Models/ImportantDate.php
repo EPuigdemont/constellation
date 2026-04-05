@@ -12,6 +12,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
+/**
+ * @property string $id
+ * @property int $user_id
+ * @property string $label
+ * @property \Carbon\CarbonInterface $date
+ * @property bool $recurs_annually
+ * @property bool $is_done
+ * @property \Carbon\CarbonInterface|null $created_at
+ * @property \Carbon\CarbonInterface|null $updated_at
+ * @property \Carbon\CarbonInterface|null $deleted_at
+ */
 class ImportantDate extends Model
 {
     /** @use HasFactory<ImportantDateFactory> */

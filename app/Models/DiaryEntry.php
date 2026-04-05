@@ -13,6 +13,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
+/**
+ * @property string $id
+ * @property int $user_id
+ * @property string $title
+ * @property string $body
+ * @property Mood|null $mood
+ * @property string|null $color_override
+ * @property bool $is_public
+ * @property \Carbon\CarbonInterface|null $created_at
+ * @property \Carbon\CarbonInterface|null $updated_at
+ * @property \Carbon\CarbonInterface|null $deleted_at
+ */
 class DiaryEntry extends Model
 {
     /** @use HasFactory<DiaryEntryFactory> */

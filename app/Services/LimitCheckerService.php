@@ -96,7 +96,7 @@ class LimitCheckerService
      */
     private function getLimitsForUser(User $user): array
     {
-        $tier = $user->tier?->value ?? Tier::Basic->value;
+        $tier = $user->tier->value;
         /** @var array<string, int|null>|null $tierLimits */
         $tierLimits = config("constellation.tiers.{$tier}");
         $tierLimits ??= [];

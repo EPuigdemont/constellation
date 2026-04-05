@@ -9,6 +9,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string $id
+ * @property int $user_id
+ * @property \Carbon\CarbonInterface $date
+ * @property string $mood
+ */
 class CalendarDayMood extends Model
 {
     use HasUuids;

@@ -15,6 +15,21 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $username
+ * @property string $email
+ * @property string|null $avatar_path
+ * @property string|null $avatar_disk
+ * @property string $theme
+ * @property string $language
+ * @property float $desktop_zoom
+ * @property float $vision_board_zoom
+ * @property string $diary_display_mode
+ * @property \Carbon\CarbonInterface|null $first_login_at
+ * @property Tier $tier
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
