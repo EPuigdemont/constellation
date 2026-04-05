@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\Tag;
+use App\Services\LimitCheckerService;
 use App\Services\ReminderService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,8 @@ class Diary extends Component
     public array $newTagIds = [];
 
     public string $newTagSearch = '';
+
+    public string $limitError = '';
 
     public function mount(): void
     {
@@ -235,6 +238,20 @@ class Diary extends Component
     public function createEntry(): void
     {
         $user = Auth::user();
+
+        // Check limit before creating
+        $limitChecker = app(LimitCheckerService::class);
+        if (! $limitChecker->canCreateEntity($user, 'diary_entry')) {
+            $remaining = $limitChecker->getRemainingCount($user, 'diary_entry');
+            $this->limitError = "You have reached your diary entry limit for today. Remaining: {$remaining}.";
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return;
+        }
+
+        $this->limitError = '';
+
+        Gate::authorize('create', DiaryEntry::class);
 
         $entry = DiaryEntry::create([
             'user_id' => $user->id,

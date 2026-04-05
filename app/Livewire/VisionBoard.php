@@ -12,6 +12,7 @@ use App\Models\Note;
 use App\Models\Tag;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
+use App\Services\LimitCheckerService;
 use App\Services\ShareEntityService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -73,6 +74,8 @@ class VisionBoard extends Component
     public float $viewportCenterX = 2000.0;
 
     public float $viewportCenterY = 2000.0;
+
+    public string $limitError = '';
 
     /** Linking state */
     public string $linkingMode = '';
@@ -161,6 +164,23 @@ class VisionBoard extends Component
             }
 
             $user = Auth::user();
+
+            // Check limit before uploading
+            $limitChecker = app(LimitCheckerService::class);
+            if (! $limitChecker->canCreateEntity($user, 'image')) {
+                $remaining = $limitChecker->getRemainingCount($user, 'image');
+                $this->limitError = "You have reached your image upload limit. Remaining: {$remaining}.";
+                $this->imageUpload = null;
+                $this->dispatch('notify-error', message: $this->limitError);
+                \Illuminate\Support\Facades\Log::warning('[VisionBoard] uploadImage: limit reached');
+
+                return;
+            }
+
+            $this->limitError = '';
+
+            Gate::authorize('create', Image::class);
+
             $image = $imageService->store($user, $this->imageUpload);
             \Illuminate\Support\Facades\Log::info('[VisionBoard] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
 

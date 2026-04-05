@@ -13,6 +13,7 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
+use App\Services\LimitCheckerService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -104,6 +105,8 @@ class Canvas extends Component
     /** @var array<int, string> */
     public array $currentEntitySharedFriends = [];
 
+    public string $limitError = '';
+
     public function mount(DesktopService $service): void
     {
         $user = Auth::user();
@@ -175,6 +178,20 @@ class Canvas extends Component
     {
         $user = Auth::user();
 
+        // Check limit before creating
+        $limitChecker = app(LimitCheckerService::class);
+        if (! $limitChecker->canCreateEntity($user, 'postit')) {
+            $remaining = $limitChecker->getRemainingCount($user, 'postit');
+            $this->limitError = "You have reached your post-it limit for today. Remaining: {$remaining}.";
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return;
+        }
+
+        $this->limitError = '';
+
+        Gate::authorize('create', Postit::class);
+
         $postit = Postit::create([
             'user_id' => $user->id,
             'body' => '',
@@ -214,6 +231,20 @@ class Canvas extends Component
     public function createReminder(DesktopService $service, float $centerX = 2000.0, float $centerY = 2000.0): void
     {
         $user = Auth::user();
+
+        // Check limit before creating
+        $limitChecker = app(LimitCheckerService::class);
+        if (! $limitChecker->canCreateEntity($user, 'reminder')) {
+            $remaining = $limitChecker->getRemainingCount($user, 'reminder');
+            $this->limitError = "You have reached your reminder limit for today. Remaining: {$remaining}.";
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return;
+        }
+
+        $this->limitError = '';
+
+        Gate::authorize('create', Reminder::class);
 
         $reminder = Reminder::create([
             'user_id' => $user->id,
@@ -276,6 +307,23 @@ class Canvas extends Component
             }
 
             $user = Auth::user();
+
+            // Check limit before uploading
+            $limitChecker = app(LimitCheckerService::class);
+            if (! $limitChecker->canCreateEntity($user, 'image')) {
+                $remaining = $limitChecker->getRemainingCount($user, 'image');
+                $this->limitError = "You have reached your image upload limit. Remaining: {$remaining}.";
+                $this->imageUpload = null;
+                $this->dispatch('notify-error', message: $this->limitError);
+                \Illuminate\Support\Facades\Log::warning('[Canvas] uploadImage: limit reached');
+
+                return;
+            }
+
+            $this->limitError = '';
+
+            Gate::authorize('create', \App\Models\Image::class);
+
             $image = $imageService->store($user, $this->imageUpload);
             \Illuminate\Support\Facades\Log::info('[Canvas] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
 
@@ -332,10 +380,17 @@ class Canvas extends Component
             $this->editorColorOverride = null;
         }
 
+        $saved = false;
+
         if ($this->editingEntityId !== '') {
             $this->updateExistingEntity($user, $mood);
+            $saved = true;
         } else {
-            $this->createNewEntity($user, $mood, $service);
+            $saved = $this->createNewEntity($user, $mood, $service);
+        }
+
+        if (! $saved) {
+            return;
         }
 
         $this->showEditorModal = false;
@@ -401,6 +456,21 @@ class Canvas extends Component
         }
 
         $user = Auth::user();
+
+        $limitChecker = app(LimitCheckerService::class);
+        if (! $limitChecker->canCreateEntity($user, 'image')) {
+            $remaining = $limitChecker->getRemainingCount($user, 'image');
+            $this->limitError = "You have reached your image upload limit. Remaining: {$remaining}.";
+            $this->editorImage = null;
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return;
+        }
+
+        $this->limitError = '';
+
+        Gate::authorize('create', \App\Models\Image::class);
+
         $image = $service->store($user, $this->editorImage);
         $url = route('images.serve', $image);
 
@@ -815,8 +885,23 @@ class Canvas extends Component
         return $class::find($entityId);
     }
 
-    private function createNewEntity(User $user, Mood $mood, DesktopService $service): void
+    private function createNewEntity(User $user, Mood $mood, DesktopService $service): bool
     {
+        // Determine entity type and check limits
+        $entityType = $this->editorMode === 'diary' ? 'diary_entry' : 'note';
+        $limitChecker = app(LimitCheckerService::class);
+
+        if (! $limitChecker->canCreateEntity($user, $entityType)) {
+            $remaining = $limitChecker->getRemainingCount($user, $entityType);
+            $typeName = $entityType === 'diary_entry' ? 'diary entry' : 'note';
+            $this->limitError = "You have reached your {$typeName} limit for today. Remaining: {$remaining}.";
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return false;
+        }
+
+        $this->limitError = '';
+
         $data = [
             'user_id' => $user->id,
             'title' => $this->editorTitle,
@@ -826,9 +911,11 @@ class Canvas extends Component
         ];
 
         if ($this->editorMode === 'diary') {
+            Gate::authorize('create', DiaryEntry::class);
             $entity = DiaryEntry::create($data);
             $type = 'diary_entry';
         } else {
+            Gate::authorize('create', Note::class);
             $entity = Note::create($data);
             $type = 'note';
         }
@@ -866,6 +953,8 @@ class Canvas extends Component
         $this->maxZIndex = $position->z_index;
 
         $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
+
+        return true;
     }
 
     private function updateExistingEntity(User $user, Mood $mood): void

@@ -7,6 +7,7 @@ namespace App\Policies;
 use App\Models\DiaryEntry;
 use App\Models\EntityShare;
 use App\Models\User;
+use App\Services\LimitCheckerService;
 
 class DiaryEntryPolicy
 {
@@ -17,12 +18,10 @@ class DiaryEntryPolicy
 
     public function view(User $user, DiaryEntry $diaryEntry): bool
     {
-        // Owner can always view
         if ($diaryEntry->user_id === $user->id) {
             return true;
         }
 
-        // Check if entity is shared with this user
         return EntityShare::query()
             ->where('owner_id', $diaryEntry->user_id)
             ->where('friend_id', $user->id)
@@ -33,7 +32,9 @@ class DiaryEntryPolicy
 
     public function create(User $user): bool
     {
-        return true;
+        $limitChecker = app(LimitCheckerService::class);
+
+        return $limitChecker->canCreateEntity($user, 'diary_entry');
     }
 
     public function update(User $user, DiaryEntry $diaryEntry): bool

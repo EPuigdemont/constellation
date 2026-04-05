@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Tier;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -36,6 +37,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'desktop_zoom',
         'vision_board_zoom',
         'diary_display_mode',
+        'tier',
         'first_login_at',
     ];
 
@@ -64,6 +66,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'desktop_zoom' => 'float',
             'vision_board_zoom' => 'float',
+            'tier' => Tier::class,
         ];
     }
 

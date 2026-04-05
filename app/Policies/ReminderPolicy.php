@@ -7,6 +7,7 @@ namespace App\Policies;
 use App\Models\EntityShare;
 use App\Models\Reminder;
 use App\Models\User;
+use App\Services\LimitCheckerService;
 
 class ReminderPolicy
 {
@@ -31,7 +32,9 @@ class ReminderPolicy
 
     public function create(User $user): bool
     {
-        return true;
+        $limitChecker = app(LimitCheckerService::class);
+
+        return $limitChecker->canCreateEntity($user, 'reminder');
     }
 
     public function update(User $user, Reminder $reminder): bool

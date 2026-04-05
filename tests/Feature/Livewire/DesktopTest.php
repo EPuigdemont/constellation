@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Livewire;
 
 use App\Enums\Mood;
+use App\Enums\Tier;
 use App\Livewire\Canvas;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
@@ -315,5 +316,27 @@ class DesktopTest extends TestCase
             ->assertSet('readonlyBody', '')
             ->assertSet('readonlyImageUrl', '')
             ->assertSet('readonlyUpdatedAt', '');
+    }
+
+    public function test_save_editor_blocks_note_creation_when_daily_limit_reached(): void
+    {
+        $user = User::factory()->create(['tier' => Tier::Basic->value]);
+        Note::factory()->count(10)->create(['user_id' => $user->id]);
+
+        Livewire::actingAs($user)
+            ->test(Canvas::class)
+            ->set('showEditorModal', true)
+            ->set('editorMode', 'note')
+            ->set('editorTitle', 'Blocked note')
+            ->set('editorBody', 'Body')
+            ->set('editorMood', 'plain')
+            ->call('saveEditor')
+            ->assertSet('showEditorModal', true)
+            ->assertSet('limitError', 'You have reached your note limit for today. Remaining: 0.');
+
+        $this->assertDatabaseMissing('notes', [
+            'user_id' => $user->id,
+            'title' => 'Blocked note',
+        ]);
     }
 }

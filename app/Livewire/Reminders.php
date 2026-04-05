@@ -8,9 +8,11 @@ use App\Enums\Mood;
 use App\Enums\ReminderType;
 use App\Models\ImportantDate;
 use App\Models\Reminder;
+use App\Services\LimitCheckerService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -44,6 +46,8 @@ class Reminders extends Component
     public string $reminderType = 'general';
 
     public string $tab = 'reminders';
+
+    public string $limitError = '';
 
     public function mount(): void
     {
@@ -145,6 +149,21 @@ class Reminders extends Component
         ]);
 
         $user = Auth::user();
+
+        // Check limit before creating if not editing
+        if (! $this->editingReminderId) {
+            $limitChecker = app(LimitCheckerService::class);
+            if (! $limitChecker->canCreateEntity($user, 'reminder')) {
+                $remaining = $limitChecker->getRemainingCount($user, 'reminder');
+                $this->limitError = "You have reached your reminder limit for today. Remaining: {$remaining}.";
+                $this->dispatch('notify-error', message: $this->limitError);
+
+                return;
+            }
+        }
+
+        $this->limitError = '';
+
         $data = [
             'user_id' => $user->id,
             'title' => $this->reminderTitle,
@@ -159,6 +178,7 @@ class Reminders extends Component
                 ->findOrFail($this->editingReminderId)
                 ->update($data);
         } else {
+            Gate::authorize('create', Reminder::class);
             Reminder::create($data);
         }
 

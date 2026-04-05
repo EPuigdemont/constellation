@@ -7,6 +7,7 @@ namespace App\Policies;
 use App\Models\EntityShare;
 use App\Models\Postit;
 use App\Models\User;
+use App\Services\LimitCheckerService;
 
 class PostitPolicy
 {
@@ -33,7 +34,9 @@ class PostitPolicy
 
     public function create(User $user): bool
     {
-        return true;
+        $limitChecker = app(LimitCheckerService::class);
+
+        return $limitChecker->canCreateEntity($user, 'postit');
     }
 
     public function update(User $user, Postit $postit): bool

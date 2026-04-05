@@ -1,4 +1,10 @@
 <div class="flex h-screen flex-col overflow-hidden">
+    @if ($limitError !== '')
+        <div class="border-b border-[var(--theme-border)] px-3 py-2 text-sm text-[var(--theme-text)]"
+             style="background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-bg));">
+            {{ $limitError }}
+        </div>
+    @endif
     {{-- Toolbar --}}
     <div class="flex items-center gap-3 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
         <flux:heading size="lg" class="max-lg:hidden">{{ __('Diary') }}</flux:heading>

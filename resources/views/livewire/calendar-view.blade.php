@@ -1,6 +1,12 @@
 @php use App\Enums\Mood;use Carbon\Carbon; @endphp
 <div class="page-glitter-wrapper flex h-full flex-col gap-4 p-4 lg:p-6">
     <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
+    @if ($limitError !== '')
+        <div class="rounded-lg border border-(--theme-border) px-3 py-2 text-sm text-(--theme-text)"
+             style="background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-bg));">
+            {{ $limitError }}
+        </div>
+    @endif
     {{-- Header: Month Navigation + Filters --}}
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">

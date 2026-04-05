@@ -12,11 +12,13 @@ use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\Tag;
+use App\Services\LimitCheckerService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -61,6 +63,8 @@ class Calendar extends Component
     public array $createTags = [];
 
     public string $createDate = '';
+
+    public string $limitError = '';
 
     public function mount(): void
     {
@@ -154,40 +158,79 @@ class Calendar extends Component
         $user = Auth::user();
         $mood = Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer;
 
+        $limitEntityType = match ($this->createType) {
+            'diary' => 'diary_entry',
+            'note' => 'note',
+            'postit' => 'postit',
+            'reminder' => 'reminder',
+            default => null,
+        };
+
+        if ($limitEntityType !== null) {
+            $limitChecker = app(LimitCheckerService::class);
+
+            if (! $limitChecker->canCreateEntity($user, $limitEntityType)) {
+                $remaining = $limitChecker->getRemainingCount($user, $limitEntityType);
+                $typeLabel = str_replace('_', ' ', $limitEntityType);
+                $this->limitError = "You have reached your {$typeLabel} limit. Remaining: {$remaining}.";
+                $this->dispatch('notify-error', message: $this->limitError);
+
+                return;
+            }
+        }
+
+        $this->limitError = '';
+
         $createdAt = null;
         if ($this->createDate !== '') {
             $createdAt = Carbon::parse($this->createDate);
         }
 
         $entity = match ($this->createType) {
-            'diary' => $entity = DiaryEntry::create([
+            'diary' => (function () use ($user, $mood, $createdAt) {
+                Gate::authorize('create', DiaryEntry::class);
+
+                return DiaryEntry::create([
                 'user_id' => $user->id,
                 'title' => $this->createTitle ?: 'Untitled',
                 'body' => $this->createBody,
                 'mood' => $mood,
                 'created_at' => $createdAt,
-            ]),
-            'note' => $entity = Note::create([
+            ]);
+            })(),
+            'note' => (function () use ($user, $mood, $createdAt) {
+                Gate::authorize('create', Note::class);
+
+                return Note::create([
                 'user_id' => $user->id,
                 'title' => $this->createTitle ?: 'Untitled',
                 'body' => $this->createBody,
                 'mood' => $mood,
                 'created_at' => $createdAt,
-            ]),
-            'postit' => $entity = Postit::create([
+            ]);
+            })(),
+            'postit' => (function () use ($user, $mood, $createdAt) {
+                Gate::authorize('create', Postit::class);
+
+                return Postit::create([
                 'user_id' => $user->id,
                 'body' => $this->createBody,
                 'mood' => $mood,
                 'created_at' => $createdAt,
-            ]),
-            'reminder' => $entity = Reminder::create([
+            ]);
+            })(),
+            'reminder' => (function () use ($user, $mood, $createdAt) {
+                Gate::authorize('create', Reminder::class);
+
+                return Reminder::create([
                 'user_id' => $user->id,
                 'title' => $this->createTitle ?: 'Reminder',
                 'body' => $this->createBody,
                 'remind_at' => $this->selectedDate ? Carbon::parse($this->selectedDate)->setTime(9, 0) : now()->addDay(),
                 'mood' => $mood,
                 'created_at' => $createdAt,
-            ]),
+            ]);
+            })(),
             default => null,
         };
 

@@ -7,6 +7,7 @@ namespace App\Policies;
 use App\Models\EntityShare;
 use App\Models\Image;
 use App\Models\User;
+use App\Services\LimitCheckerService;
 
 class ImagePolicy
 {
@@ -31,7 +32,9 @@ class ImagePolicy
 
     public function create(User $user): bool
     {
-        return true;
+        $limitChecker = app(LimitCheckerService::class);
+
+        return $limitChecker->canCreateEntity($user, 'image');
     }
 
     public function update(User $user, Image $image): bool

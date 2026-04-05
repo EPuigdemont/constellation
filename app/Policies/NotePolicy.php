@@ -7,6 +7,7 @@ namespace App\Policies;
 use App\Models\EntityShare;
 use App\Models\Note;
 use App\Models\User;
+use App\Services\LimitCheckerService;
 
 class NotePolicy
 {
@@ -33,7 +34,9 @@ class NotePolicy
 
     public function create(User $user): bool
     {
-        return true;
+        $limitChecker = app(LimitCheckerService::class);
+
+        return $limitChecker->canCreateEntity($user, 'note');
     }
 
     public function update(User $user, Note $note): bool
