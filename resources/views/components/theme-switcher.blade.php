@@ -1,6 +1,6 @@
 @php
     $themes = \App\Enums\Theme::cases();
-    $currentTheme = auth()->user()?->theme ?? 'summer';
+    $currentTheme = auth()->user()?->activeTheme() ?? 'summer';
     $currentThemeEnum = \App\Enums\Theme::tryFrom($currentTheme) ?? \App\Enums\Theme::Summer;
 @endphp
 

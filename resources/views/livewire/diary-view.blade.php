@@ -156,7 +156,7 @@
                     <div class="diary-entry-themed {{ $moodClass }} {{ $editingEntryId === $entry->id ? 'is-editing' : '' }} flex flex-1 flex-col rounded-lg border p-6 shadow-md"
                          style="border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
-                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
+                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->activeTheme() ?? 'summer' }}"></canvas>
                         @if($editingEntryId === $entry->id)
                             <div class="relative z-[3] flex flex-1 flex-col gap-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
@@ -179,7 +179,7 @@
                                 </span>
                                 <div class="flex items-center gap-2">
                                     @if($entry->mood)
-                                        <flux:select size="sm" class="!w-24 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
+                                        <flux:select size="sm" class="!w-28 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
                                             @foreach(\App\Enums\Mood::cases() as $mood)
                                                 <option value="{{ $mood->value }}" @selected($entry->mood === $mood)>{{ ucfirst($mood->value) }}</option>
                                             @endforeach
@@ -239,7 +239,7 @@
                     <div class="diary-entry-themed {{ $moodClass }} {{ $editingEntryId === $entry->id ? 'is-editing' : '' }} rounded-lg border p-6 shadow-md"
                          style="border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
-                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
+                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->activeTheme() ?? 'summer' }}"></canvas>
                         @if($editingEntryId === $entry->id)
                             <div class="relative z-[3] space-y-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
@@ -262,7 +262,7 @@
                                 </span>
                                 <div class="flex items-center gap-2">
                                     @if($entry->mood)
-                                        <flux:select size="sm" class="!w-24 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
+                                        <flux:select size="sm" class="!w-28 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
                                             @foreach(\App\Enums\Mood::cases() as $mood)
                                                 <option value="{{ $mood->value }}" @selected($entry->mood === $mood)>{{ ucfirst($mood->value) }}</option>
                                             @endforeach

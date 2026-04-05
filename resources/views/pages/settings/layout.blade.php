@@ -4,9 +4,9 @@
     'showNav' => true,
 ])
 
-<div class="flex items-start max-md:flex-col">
+<div class="flex items-start gap-6 lg:gap-10 max-md:flex-col">
     @if($showNav)
-        <div class="me-10 w-full pb-4 md:w-[220px]">
+        <div class="w-full shrink-0 pb-2 md:w-55 lg:w-60">
             <flux:navlist aria-label="{{ __('Settings') }}">
                 <flux:navlist.item :href="route('profile.edit')" wire:navigate>{{ __('Profile') }}</flux:navlist.item>
                 <flux:navlist.item :href="route('security.edit')" wire:navigate>{{ __('Security') }}</flux:navlist.item>
@@ -17,14 +17,14 @@
 
         <flux:separator class="md:hidden" />
     @else
-        <div class="me-10 hidden w-full pb-4 md:block md:w-[220px]"></div>
+        <div class="hidden w-full shrink-0 pb-2 md:block md:w-55 lg:w-60"></div>
     @endif
 
-    <div class="flex-1 self-stretch max-md:pt-6">
+    <div class="min-w-0 flex-1 self-stretch max-md:pt-6">
         <flux:heading>{{ $heading ?? '' }}</flux:heading>
         <flux:subheading>{{ $subheading ?? '' }}</flux:subheading>
 
-        <div class="mt-5 w-full max-w-lg">
+        <div class="mt-6 w-full max-w-3xl">
             {{ $slot }}
         </div>
     </div>

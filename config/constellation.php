@@ -36,5 +36,24 @@ return [
             'reminders_per_day' => null, // unlimited
         ],
     ],
+
+    'automatic_themes' => [
+        // Special dates override seasonal mapping (MM-DD => theme enum value).
+        'special_dates' => [
+            '02-14' => 'love',
+            '10-31' => 'night',
+            '12-24' => 'cozy',
+            '12-25' => 'cozy',
+            '12-26' => 'cozy',
+        ],
+
+        // Meteorological seasons by MM-DD ranges.
+        'seasonal_ranges' => [
+            ['start' => '03-01', 'end' => '05-31', 'theme' => 'spring'],
+            ['start' => '06-01', 'end' => '08-31', 'theme' => 'summer'],
+            ['start' => '09-01', 'end' => '11-30', 'theme' => 'autumn'],
+            ['start' => '12-01', 'end' => '02-29', 'theme' => 'winter'],
+        ],
+    ],
 ];
 

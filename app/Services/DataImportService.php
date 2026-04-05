@@ -73,6 +73,7 @@ class DataImportService
                 $settings = $data['user_settings'];
                 $user->update(array_filter([
                     'theme' => $settings['theme'] ?? null,
+                    'automatic_themes' => $settings['automatic_themes'] ?? null,
                     'language' => $settings['language'] ?? null,
                     'desktop_zoom' => $settings['desktop_zoom'] ?? null,
                     'vision_board_zoom' => $settings['vision_board_zoom'] ?? null,

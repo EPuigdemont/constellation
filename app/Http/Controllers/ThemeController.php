@@ -16,7 +16,10 @@ class ThemeController extends Controller
             'theme' => ['required', 'string', 'in:' . implode(',', array_column(Theme::cases(), 'value'))],
         ]);
 
-        $request->user()->update(['theme' => $validated['theme']]);
+        $request->user()->update([
+            'theme' => $validated['theme'],
+            'automatic_themes' => false,
+        ]);
 
         return response()->json(['ok' => true]);
     }

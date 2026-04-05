@@ -61,6 +61,7 @@ class DataExportService
             'exported_at' => now()->toIso8601String(),
             'user_settings' => [
                 'theme' => $user->theme,
+                'automatic_themes' => $user->automatic_themes,
                 'language' => $user->language,
                 'desktop_zoom' => $user->desktop_zoom,
                 'vision_board_zoom' => $user->vision_board_zoom,

@@ -156,7 +156,7 @@ class Calendar extends Component
     public function saveNewEntity(): void
     {
         $user = Auth::user();
-        $mood = Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer;
+        $mood = Mood::tryFrom($user->activeTheme()) ?? Mood::Summer;
 
         $limitEntityType = match ($this->createType) {
             'diary' => 'diary_entry',

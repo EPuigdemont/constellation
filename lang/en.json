@@ -88,5 +88,8 @@
     "Reject": "Reject",
     "Your Friends": "Your Friends",
     "Remove": "Remove",
-    "No friends added yet. Add someone to share items with them.": "No friends added yet. Add someone to share items with them."
+    "No friends added yet. Add someone to share items with them.": "No friends added yet. Add someone to share items with them.",
+    "Automatic themes": "Automatic themes",
+    "Automatically pick seasonal and special-day themes (Valentine's, Christmas, etc.).": "Automatically pick seasonal and special-day themes (Valentine's, Christmas, etc.).",
+    "Choosing a theme manually turns automatic themes off and uses your selected theme as preference.": "Choosing a theme manually turns automatic themes off and uses your selected theme as preference."
 }

@@ -8,11 +8,13 @@ use Livewire\Component;
 new #[Title('Appearance settings')] class extends Component {
     public string $theme = 'summer';
     public string $language = 'en';
+    public bool $automaticThemes = true;
 
     public function mount(): void
     {
-        $this->theme = Auth::user()->theme ?? 'summer';
+        $this->theme = Auth::user()->activeTheme();
         $this->language = Auth::user()->language ?? 'en';
+        $this->automaticThemes = (bool) (Auth::user()->automatic_themes ?? true);
     }
 
     public function updateTheme(string $value): void
@@ -24,10 +26,22 @@ new #[Title('Appearance settings')] class extends Component {
 
         $user = Auth::user();
         $user->theme = $theme->value;
+        $user->automatic_themes = false;
         $user->save();
 
         $this->theme = $theme->value;
+        $this->automaticThemes = false;
         $this->dispatch('theme-updated', theme: $theme->value);
+    }
+
+    public function updateAutomaticThemes(bool $value): void
+    {
+        $user = Auth::user();
+        $user->automatic_themes = $value;
+        $user->save();
+
+        $this->automaticThemes = $value;
+        $this->dispatch('theme-updated', theme: $user->activeTheme());
     }
 
     public function updateLanguage(string $value): void
@@ -45,7 +59,7 @@ new #[Title('Appearance settings')] class extends Component {
     }
 }; ?>
 
-<section class="w-full">
+<section class="mx-auto w-full max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8 lg:space-y-10 lg:py-8">
     @include('partials.settings-heading')
 
     <flux:heading class="sr-only">{{ __('Appearance settings') }}</flux:heading>
@@ -60,9 +74,32 @@ new #[Title('Appearance settings')] class extends Component {
 
     <x-pages::settings.layout :heading="__('Theme')" :subheading="__('Choose a color theme for your workspace')" :show-nav="false">
         <div x-data="{
+                automaticThemes: @entangle('automaticThemes'),
+                async setAutomaticThemes(value) {
+                    this.automaticThemes = value;
+                    await $wire.updateAutomaticThemes(value);
+                    window.location.reload();
+                }
+             }"
+             class="mb-4 rounded-xl border border-zinc-200 p-3 dark:border-zinc-700">
+            <label class="flex items-center justify-between gap-3">
+                <span>
+                    <span class="block text-sm font-medium text-zinc-700 dark:text-zinc-200">{{ __('Automatic themes') }}</span>
+                    <span class="block text-xs text-zinc-500 dark:text-zinc-400">{{ __('Automatically pick seasonal and special-day themes (Valentine\'s, Christmas, etc.).') }}</span>
+                </span>
+                <input type="checkbox"
+                       x-bind:checked="automaticThemes"
+                       x-on:change="setAutomaticThemes($event.target.checked)"
+                       class="h-4 w-4 rounded border-zinc-300 text-(--theme-accent) focus:ring-(--theme-accent) dark:border-zinc-600" />
+            </label>
+        </div>
+
+        <div x-data="{
                 theme: @entangle('theme'),
+                automaticThemes: @entangle('automaticThemes'),
                 async setTheme(value) {
                     this.theme = value;
+                    this.automaticThemes = false;
                     await $wire.updateTheme(value);
                     window.location.reload();
                 }
@@ -88,6 +125,9 @@ new #[Title('Appearance settings')] class extends Component {
                 </button>
             @endforeach
         </div>
+        <p class="mt-2 text-xs text-(--theme-text-muted)">
+            {{ __('Choosing a theme manually turns automatic themes off and uses your selected theme as preference.') }}
+        </p>
     </x-pages::settings.layout>
 
     <x-pages::settings.layout :heading="__('Language')" :subheading="__('Choose your preferred language')" :show-nav="false">
@@ -95,6 +135,6 @@ new #[Title('Appearance settings')] class extends Component {
             <flux:radio value="en">English</flux:radio>
             <flux:radio value="es">Español</flux:radio>
         </flux:radio.group>
-        <p class="mt-2 text-xs text-[var(--theme-text-muted)]">{{ __('Changes apply immediately after page reload.') }}</p>
+        <p class="mt-2 text-xs text-(--theme-text-muted)">{{ __('Changes apply immediately after page reload.') }}</p>
     </x-pages::settings.layout>
 </section>

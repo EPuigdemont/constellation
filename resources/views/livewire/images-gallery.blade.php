@@ -1,5 +1,5 @@
 <div class="page-glitter-wrapper flex h-screen flex-col overflow-hidden">
-    <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
+    <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->activeTheme() ?? 'summer' }}"></canvas>
     {{-- Toolbar --}}
     <div class="relative z-10 flex items-center gap-3 border-b border-(--theme-border,var(--color-zinc-200)) bg-(--theme-header-bg,var(--color-zinc-50)) px-2 py-1.5 dark:border-(--theme-border,var(--color-zinc-700)) dark:bg-(--theme-header-bg,var(--color-zinc-900))">
         <flux:heading size="lg">{{ __('Images') }}</flux:heading>

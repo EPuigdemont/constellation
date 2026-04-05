@@ -169,7 +169,7 @@ class Reminders extends Component
             'title' => $this->reminderTitle,
             'body' => $this->reminderBody,
             'remind_at' => $this->reminderAt,
-            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+            'mood' => Mood::tryFrom($user->activeTheme()) ?? Mood::Summer,
             'reminder_type' => ReminderType::tryFrom($this->reminderType) ?? ReminderType::General,
         ];
 

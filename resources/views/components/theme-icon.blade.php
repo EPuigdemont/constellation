@@ -1,6 +1,6 @@
 @php
     $themes = \App\Enums\Theme::cases();
-    $theme = \App\Enums\Theme::tryFrom(auth()->user()?->theme ?? 'summer') ?? \App\Enums\Theme::Summer;
+    $theme = \App\Enums\Theme::tryFrom(auth()->user()?->activeTheme() ?? 'summer') ?? \App\Enums\Theme::Summer;
 @endphp
 
 <div x-data="{

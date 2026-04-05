@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Theme;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Tier;
+use App\Services\ThemeResolverService;
+use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,6 +26,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $avatar_path
  * @property string|null $avatar_disk
  * @property string $theme
+ * @property bool $automatic_themes
  * @property string $language
  * @property float $desktop_zoom
  * @property float $vision_board_zoom
@@ -46,6 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'theme',
+        'automatic_themes',
         'language',
         'avatar_path',
         'avatar_disk',
@@ -81,8 +86,19 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'desktop_zoom' => 'float',
             'vision_board_zoom' => 'float',
+            'automatic_themes' => 'boolean',
             'tier' => Tier::class,
         ];
+    }
+
+    public function resolvedTheme(?CarbonInterface $now = null): Theme
+    {
+        return app(ThemeResolverService::class)->resolveForUser($this, $now);
+    }
+
+    public function activeTheme(?CarbonInterface $now = null): string
+    {
+        return $this->resolvedTheme($now)->value;
     }
 
     /**

@@ -257,7 +257,7 @@ class Diary extends Component
             'user_id' => $user->id,
             'title' => $this->newTitle,
             'body' => $this->newBody,
-            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+            'mood' => Mood::tryFrom($user->activeTheme()) ?? Mood::Summer,
         ]);
 
         if (! empty($this->newTagIds)) {

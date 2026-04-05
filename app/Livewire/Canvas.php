@@ -195,7 +195,7 @@ class Canvas extends Component
         $postit = Postit::create([
             'user_id' => $user->id,
             'body' => '',
-            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+            'mood' => Mood::tryFrom($user->activeTheme()) ?? Mood::Summer,
         ]);
 
         $position = $service->assignDefaultPosition($user, $postit->id, 'postit', $centerX, $centerY);
@@ -205,7 +205,7 @@ class Canvas extends Component
             'type' => 'postit',
             'title' => '',
             'preview' => '',
-            'mood' => 'summer',
+            'mood' => $this->moodValue($postit->mood),
             'color_override' => null,
             'x' => $position->x,
             'y' => $position->y,
@@ -251,7 +251,7 @@ class Canvas extends Component
             'title' => '',
             'body' => '',
             'remind_at' => now()->addDay(),
-            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+            'mood' => Mood::tryFrom($user->activeTheme()) ?? Mood::Summer,
         ]);
 
         $position = $service->assignDefaultPosition($user, $reminder->id, 'reminder', $centerX, $centerY);
@@ -863,7 +863,7 @@ class Canvas extends Component
         $this->editingEntityId = '';
         $this->editorTitle = '';
         $this->editorBody = '';
-        $this->editorMood = Auth::user()->theme ?? 'summer';
+        $this->editorMood = Auth::user()->activeTheme();
         $this->editorColorOverride = null;
         $this->editorImage = null;
         $this->imageUpload = null;
