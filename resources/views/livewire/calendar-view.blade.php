@@ -180,7 +180,7 @@
                     <div x-data="{ moodOpen: false }" class="relative">
                         <flux:button size="xs" variant="subtle" icon="paint-brush" x-on:click="moodOpen = !moodOpen"/>
                         <div x-show="moodOpen" x-cloak x-on:click.outside="moodOpen = false"
-                             class="absolute right-0 top-full z-20 mt-1 rounded-lg border border-(--theme-border) p-2 shadow-lg"
+                             class="absolute right-0 bottom-full z-20 mb-1 rounded-lg border border-(--theme-border) p-2 shadow-lg"
                              style="background: var(--theme-bg);">
                             <div class="flex flex-wrap gap-1">
                                 <button type="button" wire:click="setDayMood('{{ $selectedDate }}', '')"
