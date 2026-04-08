@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\FriendshipStatus;
 use App\Models\EntityShare;
 use App\Models\Friendship;
 use App\Models\User;
@@ -19,10 +20,12 @@ class ShareEntityService
     public function getFriendsForUser(User $user): array
     {
         $sentFriendships = Friendship::where('user_id', $user->id)
+            ->where('status', FriendshipStatus::Accepted->value)
             ->pluck('friend_id')
             ->all();
 
         $receivedFriendships = Friendship::where('friend_id', $user->id)
+            ->where('status', FriendshipStatus::Accepted->value)
             ->pluck('user_id')
             ->all();
 

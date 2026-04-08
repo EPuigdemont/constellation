@@ -6,13 +6,15 @@ namespace App\Models;
 
 use App\Enums\Theme;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\FriendshipStatus;
 use App\Enums\Tier;
 use App\Services\ThemeResolverService;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -203,7 +205,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'user_id',
             'friend_id'
         )
-            ->wherePivot('status', 'accepted')
+            ->wherePivot('status', FriendshipStatus::Accepted->value)
             ->withTimestamps();
     }
 
@@ -219,18 +221,20 @@ class User extends Authenticatable implements MustVerifyEmail
             'friend_id',
             'user_id'
         )
-            ->wherePivot('status', 'accepted')
+            ->wherePivot('status', FriendshipStatus::Accepted->value)
             ->withTimestamps();
     }
 
     /**
      * Get all friends (both directions).
      */
-    /** @return BelongsToMany<User, $this> */
-    public function allFriends(): BelongsToMany
+    /** @return EloquentCollection<int, User> */
+    public function allFriends(): EloquentCollection
     {
-        return $this->friends()->union(
-            $this->acceptedByFriends()->getQuery()
-        );
+        return $this->friends()
+            ->get()
+            ->merge($this->acceptedByFriends()->get())
+            ->unique('id')
+            ->values();
     }
 }

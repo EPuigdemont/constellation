@@ -56,6 +56,10 @@ document.addEventListener('alpine:init', () => {
             });
         },
 
+        _normalizeEditorContent(value) {
+            return (value ?? '').toString();
+        },
+
         init() {
             // Delay initial creation until the modal is visible
             this.$nextTick(() => {
@@ -77,9 +81,13 @@ document.addEventListener('alpine:init', () => {
                     this.$nextTick(() => this._createEditor());
                     return;
                 }
+
+                const incomingContent = this._normalizeEditorContent(value);
+                const currentContent = this._normalizeEditorContent(this.editor.getHTML());
+
                 // Only update if content actually differs to avoid unnecessary transactions
-                if (value && value !== this.editor.getHTML()) {
-                    this.editor.commands.setContent(value, false);
+                if (incomingContent !== currentContent) {
+                    this.editor.commands.setContent(incomingContent, false);
                 }
             });
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\FriendshipStatus;
 use App\Models\Friendship;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
@@ -38,7 +39,7 @@ class FriendshipService
         Friendship::create([
             'user_id' => $from->id,
             'friend_id' => $to->id,
-            'status' => 'pending',
+            'status' => FriendshipStatus::Pending->value,
         ]);
 
         return true;
@@ -51,14 +52,14 @@ class FriendshipService
     {
         $friendship = Friendship::where('id', $friendshipId)
             ->where('friend_id', $user->id)
-            ->where('status', 'pending')
+            ->where('status', FriendshipStatus::Pending->value)
             ->first();
 
         if (!$friendship) {
             return false;
         }
 
-        $friendship->update(['status' => 'accepted']);
+        $friendship->update(['status' => FriendshipStatus::Accepted->value]);
 
         return true;
     }
@@ -73,7 +74,7 @@ class FriendshipService
                 $query->where('friend_id', $user->id)
                     ->orWhere('user_id', $user->id);
             })
-            ->where('status', 'pending')
+            ->where('status', FriendshipStatus::Pending->value)
             ->first();
 
         if (!$friendship) {
@@ -91,10 +92,15 @@ class FriendshipService
     public function removeFriend(User $user, string $friendId): bool
     {
         Friendship::where(function ($query) use ($user, $friendId) {
-            $query->where('user_id', $user->id)->where('friend_id', $friendId)
-                ->orWhere('user_id', $friendId)->where('friend_id', $user->id);
+            $query->where(function ($direction) use ($user, $friendId) {
+                $direction->where('user_id', $user->id)
+                    ->where('friend_id', $friendId);
+            })->orWhere(function ($direction) use ($user, $friendId) {
+                $direction->where('user_id', $friendId)
+                    ->where('friend_id', $user->id);
+            });
         })
-            ->where('status', 'accepted')
+            ->where('status', FriendshipStatus::Accepted->value)
             ->delete();
 
         return true;
@@ -106,10 +112,15 @@ class FriendshipService
     public function areFriends(User $user1, User $user2): bool
     {
         return Friendship::where(function ($query) use ($user1, $user2) {
-            $query->where('user_id', $user1->id)->where('friend_id', $user2->id)
-                ->orWhere('user_id', $user2->id)->where('friend_id', $user1->id);
+            $query->where(function ($direction) use ($user1, $user2) {
+                $direction->where('user_id', $user1->id)
+                    ->where('friend_id', $user2->id);
+            })->orWhere(function ($direction) use ($user1, $user2) {
+                $direction->where('user_id', $user2->id)
+                    ->where('friend_id', $user1->id);
+            });
         })
-            ->where('status', 'accepted')
+            ->where('status', FriendshipStatus::Accepted->value)
             ->exists();
     }
 
@@ -121,11 +132,11 @@ class FriendshipService
     public function getFriendsForUser(User $user): Collection
     {
         $sent = Friendship::where('user_id', $user->id)
-            ->where('status', 'accepted')
+            ->where('status', FriendshipStatus::Accepted->value)
             ->pluck('friend_id');
 
         $received = Friendship::where('friend_id', $user->id)
-            ->where('status', 'accepted')
+            ->where('status', FriendshipStatus::Accepted->value)
             ->pluck('user_id');
 
         $friendIds = $sent->merge($received)->unique();
@@ -141,7 +152,7 @@ class FriendshipService
     public function getPendingRequests(User $user): Collection
     {
         return $user->friendRequestsReceived()
-            ->where('status', 'pending')
+            ->where('status', FriendshipStatus::Pending->value)
             ->with('user')
             ->get();
     }
@@ -154,7 +165,7 @@ class FriendshipService
     public function getPendingOutgoing(User $user): Collection
     {
         return $user->friendships()
-            ->where('status', 'pending')
+            ->where('status', FriendshipStatus::Pending->value)
             ->with('friend')
             ->get();
     }
