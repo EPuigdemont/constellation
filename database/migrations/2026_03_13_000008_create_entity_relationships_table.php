@@ -22,10 +22,7 @@ return new class extends Migration
 
             $table->index(['entity_a_id', 'entity_a_type'], 'entity_rel_a_morph_index');
             $table->index(['entity_b_id', 'entity_b_type'], 'entity_rel_b_morph_index');
-            $table->unique(
-                ['entity_a_id', 'entity_a_type', 'entity_b_id', 'entity_b_type', 'relationship_type'],
-                'entity_rel_unique',
-            );
+            $table->unique(['e_a_id', 'e_a_type', 'e_b_id', 'e_b_type', 'r_type'], 'entity_rel_unique');
         });
     }
 
