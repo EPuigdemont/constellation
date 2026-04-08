@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Policies;
 
+use App\Models\EntityShare;
 use App\Models\Image;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,20 +22,27 @@ class ImagePolicyTest extends TestCase
         $this->assertTrue($user->can('view', $image));
     }
 
-    public function test_non_owner_cannot_view_private_image(): void
+    public function test_non_owner_cannot_view_unshared_image(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $image = Image::factory()->create(['user_id' => $owner->id, 'is_public' => false]);
+        $image = Image::factory()->create(['user_id' => $owner->id]);
 
         $this->assertFalse($other->can('view', $image));
     }
 
-    public function test_non_owner_can_view_public_image(): void
+    public function test_non_owner_can_view_shared_image(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $image = Image::factory()->create(['user_id' => $owner->id, 'is_public' => true]);
+        $image = Image::factory()->create(['user_id' => $owner->id]);
+
+        EntityShare::create([
+            'owner_id' => $owner->id,
+            'friend_id' => $other->id,
+            'entity_id' => $image->id,
+            'entity_type' => 'image',
+        ]);
 
         $this->assertTrue($other->can('view', $image));
     }

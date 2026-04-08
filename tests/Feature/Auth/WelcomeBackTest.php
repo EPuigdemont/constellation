@@ -30,6 +30,7 @@ class WelcomeBackTest extends TestCase
 
         $response->assertSee('Welcome to Constellation');
         $response->assertSee('Log in');
-        $response->assertDontSee('Don&#039;t have an account?');
+        $response->assertSee('Don\'t have an account yet?');
+        $response->assertSee('Register here');
     }
 }

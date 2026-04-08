@@ -8,8 +8,11 @@ use App\Enums\Mood;
 use App\Enums\ReminderType;
 use App\Models\ImportantDate;
 use App\Models\Reminder;
+use App\Services\LimitCheckerService;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -44,6 +47,8 @@ class Reminders extends Component
 
     public string $tab = 'reminders';
 
+    public string $limitError = '';
+
     public function mount(): void
     {
         $this->reminderAt = now()->addDay()->format('Y-m-d\TH:i');
@@ -57,7 +62,7 @@ class Reminders extends Component
             $date = ImportantDate::where('user_id', Auth::id())->findOrFail($id);
             $this->editingDateId = $date->id;
             $this->dateLabel = $date->label;
-            $this->dateValue = $date->date->format('Y-m-d');
+            $this->dateValue = Carbon::parse((string) $date->date)->format('Y-m-d');
             $this->dateRecurs = $date->recurs_annually;
         } else {
             $this->editingDateId = '';
@@ -102,7 +107,7 @@ class Reminders extends Component
     public function toggleDateComplete(string $id): void
     {
         $date = ImportantDate::where('user_id', Auth::id())->findOrFail($id);
-        $date->update(['is_done' => !$date->is_done]);
+        $date->update(['is_done' => ! $date->is_done]);
     }
 
     public function closeDateForm(): void
@@ -123,8 +128,8 @@ class Reminders extends Component
             $this->editingReminderId = $reminder->id;
             $this->reminderTitle = $reminder->title;
             $this->reminderBody = $reminder->body ?? '';
-            $this->reminderAt = $reminder->remind_at->format('Y-m-d\TH:i');
-            $this->reminderType = $reminder->reminder_type?->value ?? 'general';
+            $this->reminderAt = Carbon::parse((string) $reminder->remind_at)->format('Y-m-d\TH:i');
+            $this->reminderType = $this->reminderTypeValue($reminder->reminder_type);
         } else {
             $this->editingReminderId = '';
             $this->reminderTitle = '';
@@ -144,12 +149,27 @@ class Reminders extends Component
         ]);
 
         $user = Auth::user();
+
+        // Check limit before creating if not editing
+        if (! $this->editingReminderId) {
+            $limitChecker = app(LimitCheckerService::class);
+            if (! $limitChecker->canCreateEntity($user, 'reminder')) {
+                $remaining = $limitChecker->getRemainingCount($user, 'reminder');
+                $this->limitError = __('You have reached your reminder limit for today. Remaining: :remaining.', ['remaining' => $remaining]);
+                $this->dispatch('notify-error', message: $this->limitError);
+
+                return;
+            }
+        }
+
+        $this->limitError = '';
+
         $data = [
             'user_id' => $user->id,
             'title' => $this->reminderTitle,
             'body' => $this->reminderBody,
             'remind_at' => $this->reminderAt,
-            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+            'mood' => Mood::tryFrom($user->activeTheme()) ?? Mood::Summer,
             'reminder_type' => ReminderType::tryFrom($this->reminderType) ?? ReminderType::General,
         ];
 
@@ -158,6 +178,7 @@ class Reminders extends Component
                 ->findOrFail($this->editingReminderId)
                 ->update($data);
         } else {
+            Gate::authorize('create', Reminder::class);
             Reminder::create($data);
         }
 
@@ -201,5 +222,10 @@ class Reminders extends Component
             'importantDates' => $importantDates,
             'reminders' => $reminders,
         ]);
+    }
+
+    private function reminderTypeValue(mixed $type): string
+    {
+        return $type instanceof ReminderType ? $type->value : (is_string($type) && $type !== '' ? $type : 'general');
     }
 }

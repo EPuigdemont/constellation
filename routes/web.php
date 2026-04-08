@@ -4,14 +4,15 @@ use App\Http\Controllers\AvatarServeController;
 use App\Http\Controllers\DataExportController;
 use App\Http\Controllers\ImageServeController;
 use App\Http\Controllers\ThemeController;
+use App\Livewire\Actions\ManageFriends;
 use App\Livewire\Calendar;
 use App\Livewire\Canvas;
 use App\Livewire\Constellation;
-use App\Livewire\Reminders;
 use App\Livewire\Diary;
 use App\Livewire\ImagesGallery;
 use App\Livewire\LoadingScreen;
 use App\Livewire\Notifications;
+use App\Livewire\Reminders;
 use App\Livewire\VisionBoard;
 use App\Livewire\Welcome;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('constellation', Constellation::class)->name('constellation');
     Route::get('reminders', Reminders::class)->name('reminders');
     Route::get('notifications', Notifications::class)->name('notifications');
+    Route::get('friends', ManageFriends::class)->name('friends');
 });
 
 Route::middleware(['auth'])->group(function () {

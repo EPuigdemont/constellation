@@ -1,15 +1,13 @@
 @php
     $themes = \App\Enums\Theme::cases();
-    $currentTheme = auth()->user()?->theme ?? 'summer';
+    $currentTheme = auth()->user()?->activeTheme() ?? 'summer';
     $currentThemeEnum = \App\Enums\Theme::tryFrom($currentTheme) ?? \App\Enums\Theme::Summer;
 @endphp
 
 <div x-data="{
         current: '{{ $currentTheme }}',
-        dropdownOpen: false,
         async setTheme(value) {
             this.current = value;
-            this.dropdownOpen = false;
             await fetch('{{ route('theme.update') }}', {
                 method: 'POST',
                 headers: {
@@ -34,36 +32,34 @@
         @endforeach
     </div>
 
-    {{-- Collapsed view: single dot with dropdown --}}
-    <div class="not-in-data-flux-sidebar-collapsed-desktop:hidden relative flex justify-center py-1.5">
+    {{-- Collapsed view: single dot with context menu --}}
+    <flux:dropdown position="right" align="start" class="not-in-data-flux-sidebar-collapsed-desktop:hidden flex justify-center py-1.5">
         <button type="button"
-                x-on:click="dropdownOpen = !dropdownOpen"
                 class="flex h-5 w-5 items-center justify-center rounded-full transition-all hover:scale-110"
-                style="background-color: {{ $currentThemeEnum->swatchColor() }};"
+                :style="'background-color: ' + ({
+                    spring: '{{ \App\Enums\Theme::Spring->swatchColor() }}',
+                    summer: '{{ \App\Enums\Theme::Summer->swatchColor() }}',
+                    autumn: '{{ \App\Enums\Theme::Autumn->swatchColor() }}',
+                    winter: '{{ \App\Enums\Theme::Winter->swatchColor() }}',
+                    love: '{{ \App\Enums\Theme::Love->swatchColor() }}',
+                    breeze: '{{ \App\Enums\Theme::Breeze->swatchColor() }}',
+                    night: '{{ \App\Enums\Theme::Night->swatchColor() }}',
+                    cozy: '{{ \App\Enums\Theme::Cozy->swatchColor() }}'
+                }[current] || '{{ $currentThemeEnum->swatchColor() }}')"
                 title="{{ __('Change theme') }}">
         </button>
 
-        <div x-show="dropdownOpen"
-             x-cloak
-             x-on:click.outside="dropdownOpen = false"
-             x-transition:enter="transition ease-out duration-150"
-             x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100"
-             x-transition:leave="transition ease-in duration-100"
-             x-transition:leave-start="opacity-100 scale-100"
-             x-transition:leave-end="opacity-0 scale-95"
-             class="absolute left-full bottom-0 z-50 ml-2 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-            <div class="flex flex-col gap-1.5">
-                @foreach($themes as $theme)
-                    <button type="button"
-                            x-on:click="setTheme('{{ $theme->value }}')"
-                            :class="current === '{{ $theme->value }}' ? 'ring-2 ring-zinc-400 dark:ring-zinc-500' : 'hover:scale-110'"
-                            class="h-4 w-4 rounded-full transition-all"
-                            style="background-color: {{ $theme->swatchColor() }};"
-                            title="{{ $theme->label() }}">
-                    </button>
-                @endforeach
-            </div>
-        </div>
-    </div>
+        <flux:menu class="min-w-40">
+            @foreach($themes as $theme)
+                <flux:menu.item as="button"
+                                type="button"
+                                x-on:click="setTheme('{{ $theme->value }}')"
+                                class="flex items-center gap-2">
+                    <span class="inline-flex h-3 w-3 rounded-full"
+                          style="background-color: {{ $theme->swatchColor() }};"></span>
+                    <span>{{ $theme->label() }}</span>
+                </flux:menu.item>
+            @endforeach
+        </flux:menu>
+    </flux:dropdown>
 </div>

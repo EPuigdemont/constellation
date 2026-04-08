@@ -1,7 +1,13 @@
 <div class="flex h-screen flex-col overflow-hidden">
+    @if ($limitError !== '')
+        <div class="border-b border-[var(--theme-border)] px-3 py-2 text-sm text-[var(--theme-text)]"
+             style="background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-bg));">
+            {{ $limitError }}
+        </div>
+    @endif
     {{-- Toolbar --}}
     <div class="flex items-center gap-3 border-b border-[var(--theme-border,theme(colors.zinc.200))] bg-[var(--theme-header-bg,theme(colors.zinc.50))] px-2 py-1.5 dark:border-[var(--theme-border,theme(colors.zinc.700))] dark:bg-[var(--theme-header-bg,theme(colors.zinc.900))]">
-        <flux:heading size="lg">{{ __('Diary') }}</flux:heading>
+        <flux:heading size="lg" class="max-lg:hidden">{{ __('Diary') }}</flux:heading>
 
         <flux:spacer />
 
@@ -14,19 +20,22 @@
             @if($search)
                 <button wire:click="$set('search', '')"
                         class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300">
-                    <svg class="size-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <x-icons.close class="size-3.5" />
                 </button>
             @endif
         </div>
 
-        <flux:button size="sm" icon="plus" wire:click="openNewEntry">
-            {{ __('New Entry') }}
+        <flux:button size="sm" icon="plus" wire:click="openNewEntry" title="{{ __('New Entry') }}" aria-label="{{ __('New Entry') }}">
+            <x-icons.diary class="hidden size-4 max-[420px]:inline-block" />
+            <span class="max-[420px]:hidden">{{ __('New Entry') }}</span>
         </flux:button>
 
         <flux:button size="sm"
                      x-on:click="$wire.toggleDisplayMode()"
-                     :icon="$displayMode === 'scroll' ? 'book-open' : 'bars-3'">
-            {{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}
+                     :icon="$displayMode === 'scroll' ? 'book-open' : 'bars-3'"
+                     title="{{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}"
+                     aria-label="{{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}">
+            <span class="max-[420px]:hidden">{{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}</span>
         </flux:button>
     </div>
 
@@ -44,7 +53,7 @@
                     <p class="mt-0.5 text-xs text-[var(--theme-text-muted)]">{{ $upliftPreview }}</p>
                 </div>
                 <button wire:click="dismissUplift" class="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]">
-                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    <x-icons.close />
                 </button>
             </div>
         </div>
@@ -84,7 +93,7 @@
                         @forelse($filteredNewTags as $tag)
                             <button type="button" wire:click="toggleNewTag('{{ $tag['id'] }}')" class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
                                 @if(in_array($tag['id'], $newTagIds, true))
-                                    <svg class="size-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                                    <x-icons.check class="size-4 text-green-500" />
                                 @else
                                     <span class="size-4"></span>
                                 @endif
@@ -127,7 +136,7 @@
                 <button wire:click="previousPage"
                         x-on:click="$dispatch('page-turn', { direction: 'left' })"
                         class="diary-page-arrow diary-page-arrow-left group absolute left-0 top-1/2 z-10 flex h-16 w-8 -translate-y-1/2 items-center justify-center rounded-r-lg bg-black/5 opacity-0 transition-all hover:w-10 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10">
-                    <svg class="size-5 text-zinc-500 transition-transform group-hover:-translate-x-0.5 dark:text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                    <x-icons.chevron-right class="size-5 rotate-180 text-zinc-500 transition-transform group-hover:-translate-x-0.5 dark:text-zinc-400" />
                 </button>
             @endif
 
@@ -136,7 +145,7 @@
                 <button wire:click="nextPage"
                         x-on:click="$dispatch('page-turn', { direction: 'right' })"
                         class="diary-page-arrow diary-page-arrow-right group absolute right-0 top-1/2 z-10 flex h-16 w-8 -translate-y-1/2 items-center justify-center rounded-l-lg bg-black/5 opacity-0 transition-all hover:w-10 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10">
-                    <svg class="size-5 text-zinc-500 transition-transform group-hover:translate-x-0.5 dark:text-zinc-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                    <x-icons.chevron-right class="size-5 text-zinc-500 transition-transform group-hover:translate-x-0.5 dark:text-zinc-400" />
                 </button>
             @endif
 
@@ -147,7 +156,7 @@
                     <div class="diary-entry-themed {{ $moodClass }} {{ $editingEntryId === $entry->id ? 'is-editing' : '' }} flex flex-1 flex-col rounded-lg border p-6 shadow-md"
                          style="border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
-                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
+                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->activeTheme() ?? 'summer' }}"></canvas>
                         @if($editingEntryId === $entry->id)
                             <div class="relative z-[3] flex flex-1 flex-col gap-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
@@ -170,7 +179,7 @@
                                 </span>
                                 <div class="flex items-center gap-2">
                                     @if($entry->mood)
-                                        <flux:select size="sm" class="!w-24 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
+                                        <flux:select size="sm" class="!w-28 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
                                             @foreach(\App\Enums\Mood::cases() as $mood)
                                                 <option value="{{ $mood->value }}" @selected($entry->mood === $mood)>{{ ucfirst($mood->value) }}</option>
                                             @endforeach
@@ -230,7 +239,7 @@
                     <div class="diary-entry-themed {{ $moodClass }} {{ $editingEntryId === $entry->id ? 'is-editing' : '' }} rounded-lg border p-6 shadow-md"
                          style="border-color: var(--card-border, var(--theme-border, theme(colors.zinc.200)));"
                          @if($editingEntryId !== $entry->id) x-on:dblclick="$wire.startEditing('{{ $entry->id }}')" @endif>
-                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
+                        <canvas class="diary-entry-glitter" data-glitter-theme="{{ auth()->user()?->activeTheme() ?? 'summer' }}"></canvas>
                         @if($editingEntryId === $entry->id)
                             <div class="relative z-[3] space-y-3">
                                 <flux:input wire:model="editTitle" placeholder="{{ __('Title...') }}" />
@@ -253,7 +262,7 @@
                                 </span>
                                 <div class="flex items-center gap-2">
                                     @if($entry->mood)
-                                        <flux:select size="sm" class="!w-24 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
+                                        <flux:select size="sm" class="!w-28 !text-xs" wire:change="changeMood('{{ $entry->id }}', $event.target.value)">
                                             @foreach(\App\Enums\Mood::cases() as $mood)
                                                 <option value="{{ $mood->value }}" @selected($entry->mood === $mood)>{{ ucfirst($mood->value) }}</option>
                                             @endforeach

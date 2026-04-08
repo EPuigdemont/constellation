@@ -19,6 +19,9 @@ class AvatarService
 
         $disk = 'private';
         $path = $file->store("avatars/{$user->id}", $disk);
+        if ($path === false) {
+            throw new \RuntimeException('Failed to store avatar file.');
+        }
 
         $user->update([
             'avatar_path' => $path,

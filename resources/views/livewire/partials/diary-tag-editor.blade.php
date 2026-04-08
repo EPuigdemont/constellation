@@ -29,7 +29,7 @@
         @forelse($filteredTags as $tag)
             <button type="button" wire:click="{{ $toggleMethod }}('{{ $tag['id'] }}')" class="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
                 @if(in_array($tag['id'], $tagIds, true))
-                    <svg class="size-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+                    <x-icons.check class="size-4 text-green-500" />
                 @else
                     <span class="size-4"></span>
                 @endif

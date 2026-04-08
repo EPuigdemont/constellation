@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\Tag;
+use App\Services\LimitCheckerService;
 use App\Services\ReminderService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,8 @@ class Diary extends Component
     public array $newTagIds = [];
 
     public string $newTagSearch = '';
+
+    public string $limitError = '';
 
     public function mount(): void
     {
@@ -236,12 +239,25 @@ class Diary extends Component
     {
         $user = Auth::user();
 
+        // Check limit before creating
+        $limitChecker = app(LimitCheckerService::class);
+        if (! $limitChecker->canCreateEntity($user, 'diary_entry')) {
+            $remaining = $limitChecker->getRemainingCount($user, 'diary_entry');
+            $this->limitError = __('You have reached your diary entry limit for today. Remaining: :remaining.', ['remaining' => $remaining]);
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return;
+        }
+
+        $this->limitError = '';
+
+        Gate::authorize('create', DiaryEntry::class);
+
         $entry = DiaryEntry::create([
             'user_id' => $user->id,
             'title' => $this->newTitle,
             'body' => $this->newBody,
-            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
-            'is_public' => false,
+            'mood' => Mood::tryFrom($user->activeTheme()) ?? Mood::Summer,
         ]);
 
         if (! empty($this->newTagIds)) {
@@ -264,7 +280,7 @@ class Diary extends Component
             return;
         }
 
-        $service = new ReminderService();
+        $service = new ReminderService;
         $uplift = $service->findUpliftingEntry(Auth::user());
 
         if ($uplift && $uplift->id !== $entry->id) {
@@ -290,8 +306,8 @@ class Diary extends Component
 
         if ($this->search !== '') {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('body', 'like', '%' . $this->search . '%');
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('body', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -326,8 +342,8 @@ class Diary extends Component
 
         if ($this->search !== '') {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('body', 'like', '%' . $this->search . '%');
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('body', 'like', '%'.$this->search.'%');
             });
         }
 

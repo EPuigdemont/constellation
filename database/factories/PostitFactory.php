@@ -21,12 +21,6 @@ class PostitFactory extends Factory
             'body' => fake()->sentence(),
             'mood' => fake()->randomElement(Mood::cases()),
             'color_override' => null,
-            'is_public' => false,
         ];
-    }
-
-    public function public(): static
-    {
-        return $this->state(['is_public' => true]);
     }
 }

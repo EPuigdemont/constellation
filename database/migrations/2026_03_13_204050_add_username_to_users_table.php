@@ -23,7 +23,7 @@ return new class extends Migration
             $username = $base;
             $counter = 1;
             while (User::where('username', $username)->where('id', '!=', $user->id)->exists()) {
-                $username = $base . '-' . $counter;
+                $username = $base.'-'.$counter;
                 $counter++;
             }
             $user->update(['username' => $username]);

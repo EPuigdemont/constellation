@@ -1,147 +1,339 @@
 # SCHEMA.md — Constellation Database Design
 
+Current schema state based on migrations in `database/migrations`.
+
 ## Entity Strategy
 
-Each entity type has its own table (diary_entries, notes, postits, images). They share behavior through:
-- A common `entity_relationships` pivot for linking any two entities
-- A common `entity_positions` table for desktop positioning
-- Polymorphic tagging via `taggables`
+- Core content entities live in dedicated tables: `diary_entries`, `notes`, `postits`, `images`, `important_dates`, `reminders`
+- Cross-entity linking uses polymorphic pivots/relations:
+  - `entity_relationships` (entity-to-entity links)
+  - `entity_positions` (per-user placement/state on canvas contexts)
+  - `taggables` (polymorphic tags)
+- Most entity tables use UUID primary keys and soft deletes
 
-UUIDs are used as primary keys on all entity tables.
+## Core Tables
 
----
+### `users`
 
-## Tables
-
-### users
 | Column | Type | Notes |
-|--------|------|-------|
-| id | bigint PK | |
-| name | string | |
-| email | string unique | |
-| password | string hashed | |
-| theme | string default `summer` | Active global theme |
-| desktop_zoom | float default `1.0` | Canvas zoom level |
-| remember_token | string nullable | |
-| timestamps | | |
+|---|---|---|
+| `id` | bigint PK | Laravel default user key |
+| `name` | string | Display name |
+| `username` | string unique | Primary login identifier |
+| `email` | string unique | Used for verification/reset flows |
+| `email_verified_at` | timestamp nullable | Email verification status |
+| `first_login_at` | timestamp nullable | Used by welcome/first-login flow |
+| `password` | string | Hashed password |
+| `two_factor_secret` | text nullable | Fortify 2FA secret |
+| `two_factor_recovery_codes` | text nullable | Fortify recovery codes |
+| `two_factor_confirmed_at` | timestamp nullable | 2FA confirmation timestamp |
+| `theme` | string default `summer` | Active UI theme; see `Theme` enum |
+| `automatic_themes` | boolean default `true` | When `true`, theme is resolved from date-based seasonal rules instead of `theme` |
+| `language` | string(5) default `en` | Preferred locale (`en`, `es`) |
+| `avatar_path` | string nullable | Avatar storage path |
+| `avatar_disk` | string nullable default `private` | Avatar storage disk |
+| `desktop_zoom` | float default `1.0` | Canvas zoom level |
+| `vision_board_zoom` | float default `1.0` | Vision board zoom level |
+| `diary_display_mode` | string default `paginated` | Diary mode preference (`paginated`, `scroll`) |
+| `tier` | string default `basic` | Account tier; see `Tier` enum (`basic`, `premium`, `vip`) |
+| `remember_token` | string nullable | Auth remember token |
+| `created_at`, `updated_at` | timestamps | |
 
-### diary_entries
+### `diary_entries`
+
 | Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| user_id | bigint FK users | Owner |
-| title | string nullable | |
-| body | longtext | Tiptap JSON or HTML |
-| mood | string default `plain` | Mood preset name |
-| color_override | string nullable | Hex color override |
-| is_public | boolean default false | Visible to other user |
-| deleted_at | timestamp nullable | Soft delete |
-| timestamps | | |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | foreignId FK `users.id` | Owner |
+| `title` | string | Required |
+| `body` | longText | Rich text content |
+| `mood` | string nullable | `Mood` enum value |
+| `color_override` | string nullable | Custom theme color |
+| `is_public` | boolean default `false` | Visibility toggle |
+| `created_at`, `updated_at` | timestamps | |
+| `deleted_at` | softDeletes | |
 
-### notes
-Same structure as diary_entries.
+### `notes`
 
-### postits
 | Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| user_id | bigint FK users | |
-| body | text | Plain or minimal rich text |
-| mood | string default `plain` | |
-| color_override | string nullable | |
-| is_public | boolean default false | |
-| deleted_at | timestamp nullable | |
-| timestamps | | |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | foreignId FK `users.id` | Owner |
+| `title` | string nullable | Optional title |
+| `body` | longText | Rich text content |
+| `mood` | string nullable | `Mood` enum value |
+| `color_override` | string nullable | Custom theme color |
+| `is_public` | boolean default `false` | Visibility toggle |
+| `created_at`, `updated_at` | timestamps | |
+| `deleted_at` | softDeletes | |
 
-### images
+### `postits`
+
 | Column | Type | Notes |
-|--------|------|-------|
-| id | uuid PK | |
-| user_id | bigint FK users | |
-| path | string | Storage path on private disk |
-| disk | string default `private` | |
-| alt | string nullable | |
-| is_public | boolean default false | |
-| deleted_at | timestamp nullable | |
-| timestamps | | |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | foreignId FK `users.id` | Owner |
+| `body` | text | Post-it content |
+| `mood` | string nullable | `Mood` enum value |
+| `color_override` | string nullable | Custom theme color |
+| `is_public` | boolean default `false` | Visibility toggle |
+| `created_at`, `updated_at` | timestamps | |
+| `deleted_at` | softDeletes | |
 
-### tags
+### `images`
+
 | Column | Type | Notes |
-|--------|------|-------|
-| id | bigint PK | |
-| name | string | |
-| user_id | bigint nullable FK users | null = system tag |
-| color | string nullable | Hex color for tag chip |
-| timestamps | | |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | foreignId FK `users.id` | Owner |
+| `path` | string | Stored path on disk |
+| `disk` | string default `private` | Filesystem disk |
+| `alt` | string nullable | Accessibility text |
+| `title` | string nullable | UI title (shown as header on vision board cards) |
+| `mood` | string nullable | `Mood` enum value |
+| `color_override` | string nullable | Custom theme color |
+| `is_public` | boolean default `false` | Visibility toggle |
+| `created_at`, `updated_at` | timestamps | |
+| `deleted_at` | softDeletes | |
 
-### taggables
+### `important_dates`
+
 | Column | Type | Notes |
-|--------|------|-------|
-| tag_id | bigint FK tags | |
-| taggable_id | uuid | Polymorphic entity ID |
-| taggable_type | string | Polymorphic entity class |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | foreignId FK `users.id` | Owner |
+| `label` | string | Human-readable date label |
+| `date` | date | Date value |
+| `recurs_annually` | boolean default `false` | Repeat yearly |
+| `is_done` | boolean default `false` | Acknowledged/completed flag |
+| `created_at`, `updated_at` | timestamps | |
+| `deleted_at` | softDeletes | |
 
-### entity_relationships
+### `reminders`
+
 | Column | Type | Notes |
-|--------|------|-------|
-| id | bigint PK | |
-| entity_a_id | uuid | |
-| entity_a_type | string | Morph class |
-| entity_b_id | uuid | |
-| entity_b_type | string | Morph class |
-| relationship_type | enum | `parent_child`, `sibling` |
-| direction | string nullable | `a_is_parent` or `b_is_parent` — only for parent_child |
-| timestamps | | |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | foreignId FK `users.id` | Owner |
+| `title` | string | Reminder title |
+| `body` | text nullable | Optional details |
+| `remind_at` | dateTime | Due date/time |
+| `mood` | string nullable | `Mood` enum value |
+| `reminder_type` | string(30) default `general` | `ReminderType` enum value (`general`, `menstrual_cycle`, `ovulation`) |
+| `is_completed` | boolean default `false` | Completion state |
+| `created_at`, `updated_at` | timestamps | |
+| `deleted_at` | softDeletes | |
 
-**Notes:**
-- `sibling` relationships: direction is null, order of a/b is arbitrary
-- `parent_child` relationships: direction clarifies which is parent
-- A post-it (entity_a) pinned to a diary entry (entity_b) with `direction: a_is_parent` means the diary entry is the parent — adjust convention as needed during build
+Indexes: `index(user_id, remind_at)`
 
-### entity_positions
+## Support Tables
+
+### `tags`
+
 | Column | Type | Notes |
-|--------|------|-------|
-| id | bigint PK | |
-| user_id | bigint FK users | Position is per-user |
-| entity_id | uuid | |
-| entity_type | string | Morph class |
-| x | float | Pixels from canvas origin |
-| y | float | Pixels from canvas origin |
-| z_index | integer default 0 | Stack order |
-| timestamps | | |
+|---|---|---|
+| `id` | uuid PK | |
+| `name` | string | Tag label |
+| `user_id` | foreignId nullable FK `users.id` | Null for system tags |
+| `color` | string nullable | Optional tag color |
+| `created_at`, `updated_at` | timestamps | |
 
-Unique constraint: `(user_id, entity_id, entity_type)`
+Unique: `unique(name, user_id)`
 
-### important_dates
+### `taggables`
+
 | Column | Type | Notes |
-|--------|------|-------|
-| id | bigint PK | |
-| user_id | bigint FK users | |
-| label | string | e.g. "Our Anniversary" |
-| date | date | |
-| recurs_annually | boolean default true | |
-| timestamps | | |
+|---|---|---|
+| `tag_id` | foreignUuid FK `tags.id` | |
+| `taggable_id` | uuid | Tagged entity ID |
+| `taggable_type` | string | Morph alias |
 
----
+Primary key: `primary(tag_id, taggable_id, taggable_type)`  
+Index: `index(taggable_id, taggable_type)`
 
-## Morph Map
+### `entity_relationships`
 
-Register a morph map in `AppServiceProvider` to avoid storing full class names:
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `entity_a_id` | uuid | First entity ID |
+| `entity_a_type` | string | First entity morph alias |
+| `entity_b_id` | uuid | Second entity ID |
+| `entity_b_type` | string | Second entity morph alias |
+| `relationship_type` | string | `RelationshipType` enum value (`parent_child`, `sibling`) |
+| `direction` | string nullable | `RelationshipDirection` enum value (`a_to_b`, `b_to_a`), only meaningful for `parent_child` |
+| `created_at`, `updated_at` | timestamps | |
+
+Indexes:
+
+- `index(entity_a_id, entity_a_type)`
+- `index(entity_b_id, entity_b_type)`
+- `unique(entity_a_id, entity_a_type, entity_b_id, entity_b_type, relationship_type)`
+
+### `entity_positions`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | foreignId FK `users.id` | Per-user position state |
+| `entity_id` | uuid | Entity ID |
+| `entity_type` | string | Entity morph alias |
+| `context` | string default `desktop` | View context (`desktop`, `vision_board`) |
+| `x` | float | X coordinate |
+| `y` | float | Y coordinate |
+| `z_index` | integer default `0` | Layering |
+| `width` | float nullable | Card width override |
+| `height` | float nullable | Card height override |
+| `is_hidden` | boolean default `false` | Visibility in context |
+| `created_at`, `updated_at` | timestamps | |
+
+Unique: `unique(user_id, entity_id, entity_type, context)`
+
+### `calendar_day_moods`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | foreignId FK `users.id` | Owner |
+| `date` | date | Calendar day (stored as `Y-m-d`) |
+| `mood` | string(30) | `Mood` enum value applied to this day |
+| `created_at`, `updated_at` | timestamps | |
+
+Unique: `unique(user_id, date)`
+
+### `friendships`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | uuid PK | |
+| `user_id` | uuid indexed FK `users.id` | Requesting user |
+| `friend_id` | uuid indexed FK `users.id` | Target user |
+| `status` | enum(`pending`, `accepted`, `blocked`) default `pending` | `FriendshipStatus` enum value |
+| `created_at`, `updated_at` | timestamps | |
+
+Unique: `unique(user_id, friend_id)`
+
+### `entity_shares`
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint PK | |
+| `owner_id` | unsignedBigInteger FK `users.id` | Entity owner |
+| `friend_id` | unsignedBigInteger FK `users.id` | Shared-with user |
+| `entity_id` | string | Shared entity identifier |
+| `entity_type` | string | Shared entity morph/type |
+| `created_at`, `updated_at` | timestamps | |
+
+Constraints:
+
+- `unique(owner_id, friend_id, entity_id, entity_type)`
+- `index(entity_id, entity_type)`
+
+## Framework/Auth Tables
+
+- `password_reset_tokens`
+- `sessions`
+- `cache`, `cache_locks`
+- `jobs`, `job_batches`, `failed_jobs`
+
+## Morph Map (Enforced)
+
+From `App\Providers\AppServiceProvider`:
 
 ```php
-Relation::morphMap([
-    'diary_entry' => \App\Models\DiaryEntry::class,
-    'note'        => \App\Models\Note::class,
-    'postit'      => \App\Models\Postit::class,
-    'image'       => \App\Models\Image::class,
+Relation::enforceMorphMap([
+    'diary_entry' => App\Models\DiaryEntry::class,
+    'note' => App\Models\Note::class,
+    'postit' => App\Models\Postit::class,
+    'image' => App\Models\Image::class,
+    'tag' => App\Models\Tag::class,
+    'important_date' => App\Models\ImportantDate::class,
+    'reminder' => App\Models\Reminder::class,
 ]);
 ```
 
----
+## Enums
 
-## Indexes to Add
+All enums live under `App\Enums\` and are backed string enums.
 
-- `entity_relationships`: index on `(entity_a_id, entity_a_type)` and `(entity_b_id, entity_b_type)`
-- `entity_positions`: unique on `(user_id, entity_id, entity_type)`
-- `taggables`: index on `(taggable_id, taggable_type)`
-- `diary_entries`, `notes`, `postits`, `images`: index on `(user_id, deleted_at)`
+### `Mood`
+
+Used on `diary_entries.mood`, `notes.mood`, `postits.mood`, `images.mood`, `reminders.mood`, and `calendar_day_moods.mood`.
+
+| Case | Value | Notes |
+|---|---|---|
+| `Spring` | `spring` | |
+| `Summer` | `summer` | |
+| `Autumn` | `autumn` | |
+| `Winter` | `winter` | |
+| `Love` | `love` | |
+| `Breeze` | `breeze` | |
+| `Night` | `night` | |
+| `Cozy` | `cozy` | |
+| `Plain` | `plain` | Neutral/unstyled |
+| `Custom` | `custom` | Uses `color_override` instead of a preset |
+
+### `Theme`
+
+Used on `users.theme`. Drives the active UI theme class on `<body>`.
+
+| Case | Value |
+|---|---|
+| `Spring` | `spring` |
+| `Summer` | `summer` |
+| `Autumn` | `autumn` |
+| `Winter` | `winter` |
+| `Love` | `love` |
+| `Breeze` | `breeze` |
+| `Night` | `night` |
+| `Cozy` | `cozy` |
+
+When `users.automatic_themes` is `true`, the active theme is resolved at runtime by `ThemeResolverService` based on the current date; `users.theme` is used only when automatic themes are disabled.
+
+### `Tier`
+
+Used on `users.tier`. Controls entity creation limits enforced by `LimitCheckerService`.
+
+| Case | Value |
+|---|---|
+| `Basic` | `basic` |
+| `Premium` | `premium` |
+| `VIP` | `vip` |
+
+### `ReminderType`
+
+Used on `reminders.reminder_type`.
+
+| Case | Value |
+|---|---|
+| `General` | `general` |
+| `MenstrualCycle` | `menstrual_cycle` |
+| `Ovulation` | `ovulation` |
+
+### `FriendshipStatus`
+
+Used on `friendships.status`.
+
+| Case | Value |
+|---|---|
+| `Pending` | `pending` |
+| `Accepted` | `accepted` |
+| `Blocked` | `blocked` |
+
+### `RelationshipType`
+
+Used on `entity_relationships.relationship_type`.
+
+| Case | Value |
+|---|---|
+| `ParentChild` | `parent_child` |
+| `Sibling` | `sibling` |
+
+### `RelationshipDirection`
+
+Used on `entity_relationships.direction`. Only meaningful when `relationship_type` is `parent_child`.
+
+| Case | Value | Meaning |
+|---|---|---|
+| `AToB` | `a_to_b` | `entity_a` is the parent of `entity_b` |
+| `BToA` | `b_to_a` | `entity_b` is the parent of `entity_a` |

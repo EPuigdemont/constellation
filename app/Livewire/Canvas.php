@@ -6,18 +6,29 @@ namespace App\Livewire;
 
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
+use App\Models\EntityPosition;
+use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\Tag;
+use App\Models\User;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
+use App\Services\LimitCheckerService;
+use App\Services\ShareEntityService;
+use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
@@ -35,6 +46,20 @@ class Canvas extends Component
 
     public bool $showEditorModal = false;
 
+    public bool $showReadonlyModal = false;
+
+    public string $readonlyEntityType = '';
+
+    public string $readonlyOwnerUsername = '';
+
+    public string $readonlyTitle = '';
+
+    public string $readonlyBody = '';
+
+    public string $readonlyImageUrl = '';
+
+    public string $readonlyUpdatedAt = '';
+
     public string $editorMode = 'diary';
 
     public string $editingEntityId = '';
@@ -47,10 +72,10 @@ class Canvas extends Component
 
     public ?string $editorColorOverride = null;
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $editorImage = null;
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $imageUpload = null;
 
     /** @var array<int, string> */
@@ -81,6 +106,14 @@ class Canvas extends Component
     /** @var array<int, array{id: string, name: string}> */
     public array $filterAvailableTags = [];
 
+    /** @var array<int, array{id: string, username: string, name: string}> */
+    public array $userFriends = [];
+
+    /** @var array<int, string> */
+    public array $currentEntitySharedFriends = [];
+
+    public string $limitError = '';
+
     public function mount(DesktopService $service): void
     {
         $user = Auth::user();
@@ -105,7 +138,7 @@ class Canvas extends Component
         $user = Auth::user();
         $newZ = $service->nextZIndex($user);
 
-        \App\Models\EntityPosition::query()
+        EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('entity_id', $entityId)
             ->where('entity_type', $entityType)
@@ -152,11 +185,24 @@ class Canvas extends Component
     {
         $user = Auth::user();
 
+        // Check limit before creating
+        $limitChecker = app(LimitCheckerService::class);
+        if (! $limitChecker->canCreateEntity($user, 'postit')) {
+            $remaining = $limitChecker->getRemainingCount($user, 'postit');
+            $this->limitError = "You have reached your post-it limit for today. Remaining: {$remaining}.";
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return;
+        }
+
+        $this->limitError = '';
+
+        Gate::authorize('create', Postit::class);
+
         $postit = Postit::create([
             'user_id' => $user->id,
             'body' => '',
-            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
-            'is_public' => false,
+            'mood' => Mood::tryFrom($user->activeTheme()) ?? Mood::Summer,
         ]);
 
         $position = $service->assignDefaultPosition($user, $postit->id, 'postit', $centerX, $centerY);
@@ -166,9 +212,8 @@ class Canvas extends Component
             'type' => 'postit',
             'title' => '',
             'preview' => '',
-            'mood' => 'summer',
+            'mood' => $this->moodValue($postit->mood),
             'color_override' => null,
-            'is_public' => false,
             'x' => $position->x,
             'y' => $position->y,
             'z_index' => $position->z_index,
@@ -194,12 +239,26 @@ class Canvas extends Component
     {
         $user = Auth::user();
 
+        // Check limit before creating
+        $limitChecker = app(LimitCheckerService::class);
+        if (! $limitChecker->canCreateEntity($user, 'reminder')) {
+            $remaining = $limitChecker->getRemainingCount($user, 'reminder');
+            $this->limitError = "You have reached your reminder limit for today. Remaining: {$remaining}.";
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return;
+        }
+
+        $this->limitError = '';
+
+        Gate::authorize('create', Reminder::class);
+
         $reminder = Reminder::create([
             'user_id' => $user->id,
             'title' => '',
             'body' => '',
             'remind_at' => now()->addDay(),
-            'mood' => Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer,
+            'mood' => Mood::tryFrom($user->activeTheme()) ?? Mood::Summer,
         ]);
 
         $position = $service->assignDefaultPosition($user, $reminder->id, 'reminder', $centerX, $centerY);
@@ -209,9 +268,8 @@ class Canvas extends Component
             'type' => 'reminder',
             'title' => '',
             'preview' => '',
-            'mood' => $reminder->mood?->value ?? 'summer',
+            'mood' => $this->moodValue($reminder->mood),
             'color_override' => null,
-            'is_public' => false,
             'x' => $position->x,
             'y' => $position->y,
             'z_index' => $position->z_index,
@@ -241,7 +299,7 @@ class Canvas extends Component
     public function uploadImage(EditorImageService $imageService, DesktopService $service): void
     {
         try {
-            \Illuminate\Support\Facades\Log::info('[Canvas] uploadImage called', [
+            Log::info('[Canvas] uploadImage called', [
                 'hasFile' => $this->imageUpload !== null,
                 'fileClass' => $this->imageUpload ? get_class($this->imageUpload) : null,
                 'fileName' => $this->imageUpload?->getClientOriginalName(),
@@ -250,17 +308,34 @@ class Canvas extends Component
             ]);
 
             if (! $this->imageUpload) {
-                \Illuminate\Support\Facades\Log::warning('[Canvas] uploadImage: imageUpload is null, aborting');
+                Log::warning('[Canvas] uploadImage: imageUpload is null, aborting');
 
                 return;
             }
 
             $user = Auth::user();
+
+            // Check limit before uploading
+            $limitChecker = app(LimitCheckerService::class);
+            if (! $limitChecker->canCreateEntity($user, 'image')) {
+                $remaining = $limitChecker->getRemainingCount($user, 'image');
+                $this->limitError = "You have reached your image upload limit. Remaining: {$remaining}.";
+                $this->imageUpload = null;
+                $this->dispatch('notify-error', message: $this->limitError);
+                Log::warning('[Canvas] uploadImage: limit reached');
+
+                return;
+            }
+
+            $this->limitError = '';
+
+            Gate::authorize('create', Image::class);
+
             $image = $imageService->store($user, $this->imageUpload);
-            \Illuminate\Support\Facades\Log::info('[Canvas] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
+            Log::info('[Canvas] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
 
             $position = $service->assignDefaultPosition($user, $image->id, 'image', $this->viewportCenterX, $this->viewportCenterY);
-            \Illuminate\Support\Facades\Log::info('[Canvas] Position assigned', ['positionId' => $position->id, 'x' => $position->x, 'y' => $position->y]);
+            Log::info('[Canvas] Position assigned', ['positionId' => $position->id, 'x' => $position->x, 'y' => $position->y]);
 
             $card = [
                 'id' => $image->id,
@@ -269,7 +344,6 @@ class Canvas extends Component
                 'preview' => $image->alt ?? '',
                 'mood' => null,
                 'color_override' => null,
-                'is_public' => false,
                 'x' => $position->x,
                 'y' => $position->y,
                 'z_index' => $position->z_index,
@@ -291,11 +365,11 @@ class Canvas extends Component
             $this->imageUpload = null;
 
             $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
-            \Illuminate\Support\Facades\Log::info('[Canvas] uploadImage completed successfully', ['cardId' => $card['id']]);
+            Log::info('[Canvas] uploadImage completed successfully', ['cardId' => $card['id']]);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('[Canvas] uploadImage failed', [
+            Log::error('[Canvas] uploadImage failed', [
                 'error' => $e->getMessage(),
-                'file' => $e->getFile() . ':' . $e->getLine(),
+                'file' => $e->getFile().':'.$e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
@@ -305,6 +379,7 @@ class Canvas extends Component
 
     public function saveEditor(DesktopService $service): void
     {
+        /** @var User $user */
         $user = Auth::user();
         $mood = Mood::tryFrom($this->editorMood) ?? Mood::Plain;
 
@@ -312,10 +387,17 @@ class Canvas extends Component
             $this->editorColorOverride = null;
         }
 
+        $saved = false;
+
         if ($this->editingEntityId !== '') {
             $this->updateExistingEntity($user, $mood);
+            $saved = true;
         } else {
-            $this->createNewEntity($user, $mood, $service);
+            $saved = $this->createNewEntity($user, $mood, $service);
+        }
+
+        if (! $saved) {
+            return;
         }
 
         $this->showEditorModal = false;
@@ -334,15 +416,44 @@ class Canvas extends Component
         $this->resetEditor();
         $this->editingEntityId = $entityId;
         $this->editorMode = $entityType === 'diary_entry' ? 'diary' : $entityType;
-        $this->editorTitle = $model->title ?? '';
-        $this->editorBody = $model->body ?? '';
-        $this->editorMood = $model->mood?->value ?? 'plain';
-        $this->editorColorOverride = $model->color_override ?? null;
-        $this->editorRemindAt = ($entityType === 'reminder' && $model->remind_at)
-            ? $model->remind_at->format('Y-m-d\TH:i')
+        $this->editorTitle = (string) (data_get($model, 'title') ?? '');
+        $this->editorBody = (string) (data_get($model, 'body') ?? '');
+        $this->editorMood = $this->moodValue(data_get($model, 'mood'), 'plain');
+        $this->editorColorOverride = data_get($model, 'color_override') ?? null;
+        $this->editorRemindAt = ($entityType === 'reminder' && data_get($model, 'remind_at'))
+            ? Carbon::parse((string) data_get($model, 'remind_at'))->format('Y-m-d\TH:i')
             : '';
         $this->loadTagsForEditor($model);
         $this->showEditorModal = true;
+    }
+
+    public function openReadonlyModal(string $entityId, string $entityType): void
+    {
+        $model = $this->resolveEntity($entityId, $entityType);
+        if (! $model) {
+            return;
+        }
+
+        Gate::authorize('view', $model);
+
+        $this->showReadonlyModal = true;
+        $this->readonlyEntityType = $entityType;
+        $this->readonlyOwnerUsername = $model->user->username ?? $model->user->name ?? '';
+        $this->readonlyTitle = $model->title ?? '';
+        $this->readonlyBody = $model->body ?? $model->alt ?? '';
+        $this->readonlyImageUrl = $entityType === 'image' ? route('images.serve', $model) : '';
+        $this->readonlyUpdatedAt = data_get($model, 'updated_at') ? Carbon::parse((string) data_get($model, 'updated_at'))->format('d/m/Y H:i') : '';
+    }
+
+    public function closeReadonlyModal(): void
+    {
+        $this->showReadonlyModal = false;
+        $this->readonlyEntityType = '';
+        $this->readonlyOwnerUsername = '';
+        $this->readonlyTitle = '';
+        $this->readonlyBody = '';
+        $this->readonlyImageUrl = '';
+        $this->readonlyUpdatedAt = '';
     }
 
     public function uploadEditorImage(EditorImageService $service): void
@@ -352,6 +463,21 @@ class Canvas extends Component
         }
 
         $user = Auth::user();
+
+        $limitChecker = app(LimitCheckerService::class);
+        if (! $limitChecker->canCreateEntity($user, 'image')) {
+            $remaining = $limitChecker->getRemainingCount($user, 'image');
+            $this->limitError = "You have reached your image upload limit. Remaining: {$remaining}.";
+            $this->editorImage = null;
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return;
+        }
+
+        $this->limitError = '';
+
+        Gate::authorize('create', Image::class);
+
         $image = $service->store($user, $this->editorImage);
         $url = route('images.serve', $image);
 
@@ -386,24 +512,24 @@ class Canvas extends Component
         }
 
         if ($card['type'] === 'reminder' && $this->editorRemindAt !== '') {
-            $data['remind_at'] = $this->editorRemindAt;
+            $data['remind_at'] = Carbon::parse($this->editorRemindAt);
         }
 
         $model->update($data);
 
-        if (method_exists($model, 'tags')) {
+        if ($model instanceof DiaryEntry || $model instanceof Note || $model instanceof Reminder) {
             $model->tags()->sync($this->editorTagIds);
         }
 
         $this->updateCardInList($this->editingEntityId, [
             'title' => $this->editorTitle,
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($this->editorBody), 120),
+            'preview' => Str::limit(strip_tags($this->editorBody), 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
         ]);
     }
 
-    public function loadTagsForEditor(?object $model = null): void
+    public function loadTagsForEditor(?Model $model = null): void
     {
         $user = Auth::user();
         $this->availableTags = Tag::forUser($user->id)
@@ -502,7 +628,7 @@ class Canvas extends Component
         $model->update(['body' => $body]);
 
         $this->updateCardInList($entityId, [
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($body), 120),
+            'preview' => Str::limit(strip_tags($body), 120),
         ]);
     }
 
@@ -563,6 +689,7 @@ class Canvas extends Component
 
         if (! $sourceModel || ! $targetModel) {
             $this->cancelLinking();
+
             return;
         }
 
@@ -595,6 +722,7 @@ class Canvas extends Component
             // Don't link entity to itself
             if ($this->linkingEntityId === $targetEntityId) {
                 $this->cancelLinking();
+
                 return;
             }
 
@@ -658,7 +786,7 @@ class Canvas extends Component
     {
         $user = Auth::user();
 
-        $position = \App\Models\EntityPosition::query()
+        $position = EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('entity_id', $entityId)
             ->where('entity_type', $entityType)
@@ -676,7 +804,22 @@ class Canvas extends Component
         $this->dispatch('card-visibility-changed', entityId: $entityId, isHidden: $position->is_hidden);
     }
 
-    public function togglePublic(string $entityId, string $entityType): void
+    public function loadFriendsForSharing(ShareEntityService $service): void
+    {
+        $user = Auth::user();
+        $this->userFriends = $service->getFriendsForUser($user);
+    }
+
+    public function loadCurrentShares(ShareEntityService $service, string $entityId, string $entityType): void
+    {
+        $user = Auth::user();
+        $this->currentEntitySharedFriends = array_map(
+            'strval',
+            $service->getSharedFriendIds($user, $entityId, $entityType),
+        );
+    }
+
+    public function toggleShareWithFriend(ShareEntityService $service, string $entityId, string $entityType, string $friendId): void
     {
         $model = $this->resolveEntity($entityId, $entityType);
         if (! $model) {
@@ -685,9 +828,18 @@ class Canvas extends Component
 
         Gate::authorize('update', $model);
 
-        $model->update(['is_public' => ! $model->is_public]);
+        $user = Auth::user();
 
-        $this->updateCardInList($entityId, ['is_public' => ! $model->is_public]);
+        if (in_array($friendId, $this->currentEntitySharedFriends, true)) {
+            $service->unshareWithFriend($user, $entityId, $entityType, $friendId);
+            $this->currentEntitySharedFriends = array_values(array_filter(
+                $this->currentEntitySharedFriends,
+                fn (string $id): bool => $id !== $friendId,
+            ));
+        } else {
+            $service->shareWithFriend($user, $entityId, $entityType, $friendId);
+            $this->currentEntitySharedFriends[] = $friendId;
+        }
     }
 
     /**
@@ -697,11 +849,11 @@ class Canvas extends Component
     {
         $user = Auth::user();
 
-        return \App\Models\Image::where('user_id', $user->id)
+        return Image::where('user_id', $user->id)
             ->latest()
             ->limit(20)
             ->get()
-            ->map(fn (\App\Models\Image $img): array => [
+            ->map(fn (Image $img): array => [
                 'id' => $img->id,
                 'image_url' => route('images.serve', $img),
                 'title' => $img->title ?? $img->alt ?? '',
@@ -709,7 +861,7 @@ class Canvas extends Component
             ->all();
     }
 
-    public function render(): \Illuminate\Contracts\View\View
+    public function render(): View
     {
         return view('livewire.desktop');
     }
@@ -719,7 +871,7 @@ class Canvas extends Component
         $this->editingEntityId = '';
         $this->editorTitle = '';
         $this->editorBody = '';
-        $this->editorMood = Auth::user()->theme ?? 'summer';
+        $this->editorMood = Auth::user()->activeTheme();
         $this->editorColorOverride = null;
         $this->editorImage = null;
         $this->imageUpload = null;
@@ -729,7 +881,7 @@ class Canvas extends Component
         $this->availableTags = [];
     }
 
-    private function resolveEntity(string $entityId, string $entityType): ?object
+    private function resolveEntity(string $entityId, string $entityType): ?Model
     {
         $morphMap = Relation::morphMap();
         $class = $morphMap[$entityType] ?? null;
@@ -741,26 +893,42 @@ class Canvas extends Component
         return $class::find($entityId);
     }
 
-    private function createNewEntity(object $user, Mood $mood, DesktopService $service): void
+    private function createNewEntity(User $user, Mood $mood, DesktopService $service): bool
     {
+        // Determine entity type and check limits
+        $entityType = $this->editorMode === 'diary' ? 'diary_entry' : 'note';
+        $limitChecker = app(LimitCheckerService::class);
+
+        if (! $limitChecker->canCreateEntity($user, $entityType)) {
+            $remaining = $limitChecker->getRemainingCount($user, $entityType);
+            $typeName = $entityType === 'diary_entry' ? 'diary entry' : 'note';
+            $this->limitError = "You have reached your {$typeName} limit for today. Remaining: {$remaining}.";
+            $this->dispatch('notify-error', message: $this->limitError);
+
+            return false;
+        }
+
+        $this->limitError = '';
+
         $data = [
             'user_id' => $user->id,
             'title' => $this->editorTitle,
             'body' => $this->editorBody,
             'mood' => $mood,
             'color_override' => $this->editorColorOverride,
-            'is_public' => false,
         ];
 
         if ($this->editorMode === 'diary') {
+            Gate::authorize('create', DiaryEntry::class);
             $entity = DiaryEntry::create($data);
             $type = 'diary_entry';
         } else {
+            Gate::authorize('create', Note::class);
             $entity = Note::create($data);
             $type = 'note';
         }
 
-        if (method_exists($entity, 'tags') && ! empty($this->editorTagIds)) {
+        if (! empty($this->editorTagIds)) {
             $entity->tags()->sync($this->editorTagIds);
         }
 
@@ -770,10 +938,9 @@ class Canvas extends Component
             'id' => $entity->id,
             'type' => $type,
             'title' => $entity->title ?? '',
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($entity->body ?? ''), 120),
+            'preview' => Str::limit(strip_tags($entity->body ?? ''), 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
-            'is_public' => false,
             'x' => $position->x,
             'y' => $position->y,
             'z_index' => $position->z_index,
@@ -794,9 +961,11 @@ class Canvas extends Component
         $this->maxZIndex = $position->z_index;
 
         $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
+
+        return true;
     }
 
-    private function updateExistingEntity(object $user, Mood $mood): void
+    private function updateExistingEntity(User $user, Mood $mood): void
     {
         $card = collect($this->cards)->firstWhere('id', $this->editingEntityId);
         if (! $card) {
@@ -832,7 +1001,7 @@ class Canvas extends Component
 
         $updates = [
             'title' => $this->editorTitle,
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($this->editorBody), 120),
+            'preview' => Str::limit(strip_tags($this->editorBody), 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
             'tag_ids' => $this->editorTagIds,
@@ -843,6 +1012,7 @@ class Canvas extends Component
         $this->dispatch('card-updated', entityId: $this->editingEntityId, updates: $updates);
     }
 
+    /** @param array<string, mixed> $updates */
     private function updateCardInList(string $entityId, array $updates): void
     {
         foreach ($this->cards as $i => $card) {
@@ -851,5 +1021,10 @@ class Canvas extends Component
                 break;
             }
         }
+    }
+
+    private function moodValue(mixed $mood, string $fallback = 'summer'): string
+    {
+        return $mood instanceof Mood ? $mood->value : (is_string($mood) && $mood !== '' ? $mood : $fallback);
     }
 }

@@ -19,6 +19,17 @@
                 :placeholder="__('Full name')"
             />
 
+            <!-- Username -->
+            <flux:input
+                name="username"
+                :label="__('Username')"
+                :value="old('username')"
+                type="text"
+                required
+                autocomplete="username"
+                placeholder="your-username"
+            />
+
             <!-- Email Address -->
             <flux:input
                 name="email"
@@ -52,6 +63,19 @@
                 viewable
             />
 
+            @if (app(\App\Services\TurnstileValidationService::class)->enabled())
+                <div class="flex flex-col gap-2">
+                    <div
+                        class="cf-turnstile"
+                        data-sitekey="{{ config('services.turnstile.site_key') }}"
+                        data-theme="auto"
+                    ></div>
+                    @error('cf-turnstile-response')
+                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
+
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
                     {{ __('Create account') }}
@@ -63,5 +87,9 @@
             <span>{{ __('Already have an account?') }}</span>
             <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
         </div>
+
+        @if (app(\App\Services\TurnstileValidationService::class)->enabled())
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        @endif
     </div>
 </x-layouts::auth>

@@ -62,5 +62,12 @@
                 </flux:button>
             </div>
         </form>
+
+        <div class="text-center text-sm text-zinc-600 dark:text-zinc-400">
+            <span>{{ __('Don\'t have an account yet?') }}</span>
+            <flux:link :href="route('register')" wire:navigate class="text-sm font-medium">
+                {{ __('Register here') }}
+            </flux:link>
+        </div>
     </div>
 </x-layouts::auth>

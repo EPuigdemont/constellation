@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Services;
 
-use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
+use App\Models\EntityShare;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\User;
@@ -23,7 +23,7 @@ class DesktopServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new DesktopService();
+        $this->service = new DesktopService;
     }
 
     public function test_load_cards_returns_user_entities_with_positions(): void
@@ -52,37 +52,64 @@ class DesktopServiceTest extends TestCase
         $this->assertEquals(1, $diaryCard['z_index']);
     }
 
-    public function test_load_cards_includes_public_entities_from_other_users(): void
+    public function test_load_cards_includes_shared_entities(): void
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        $publicNote = Note::factory()->create([
+        $sharedNote = Note::factory()->create([
             'user_id' => $other->id,
-            'is_public' => true,
+        ]);
+
+        // Share the note with the user
+        EntityShare::create([
+            'owner_id' => $other->id,
+            'friend_id' => $user->id,
+            'entity_id' => $sharedNote->id,
+            'entity_type' => 'note',
         ]);
 
         $cards = $this->service->loadCards($user);
 
-        $found = collect($cards)->firstWhere('id', $publicNote->id);
+        $found = collect($cards)->firstWhere('id', $sharedNote->id);
         $this->assertNotNull($found);
-        $this->assertTrue($found['is_public']);
+        $this->assertSame($other->id, $found['owner_id']);
     }
 
-    public function test_load_cards_excludes_private_entities_from_other_users(): void
+    public function test_load_cards_excludes_unshared_entities_from_other_users(): void
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        $privateNote = Note::factory()->create([
+        $unsharedNote = Note::factory()->create([
             'user_id' => $other->id,
-            'is_public' => false,
         ]);
 
         $cards = $this->service->loadCards($user);
 
-        $found = collect($cards)->firstWhere('id', $privateNote->id);
+        $found = collect($cards)->firstWhere('id', $unsharedNote->id);
         $this->assertNull($found);
+    }
+
+    public function test_load_cards_does_not_duplicate_shared_entities_owned_by_user(): void
+    {
+        $user = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        EntityShare::create([
+            'owner_id' => $user->id,
+            'friend_id' => $user->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
+        ]);
+
+        $cards = $this->service->loadCards($user);
+
+        $matches = collect($cards)->where('id', $note->id);
+
+        $this->assertCount(1, $matches);
     }
 
     public function test_save_position_creates_entity_position(): void

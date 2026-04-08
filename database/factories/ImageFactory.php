@@ -17,15 +17,9 @@ class ImageFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'path' => 'images/' . fake()->uuid() . '.jpg',
+            'path' => 'images/'.fake()->uuid().'.jpg',
             'disk' => 'private',
             'alt' => fake()->optional()->sentence(),
-            'is_public' => false,
         ];
-    }
-
-    public function public(): static
-    {
-        return $this->state(['is_public' => true]);
     }
 }

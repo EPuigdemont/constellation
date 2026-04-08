@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\Mood;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string $id
+ * @property int $user_id
+ * @property CarbonInterface $date
+ * @property string $mood
+ */
 class CalendarDayMood extends Model
 {
     use HasUuids;
@@ -22,10 +28,11 @@ class CalendarDayMood extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'date',
+            'date' => 'date:Y-m-d',
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

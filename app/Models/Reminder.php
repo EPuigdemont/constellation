@@ -7,14 +7,31 @@ namespace App\Models;
 use App\Enums\Mood;
 use App\Enums\ReminderType;
 use App\Models\Concerns\HasEntityDefaults;
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
+use Database\Factories\ReminderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
+/**
+ * @property string $id
+ * @property int $user_id
+ * @property string $title
+ * @property string|null $body
+ * @property CarbonInterface $remind_at
+ * @property Mood|null $mood
+ * @property ReminderType $reminder_type
+ * @property bool $is_completed
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
+ * @property CarbonInterface|null $deleted_at
+ */
 class Reminder extends Model
 {
+    /** @use HasFactory<ReminderFactory> */
     use HasEntityDefaults, HasFactory;
 
     protected $fillable = [
@@ -38,26 +55,31 @@ class Reminder extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return MorphToMany<Tag, $this> */
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');
     }
 
+    /** @return MorphMany<EntityPosition, $this> */
     public function positions(): MorphMany
     {
         return $this->morphMany(EntityPosition::class, 'entity');
     }
 
+    /** @return MorphMany<EntityRelationship, $this> */
     public function relationshipsAsA(): MorphMany
     {
         return $this->morphMany(EntityRelationship::class, 'entity_a');
     }
 
+    /** @return MorphMany<EntityRelationship, $this> */
     public function relationshipsAsB(): MorphMany
     {
         return $this->morphMany(EntityRelationship::class, 'entity_b');
@@ -65,6 +87,7 @@ class Reminder extends Model
 
     public function isDue(): bool
     {
-        return ! $this->is_completed && $this->remind_at->startOfDay()->lte(now()->startOfDay());
+        return ! $this->is_completed
+            && Carbon::parse((string) $this->remind_at)->startOfDay()->lte(now()->startOfDay());
     }
 }

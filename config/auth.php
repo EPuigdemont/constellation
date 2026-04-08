@@ -114,4 +114,9 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'registration' => [
+        'max_attempts' => (int) env('REGISTRATION_MAX_ATTEMPTS', 5),
+        'decay_seconds' => (int) env('REGISTRATION_DECAY_SECONDS', 3600),
+    ],
+
 ];

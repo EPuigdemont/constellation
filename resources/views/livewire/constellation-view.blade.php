@@ -8,12 +8,40 @@
          x-on:mousemove.window="parallax($event)"></div>
 
     {{-- Top filter bar --}}
-    <div class="relative z-10 flex flex-wrap items-center gap-2 overflow-x-auto px-4 py-3 max-md:gap-1 max-md:px-2 max-md:py-2"
+    <div class="relative z-10 px-4 py-3 max-md:px-2 max-md:py-2 min-[941px]:flex min-[941px]:items-center min-[941px]:gap-2 min-[941px]:flex-nowrap"
+         x-data="{
+            isCompact: window.matchMedia('(max-width: 767px)').matches,
+            mobileFiltersOpen: false,
+            _mq: null,
+            init() {
+                this._mq = window.matchMedia('(max-width: 767px)');
+                const updateCompact = (event) => {
+                    this.isCompact = event.matches;
+                    if (!event.matches) {
+                        this.mobileFiltersOpen = false;
+                    }
+                };
+                this._mq.addEventListener('change', updateCompact);
+            }
+         }"
          style="background: color-mix(in srgb, var(--theme-bg) 60%, transparent); backdrop-filter: blur(12px);">
-        <h1 class="mr-2 shrink-0 text-lg font-semibold text-[var(--theme-text)] max-md:mr-1 max-md:text-sm">
-            {{ __('Constellation') }}
-        </h1>
+        <div class="flex items-center gap-2 min-[941px]:contents">
+            <h1 class="shrink-0 text-lg font-semibold text-[var(--theme-text)] max-md:mr-1 max-md:text-sm max-[810px]:hidden">
+                {{ __('Constellation') }}
+            </h1>
+            <flux:spacer />
+            <flux:button size="sm"
+                         icon="bars-2"
+                         class="md:hidden"
+                         x-on:click="mobileFiltersOpen = !mobileFiltersOpen"
+                         x-bind:aria-expanded="mobileFiltersOpen"
+                         x-bind:title="mobileFiltersOpen ? '{{ __('Hide Controls') }}' : '{{ __('Show Controls') }}'"
+                         x-bind:aria-label="mobileFiltersOpen ? '{{ __('Hide Controls') }}' : '{{ __('Show Controls') }}'" />
+        </div>
 
+        <div x-show="!isCompact || mobileFiltersOpen"
+             x-cloak
+             class="mt-2 flex flex-wrap items-center gap-2 md:mt-0 min-[941px]:contents">
         <flux:select wire:model.live="filterType" size="sm" class="w-28 max-md:w-20">
             <option value="all">{{ __('All') }}</option>
             <option value="diary">{{ __('Diary') }}</option>
@@ -30,23 +58,24 @@
             @endforeach
         </flux:select>
 
-        <flux:select wire:model.live="filterMonth" size="sm" class="w-28 max-md:hidden">
+        <flux:select wire:model.live="filterMonth" size="sm" class="w-28">
             <option value="">{{ __('Month') }}</option>
             @for ($m = 1; $m <= 12; $m++)
                 <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
             @endfor
         </flux:select>
 
-        <flux:select wire:model.live="filterWeekday" size="sm" class="w-28 max-md:hidden">
+        <flux:select wire:model.live="filterWeekday" size="sm" class="w-28">
             <option value="">{{ __('Weekday') }}</option>
             @foreach (['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] as $i => $day)
                 <option value="{{ $i + 1 }}">{{ __($day) }}</option>
             @endforeach
         </flux:select>
 
-        <input type="date" wire:model.live="filterDateFrom" class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-2 py-1 text-xs text-[var(--theme-text)] max-md:hidden" />
-        <span class="text-xs text-[var(--theme-text-muted)] max-md:hidden">{{ __('to') }}</span>
-        <input type="date" wire:model.live="filterDateTo" class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-2 py-1 text-xs text-[var(--theme-text)] max-md:hidden" />
+        <input type="date" wire:model.live="filterDateFrom" class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-2 py-1 text-xs text-[var(--theme-text)]" />
+        <span class="text-xs text-[var(--theme-text-muted)]">{{ __('to') }}</span>
+        <input type="date" wire:model.live="filterDateTo" class="rounded-md border border-[var(--theme-border)] bg-[var(--theme-bg)] px-2 py-1 text-xs text-[var(--theme-text)]" />
+        </div>
     </div>
 
     {{-- D3 SVG container --}}
@@ -68,7 +97,7 @@
                         <span class="text-sm font-semibold text-[var(--theme-text)]" x-text="selectedNode.title"></span>
                     </div>
                     <button x-on:click="selectedNode = null" class="text-[var(--theme-text-muted)] hover:text-[var(--theme-text)]">
-                        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <x-icons.close />
                     </button>
                 </div>
                 <div class="mb-2 flex items-center gap-2 text-xs text-[var(--theme-text-muted)]">

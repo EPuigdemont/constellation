@@ -1,0 +1,17 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
+
+parameters:
+
+    paths:
+        - app/
+
+    # Level 10 is the highest level
+    level: 7
+
+    ignoreErrors:
+        - '#Call to function method_exists\(\) with.*and .tags. will always evaluate to true#'
+
+#    excludePaths:
+#        - ./*/*/FileToBeExcluded.php

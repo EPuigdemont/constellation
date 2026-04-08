@@ -113,7 +113,7 @@ select:focus[data-flux-control] {
 }
 
 .desktop-card-inner {
-    @apply relative flex flex-col gap-1;
+    @apply relative flex flex-col gap-2 justify-between overflow-hidden;
 }
 
 .desktop-card-badge {
@@ -123,24 +123,24 @@ select:focus[data-flux-control] {
 }
 
 .desktop-card-title {
-    @apply text-sm font-semibold leading-snug;
+    @apply text-sm font-semibold leading-tight line-clamp-3 break-words;
 }
 
 .desktop-card-preview {
-    @apply text-xs leading-relaxed opacity-75;
+    @apply text-xs leading-relaxed opacity-75 line-clamp-4 break-words;
 }
 
 .desktop-card-header {
-    @apply flex items-center justify-between gap-2;
+    @apply flex items-center justify-between gap-2 flex-wrap;
 }
 
 .desktop-card-date {
-    @apply ml-auto whitespace-nowrap text-[0.6rem] opacity-50;
+    @apply whitespace-nowrap text-[0.6rem] opacity-50;
     cursor: default;
 }
 
 .desktop-card-shared {
-    @apply absolute bottom-1 left-1.5 flex items-center gap-1 text-[0.55rem] opacity-50;
+    @apply mt-1 flex items-center gap-1 text-[0.55rem] opacity-50;
 }
 
 .desktop-card-public {
@@ -150,11 +150,11 @@ select:focus[data-flux-control] {
 /* ─── Relationship Indicators ─── */
 
 .desktop-card-relations {
-    @apply mt-1 flex flex-wrap items-center gap-1;
+    @apply mt-2 flex flex-wrap items-center gap-1;
 }
 
 .desktop-card-relation-badge {
-    @apply inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.6rem] font-medium;
+    @apply inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.6rem] font-medium whitespace-nowrap;
 }
 
 .desktop-card-relation-attached {
@@ -384,12 +384,35 @@ select:focus[data-flux-control] {
 .desktop-editor-modal {
     background: var(--card-bg, var(--theme-bg, var(--color-zinc-50)));
     border-radius: 0.5rem;
-    padding: 1px;
+    border: 1px solid var(--card-border, var(--color-zinc-200));
+    padding: 1rem 1.25rem 1.25rem;
     transition: background-color 0.3s ease;
 }
 
 .dark .desktop-editor-modal {
     background: var(--card-bg, var(--theme-bg, var(--color-zinc-800)));
+}
+
+.desktop-editor-modal > [data-flux-heading],
+.desktop-editor-modal > h1,
+.desktop-editor-modal > h2,
+.desktop-editor-modal > h3 {
+    margin-top: 0.125rem;
+    padding-right: 2rem;
+}
+
+.desktop-editor-modal .tiptap-editor-content {
+    margin-top: 0.25rem;
+}
+
+.desktop-editor-modal .grid {
+    margin-top: 0.25rem;
+}
+
+.desktop-editor-modal > .flex.items-center.justify-between {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--card-border, var(--color-zinc-200));
 }
 
 /* ─── Trashcan Drop Zone ─── */

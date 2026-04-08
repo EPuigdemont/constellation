@@ -9,6 +9,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * @property string $id
+ * @property int $user_id
+ * @property string $entity_id
+ * @property string $entity_type
+ * @property string $context
+ * @property float $x
+ * @property float $y
+ * @property int $z_index
+ * @property float|null $width
+ * @property float|null $height
+ * @property bool $is_hidden
+ */
 class EntityPosition extends Model
 {
     use HasUuids;
@@ -38,11 +51,13 @@ class EntityPosition extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return MorphTo<Model, $this> */
     public function entity(): MorphTo
     {
         return $this->morphTo();

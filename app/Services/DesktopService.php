@@ -8,11 +8,14 @@ use App\Enums\RelationshipType;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
 use App\Models\EntityRelationship;
+use App\Models\EntityShare;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class DesktopService
@@ -20,10 +23,11 @@ class DesktopService
     /**
      * Load all entity cards for a user's desktop.
      *
-     * Includes the user's own entities and public entities from others.
+     * Includes the user's own entities and entities shared via EntityShare.
      * Left-joins entity_positions so every card has coordinates.
      *
      * @param  array<string, class-string>|null  $entityTypes  Override which entity types to load
+     * @return list<array<string, mixed>>
      */
     public function loadCards(User $user, string $context = 'desktop', ?array $entityTypes = null): array
     {
@@ -40,9 +44,9 @@ class DesktopService
         // Collect all entities first
         $allEntities = [];
         foreach ($entityTypes as $morphType => $modelClass) {
+            // Get all entities owned by user
             $query = $modelClass::query()
-                ->where('user_id', $user->id)
-                ->orWhere('is_public', true);
+                ->where('user_id', $user->id);
 
             $query->with('user');
 
@@ -57,27 +61,73 @@ class DesktopService
             }
         }
 
+        // Get entities shared with this user via EntityShare
+        $sharedEntities = EntityShare::where('friend_id', $user->id)
+            ->get()
+            ->groupBy(function ($share) {
+                return $share->entity_type;
+            });
+
+        foreach ($entityTypes as $morphType => $modelClass) {
+            if (! isset($sharedEntities[$morphType])) {
+                continue;
+            }
+
+            $entityIds = $sharedEntities[$morphType]->pluck('entity_id')->toArray();
+            if (empty($entityIds)) {
+                continue;
+            }
+
+            $query = $modelClass::query()
+                ->whereIn('id', $entityIds);
+
+            $query->with('user');
+
+            if (method_exists($modelClass, 'tags')) {
+                $query->with('tags');
+            }
+
+            $entities = $query->get();
+
+            foreach ($entities as $entity) {
+                $allEntities[] = ['entity' => $entity, 'morphType' => $morphType];
+            }
+        }
+
+        $deduplicatedEntities = [];
+        foreach ($allEntities as $item) {
+            $entity = $item['entity'];
+            $deduplicatedEntities[$item['morphType'].':'.$entity->id] = $item;
+        }
+
+        $allEntities = array_values($deduplicatedEntities);
+
         // Batch load all positions for this user+context instead of N+1 queries
         $entityIds = array_map(fn ($item) => $item['entity']->id, $allEntities);
-        $positions = EntityPosition::query()
+        $positionRecords = EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('context', $context)
             ->whereIn('entity_id', $entityIds)
-            ->get()
-            ->keyBy(fn ($pos) => $pos->entity_id . ':' . $pos->entity_type);
+            ->get();
+
+        /** @var array<string, EntityPosition> $positions */
+        $positions = [];
+        foreach ($positionRecords as $position) {
+            $positions[$position->entity_id.':'.$position->entity_type] = $position;
+        }
 
         // Load only relationships involving the collected entity IDs
         $relationships = EntityRelationship::query()
             ->where(function ($q) use ($entityIds) {
                 $q->whereIn('entity_a_id', $entityIds)
-                  ->orWhereIn('entity_b_id', $entityIds);
+                    ->orWhereIn('entity_b_id', $entityIds);
             })
             ->get();
 
         foreach ($allEntities as $item) {
             $entity = $item['entity'];
             $morphType = $item['morphType'];
-            $position = $positions->get($entity->id . ':' . $morphType);
+            $position = $positions[$entity->id.':'.$morphType] ?? null;
 
             $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
         }
@@ -255,27 +305,28 @@ class DesktopService
     /**
      * Get relationship counts and parent info for card enrichment.
      *
+     * @param  Collection<int, EntityRelationship>  $relationships
      * @return array{parent_id: string|null, parent_type: string|null, children_count: int, siblings_count: int}
      */
-    public function getRelationshipData(string $entityId, string $entityType, $relationships): array
+    public function getRelationshipData(string $entityId, string $entityType, Collection $relationships): array
     {
         // Find parent (this entity is entity_b in a parent_child relationship)
         $parentRel = $relationships->first(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
-            return $rel->relationship_type === RelationshipType::ParentChild
+            return $this->relationshipTypeValue($rel->relationship_type) === RelationshipType::ParentChild->value
                 && $rel->entity_b_id === $entityId
                 && $rel->entity_b_type === $entityType;
         });
 
         // Count children (this entity is entity_a in parent_child relationships)
         $childrenCount = $relationships->filter(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
-            return $rel->relationship_type === RelationshipType::ParentChild
+            return $this->relationshipTypeValue($rel->relationship_type) === RelationshipType::ParentChild->value
                 && $rel->entity_a_id === $entityId
                 && $rel->entity_a_type === $entityType;
         })->count();
 
         // Count siblings (this entity appears as either side in sibling relationships)
         $siblingsCount = $relationships->filter(function (EntityRelationship $rel) use ($entityId, $entityType): bool {
-            return $rel->relationship_type === RelationshipType::Sibling
+            return $this->relationshipTypeValue($rel->relationship_type) === RelationshipType::Sibling->value
                 && (
                     ($rel->entity_a_id === $entityId && $rel->entity_a_type === $entityType)
                     || ($rel->entity_b_id === $entityId && $rel->entity_b_type === $entityType)
@@ -292,29 +343,40 @@ class DesktopService
 
     /**
      * Normalize an entity model into a card array for the frontend.
+     *
+     * @param  DiaryEntry|Note|Postit|Image|Reminder  $entity
+     * @param  Collection<int, EntityRelationship>|null  $relationships
+     * @return array<string, mixed>
      */
-    private function normalizeCard(object $entity, string $type, ?EntityPosition $position, $relationships = null): array
+    private function normalizeCard(Model $entity, string $type, mixed $position, ?Collection $relationships = null): array
     {
+        $position = $position instanceof EntityPosition ? $position : null;
+
         $title = match ($type) {
             'diary_entry' => $entity->title ?? '',
             'note' => $entity->title ?? '',
             'postit' => '',
             'image' => $entity->title ?? $entity->alt ?? '',
             'reminder' => $entity->title ?? '',
+            default => '',
         };
 
         $preview = match ($type) {
             'diary_entry', 'note', 'postit', 'reminder' => Str::limit(strip_tags($entity->body ?? ''), 120),
             'image' => $entity->alt ?? '',
+            default => '',
         };
 
-        $mood = $entity->mood?->value ?? null;
+        $mood = $this->enumValue($entity->mood);
 
         $relData = $relationships
             ? $this->getRelationshipData($entity->id, $type, $relationships)
             : ['parent_id' => null, 'parent_type' => null, 'children_count' => 0, 'siblings_count' => 0];
 
-        $tagIds = method_exists($entity, 'tags') && $entity->relationLoaded('tags')
+        // All entity types in the union support tags relation
+        /** @phpstan-ignore-next-line */
+        $tagIds = ($entity instanceof DiaryEntry || $entity instanceof Note || $entity instanceof Postit || $entity instanceof Image || $entity instanceof Reminder)
+            && method_exists($entity, 'tags') && $entity->relationLoaded('tags')
             ? $entity->tags->pluck('id')->all()
             : [];
 
@@ -327,13 +389,14 @@ class DesktopService
             'preview' => $preview,
             'mood' => $mood,
             'color_override' => $entity->color_override ?? null,
-            'is_public' => (bool) $entity->is_public,
-            'x' => $position?->x ?? 0.0,
-            'y' => $position?->y ?? 0.0,
-            'z_index' => $position?->z_index ?? 0,
+            'x' => $position->x ?? 0.0,
+            'y' => $position->y ?? 0.0,
+            'z_index' => $position->z_index ?? 0,
             'width' => $position?->width,
             'height' => $position?->height,
             'owner_id' => $entity->user_id,
+            'owner_name' => $entity->user->name ?? '',
+            'owner_username' => $entity->user->username ?? '',
             'created_at' => $entity->created_at?->toIso8601String(),
             'updated_at' => $entity->updated_at?->toIso8601String(),
             'parent_id' => $relData['parent_id'],
@@ -342,8 +405,25 @@ class DesktopService
             'siblings_count' => $relData['siblings_count'],
             'tag_ids' => $tagIds,
             'image_url' => $imageUrl,
-            'is_hidden' => (bool) ($position?->is_hidden ?? false),
-            'owner_name' => $entity->user?->name ?? '',
+            'is_hidden' => (bool) ($position->is_hidden ?? false),
         ];
+    }
+
+    private function relationshipTypeValue(mixed $type): ?string
+    {
+        return $type instanceof RelationshipType ? $type->value : (is_string($type) ? $type : null);
+    }
+
+    private function enumValue(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_object($value) && property_exists($value, 'value') && is_string($value->value)) {
+            return $value->value;
+        }
+
+        return null;
     }
 }

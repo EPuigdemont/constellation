@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Policies;
 
+use App\Models\EntityShare;
 use App\Models\Postit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,20 +22,27 @@ class PostitPolicyTest extends TestCase
         $this->assertTrue($user->can('view', $postit));
     }
 
-    public function test_non_owner_cannot_view_private_postit(): void
+    public function test_non_owner_cannot_view_unshared_postit(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $postit = Postit::factory()->create(['user_id' => $owner->id, 'is_public' => false]);
+        $postit = Postit::factory()->create(['user_id' => $owner->id]);
 
         $this->assertFalse($other->can('view', $postit));
     }
 
-    public function test_non_owner_can_view_public_postit(): void
+    public function test_non_owner_can_view_shared_postit(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
-        $postit = Postit::factory()->create(['user_id' => $owner->id, 'is_public' => true]);
+        $postit = Postit::factory()->create(['user_id' => $owner->id]);
+
+        EntityShare::create([
+            'owner_id' => $owner->id,
+            'friend_id' => $other->id,
+            'entity_id' => $postit->id,
+            'entity_type' => 'postit',
+        ]);
 
         $this->assertTrue($other->can('view', $postit));
     }

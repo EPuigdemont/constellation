@@ -18,7 +18,8 @@ class ConstellationService
     /**
      * Build the full graph data (nodes + edges) for a user.
      *
-     * @return array{nodes: list<array>, edges: list<array>}
+     * @param  array<string, string>  $filters
+     * @return array{nodes: list<array<string, mixed>>, edges: list<array<string, mixed>>}
      */
     public function buildGraph(User $user, array $filters = []): array
     {
@@ -38,6 +39,10 @@ class ConstellationService
 
     /**
      * Load all entities for a user, applying optional filters.
+     */
+    /**
+     * @param  array<string, string>  $filters
+     * @return Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>
      */
     private function loadEntities(User $user, array $filters): Collection
     {
@@ -75,7 +80,7 @@ class ConstellationService
                 $query->where('created_at', '<=', $dateTo);
             }
 
-            $query->get()->each(function ($entity) use ($entities, $type) {
+            $query->get()->each(function (DiaryEntry|Note|Postit|Image|Reminder $entity) use ($entities, $type): void {
                 $entities->push([
                     'model' => $entity,
                     'type' => $type,
@@ -90,40 +95,43 @@ class ConstellationService
     /**
      * Convert entities to node data for D3.
      *
-     * @return list<array>
+     * @param  Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>  $entities
+     * @return list<array<string, mixed>>
      */
     private function buildNodes(Collection $entities): array
     {
-        return $entities->map(function (array $item) {
+        return array_values($entities->map(function (array $item): array {
+            /** @var DiaryEntry|Note|Postit|Image|Reminder $entity */
             $entity = $item['model'];
             $type = $item['type'];
 
             $title = match ($type) {
                 'postit' => 'Post-it',
-                'image' => $entity->title ?: $entity->alt ?: 'Image',
-                'reminder' => $entity->title ?: 'Reminder',
-                default => $entity->title ?: 'Untitled',
+                'image' => ($entity instanceof Image ? (string) (data_get($entity, 'title') ?: data_get($entity, 'alt') ?: 'Image') : 'Image'),
+                'reminder' => (string) (data_get($entity, 'title') ?: 'Reminder'),
+                default => (string) (data_get($entity, 'title') ?: 'Untitled'),
             };
 
             return [
                 'id' => $entity->id,
                 'type' => $type,
                 'title' => $title,
-                'preview' => str(strip_tags($entity->body ?? ''))->limit(120)->toString(),
-                'mood' => $entity->mood?->value ?? 'summer',
-                'color_override' => $entity->color_override,
+                'preview' => str(strip_tags((string) (data_get($entity, 'body') ?? '')))->limit(120)->toString(),
+                'mood' => $this->enumValue($entity->mood) ?? 'summer',
+                'color_override' => data_get($entity, 'color_override'),
                 'tags' => $entity->tags->pluck('name')->all(),
                 'created_at' => $entity->created_at->toIso8601String(),
                 'day_of_week' => $entity->created_at->dayOfWeekIso,
                 'month' => $entity->created_at->month,
             ];
-        })->values()->all();
+        })->all());
     }
 
     /**
      * Load explicit entity relationships (parent_child, sibling).
      *
-     * @return list<array>
+     * @param  Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>  $entities
+     * @return list<array<string, mixed>>
      */
     private function loadRelationships(User $user, Collection $entities): array
     {
@@ -133,24 +141,25 @@ class ConstellationService
             return [];
         }
 
-        return EntityRelationship::query()
+        return array_values(EntityRelationship::query()
             ->whereIn('entity_a_id', $entityIds)
             ->whereIn('entity_b_id', $entityIds)
             ->get()
-            ->map(fn ($rel) => [
+            ->map(fn (EntityRelationship $rel): array => [
                 'source' => $rel->entity_a_id,
                 'target' => $rel->entity_b_id,
-                'type' => $rel->relationship_type->value,
+                'type' => $this->enumValue($rel->relationship_type) ?? '',
                 'strength' => 1.0,
             ])
-            ->all();
+            ->all());
     }
 
     /**
      * Compute implicit edges between entities that share tags.
      * Strength is proportional to the number of shared tags.
      *
-     * @return list<array>
+     * @param  Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>  $entities
+     * @return list<array<string, mixed>>
      */
     private function computeTagEdges(Collection $entities): array
     {
@@ -186,7 +195,8 @@ class ConstellationService
     /**
      * Compute implicit edges between entities created on the same day.
      *
-     * @return list<array>
+     * @param  Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>  $entities
+     * @return list<array<string, mixed>>
      */
     private function computeDateEdges(Collection $entities): array
     {
@@ -222,7 +232,8 @@ class ConstellationService
     /**
      * Merge all edge sources, deduplicating and keeping strongest.
      *
-     * @return list<array>
+     * @param  list<array<string, mixed>>  ...$edgeSets
+     * @return list<array<string, mixed>>
      */
     private function mergeEdges(array ...$edgeSets): array
     {
@@ -248,5 +259,18 @@ class ConstellationService
     private function edgeKey(string $a, string $b): string
     {
         return $a < $b ? "{$a}:{$b}" : "{$b}:{$a}";
+    }
+
+    private function enumValue(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_object($value) && property_exists($value, 'value') && is_string($value->value)) {
+            return $value->value;
+        }
+
+        return null;
     }
 }

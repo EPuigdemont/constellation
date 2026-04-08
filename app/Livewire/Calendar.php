@@ -12,10 +12,13 @@ use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\Tag;
+use App\Services\LimitCheckerService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -56,9 +59,12 @@ class Calendar extends Component
 
     public string $createBody = '';
 
+    /** @var list<string> */
     public array $createTags = [];
 
     public string $createDate = '';
+
+    public string $limitError = '';
 
     public function mount(): void
     {
@@ -110,9 +116,13 @@ class Calendar extends Component
         }
 
         $this->modalEntityType = $type;
-        $this->modalEntityTitle = $type === 'postit' ? 'Post-it' : ($entity->title ?: 'Untitled');
+        if ($type === 'postit') {
+            $this->modalEntityTitle = 'Post-it';
+        } else {
+            $this->modalEntityTitle = (string) (data_get($entity, 'title') ?: 'Untitled');
+        }
         $this->modalEntityBody = $entity->body ?? '';
-        $this->modalEntityMood = $entity->mood?->value ?? 'summer';
+        $this->modalEntityMood = $this->moodValue($entity->mood);
         $this->modalEntityTime = $entity->created_at->format('H:i');
         $this->showEntityModal = true;
     }
@@ -146,48 +156,89 @@ class Calendar extends Component
     public function saveNewEntity(): void
     {
         $user = Auth::user();
-        $mood = Mood::tryFrom($user->theme ?? 'summer') ?? Mood::Summer;
+        $mood = Mood::tryFrom($user->activeTheme()) ?? Mood::Summer;
+
+        $limitEntityType = match ($this->createType) {
+            'diary' => 'diary_entry',
+            'note' => 'note',
+            'postit' => 'postit',
+            'reminder' => 'reminder',
+            default => null,
+        };
+
+        if ($limitEntityType !== null) {
+            $limitChecker = app(LimitCheckerService::class);
+
+            if (! $limitChecker->canCreateEntity($user, $limitEntityType)) {
+                $remaining = $limitChecker->getRemainingCount($user, $limitEntityType);
+                $typeLabel = str_replace('_', ' ', $limitEntityType);
+                $this->limitError = "You have reached your {$typeLabel} limit. Remaining: {$remaining}.";
+                $this->dispatch('notify-error', message: $this->limitError);
+
+                return;
+            }
+        }
+
+        $this->limitError = '';
 
         $createdAt = null;
         if ($this->createDate !== '') {
             $createdAt = Carbon::parse($this->createDate);
         }
 
-        match ($this->createType) {
-            'diary' => $entity = DiaryEntry::create([
-                'user_id' => $user->id,
-                'title' => $this->createTitle ?: 'Untitled',
-                'body' => $this->createBody,
-                'mood' => $mood,
-                'is_public' => false,
-                'created_at' => $createdAt,
-            ]),
-            'note' => $entity = Note::create([
-                'user_id' => $user->id,
-                'title' => $this->createTitle ?: 'Untitled',
-                'body' => $this->createBody,
-                'mood' => $mood,
-                'is_public' => false,
-                'created_at' => $createdAt,
-            ]),
-            'postit' => $entity = Postit::create([
-                'user_id' => $user->id,
-                'body' => $this->createBody,
-                'mood' => $mood,
-                'is_public' => false,
-                'created_at' => $createdAt,
-            ]),
-            'reminder' => $entity = Reminder::create([
-                'user_id' => $user->id,
-                'title' => $this->createTitle ?: 'Reminder',
-                'body' => $this->createBody,
-                'remind_at' => $this->selectedDate ? Carbon::parse($this->selectedDate)->setTime(9, 0) : now()->addDay(),
-                'mood' => $mood,
-                'created_at' => $createdAt,
-            ]),
+        $entity = match ($this->createType) {
+            'diary' => (function () use ($user, $mood, $createdAt) {
+                Gate::authorize('create', DiaryEntry::class);
+
+                return DiaryEntry::create([
+                    'user_id' => $user->id,
+                    'title' => $this->createTitle ?: 'Untitled',
+                    'body' => $this->createBody,
+                    'mood' => $mood,
+                    'created_at' => $createdAt,
+                ]);
+            })(),
+            'note' => (function () use ($user, $mood, $createdAt) {
+                Gate::authorize('create', Note::class);
+
+                return Note::create([
+                    'user_id' => $user->id,
+                    'title' => $this->createTitle ?: 'Untitled',
+                    'body' => $this->createBody,
+                    'mood' => $mood,
+                    'created_at' => $createdAt,
+                ]);
+            })(),
+            'postit' => (function () use ($user, $mood, $createdAt) {
+                Gate::authorize('create', Postit::class);
+
+                return Postit::create([
+                    'user_id' => $user->id,
+                    'body' => $this->createBody,
+                    'mood' => $mood,
+                    'created_at' => $createdAt,
+                ]);
+            })(),
+            'reminder' => (function () use ($user, $mood, $createdAt) {
+                Gate::authorize('create', Reminder::class);
+
+                return Reminder::create([
+                    'user_id' => $user->id,
+                    'title' => $this->createTitle ?: 'Reminder',
+                    'body' => $this->createBody,
+                    'remind_at' => $this->selectedDate ? Carbon::parse($this->selectedDate)->setTime(9, 0) : now()->addDay(),
+                    'mood' => $mood,
+                    'created_at' => $createdAt,
+                ]);
+            })(),
+            default => null,
         };
 
-        if (!empty($this->createTags)) {
+        if (! $entity instanceof Model) {
+            return;
+        }
+
+        if (! empty($this->createTags)) {
             if (in_array('menstruation', $this->createTags) && $this->selectedDate !== '') {
                 CalendarDayMood::updateOrCreate(
                     ['user_id' => $user->id, 'date' => $this->selectedDate],
@@ -202,7 +253,7 @@ class Calendar extends Component
             }
         }
 
-        if (!empty($this->createTags)) {
+        if (! empty($this->createTags)) {
             $tagIds = Tag::whereIn('name', $this->createTags)->pluck('id')->toArray();
             $entity->tags()->sync($tagIds);
         }
@@ -278,7 +329,7 @@ class Calendar extends Component
         $dayMoods = CalendarDayMood::where('user_id', $userId)
             ->whereBetween('date', [$startOfMonth->toDateString(), $endOfMonth->toDateString()])
             ->get()
-            ->keyBy(fn ($dm) => $dm->date->toDateString());
+            ->keyBy(fn (CalendarDayMood $dm): string => Carbon::parse((string) $dm->date)->toDateString());
 
         return view('livewire.calendar-view', [
             'calendarDays' => $calendarDays,
@@ -295,7 +346,12 @@ class Calendar extends Component
     }
 
     /**
-     * @return array<int, array{date: string, day: int, inMonth: bool, isToday: bool, entities: Collection}>
+     * @param  Collection<int, DiaryEntry>  $diaryEntries
+     * @param  Collection<int, Note>  $notes
+     * @param  Collection<int, Postit>  $postits
+     * @param  Collection<int, ImportantDate>  $importantDates
+     * @param  Collection<int, Reminder>  $reminders
+     * @return array<int, array{date: string, day: int, inMonth: bool, isToday: bool, entities: Collection<int, array<string, mixed>>}>
      */
     private function buildCalendarGrid(Carbon $startOfMonth, Collection $diaryEntries, Collection $notes, Collection $postits, Collection $importantDates, Collection $reminders): array
     {
@@ -354,6 +410,14 @@ class Calendar extends Component
         return $grid;
     }
 
+    /**
+     * @param  Collection<int, DiaryEntry>  $diaryEntries
+     * @param  Collection<int, Note>  $notes
+     * @param  Collection<int, Postit>  $postits
+     * @param  Collection<int, ImportantDate>  $importantDates
+     * @param  Collection<int, Reminder>  $reminders
+     * @return Collection<int, array<string, mixed>>
+     */
     private function getEntitiesForDate(string $date, Collection $diaryEntries, Collection $notes, Collection $postits, Collection $importantDates, Collection $reminders): Collection
     {
         $entities = collect();
@@ -364,7 +428,7 @@ class Calendar extends Component
                 'type' => 'diary',
                 'id' => $e->id,
                 'title' => $e->title ?: 'Untitled',
-                'mood' => $e->mood?->value ?? 'summer',
+                'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
@@ -374,7 +438,7 @@ class Calendar extends Component
                 'type' => 'note',
                 'id' => $e->id,
                 'title' => $e->title ?: 'Untitled',
-                'mood' => $e->mood?->value ?? 'summer',
+                'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
@@ -384,38 +448,45 @@ class Calendar extends Component
                 'type' => 'postit',
                 'id' => $e->id,
                 'title' => 'Post-it',
-                'mood' => $e->mood?->value ?? 'summer',
+                'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
             ]));
 
         // Important dates (exact match or recurring annual match)
-        $importantDates->filter(function ($d) use ($parsedDate) {
-            if ($d->date->toDateString() === $parsedDate->toDateString()) {
+        $importantDates->filter(function (ImportantDate $d) use ($parsedDate): bool {
+            $importantDate = Carbon::parse((string) $d->date);
+
+            if ($importantDate->toDateString() === $parsedDate->toDateString()) {
                 return true;
             }
 
-            return $d->recurs_annually && $d->date->month === $parsedDate->month && $d->date->day === $parsedDate->day;
+            return $d->recurs_annually && $importantDate->month === $parsedDate->month && $importantDate->day === $parsedDate->day;
         })->each(fn ($d) => $entities->push([
             'type' => 'important_date',
             'id' => $d->id,
             'title' => $d->label,
             'mood' => 'love',
             'preview' => $d->recurs_annually ? __('Yearly') : '',
-            'created_at' => $d->date->setYear($parsedDate->year),
+            'created_at' => Carbon::parse((string) $d->date)->setYear($parsedDate->year),
         ]));
 
         // Reminders
-        $reminders->filter(fn ($r) => $r->remind_at->toDateString() === $date)
+        $reminders->filter(fn (Reminder $r): bool => Carbon::parse((string) $r->remind_at)->toDateString() === $date)
             ->each(fn ($r) => $entities->push([
                 'type' => 'reminder',
                 'id' => $r->id,
                 'title' => $r->title,
-                'mood' => $r->mood?->value ?? 'summer',
+                'mood' => $this->moodValue($r->mood),
                 'preview' => str(strip_tags($r->body ?? ''))->limit(80)->toString(),
-                'created_at' => $r->remind_at,
+                'created_at' => Carbon::parse((string) $r->remind_at),
             ]));
 
         return $entities->sortBy('created_at')->values();
+    }
+
+    private function moodValue(mixed $mood): string
+    {
+        return $mood instanceof Mood ? $mood->value : (is_string($mood) && $mood !== '' ? $mood : 'summer');
     }
 }

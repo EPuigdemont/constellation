@@ -3,7 +3,7 @@
     <head>
         @include('partials.head')
     </head>
-    <body data-theme-scene class="min-h-screen bg-[var(--theme-bg,#fff)] dark:bg-[var(--theme-bg,theme(colors.zinc.800))] theme-{{ auth()->user()?->theme ?? 'summer' }}">
+    <body data-theme-scene class="min-h-screen bg-[var(--theme-bg,#fff)] dark:bg-[var(--theme-bg,theme(colors.zinc.800))] theme-{{ auth()->user()?->activeTheme() ?? 'summer' }}">
         <flux:sidebar sticky collapsible class="border-e bg-[var(--theme-sidebar-bg,theme(colors.zinc.50))] border-[var(--theme-sidebar-border,theme(colors.zinc.200))] dark:border-[var(--theme-sidebar-border,theme(colors.zinc.700))] dark:bg-[var(--theme-sidebar-bg,theme(colors.zinc.900))]">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('diary') }}" wire:navigate />
@@ -38,6 +38,9 @@
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="photo" :href="route('images')" :current="request()->routeIs('images')" wire:navigate>
                         {{ __('Images') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="users" :href="route('friends')" :current="request()->routeIs('friends')" wire:navigate>
+                        {{ __('Friends') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 
@@ -90,6 +93,12 @@
                             <flux:icon name="photo" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
+                    <flux:tooltip :content="__('Friends')" position="right">
+                        <a href="{{ route('friends') }}" wire:navigate
+                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('friends'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('friends')])>
+                            <flux:icon name="users" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
                 </div>
             </flux:sidebar.nav>
 
@@ -105,6 +114,12 @@
         <!-- Mobile User Menu -->
         <flux:header class="lg:hidden">
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+
+            @if(isset($title) && $title)
+                <flux:heading size="sm" class="ml-1 truncate text-[var(--theme-text)]">
+                    {{ $title }}
+                </flux:heading>
+            @endif
 
             <flux:spacer />
 

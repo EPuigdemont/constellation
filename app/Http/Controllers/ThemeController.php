@@ -13,10 +13,13 @@ class ThemeController extends Controller
     public function update(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'theme' => ['required', 'string', 'in:' . implode(',', array_column(Theme::cases(), 'value'))],
+            'theme' => ['required', 'string', 'in:'.implode(',', array_column(Theme::cases(), 'value'))],
         ]);
 
-        $request->user()->update(['theme' => $validated['theme']]);
+        $request->user()->update([
+            'theme' => $validated['theme'],
+            'automatic_themes' => false,
+        ]);
 
         return response()->json(['ok' => true]);
     }

@@ -10,6 +10,15 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * @property string $id
+ * @property string $entity_a_id
+ * @property string $entity_a_type
+ * @property string $entity_b_id
+ * @property string $entity_b_type
+ * @property RelationshipType $relationship_type
+ * @property RelationshipDirection|null $direction
+ */
 class EntityRelationship extends Model
 {
     use HasUuids;
@@ -31,11 +40,13 @@ class EntityRelationship extends Model
         ];
     }
 
+    /** @return MorphTo<Model, $this> */
     public function entityA(): MorphTo
     {
         return $this->morphTo('entity_a');
     }
 
+    /** @return MorphTo<Model, $this> */
     public function entityB(): MorphTo
     {
         return $this->morphTo('entity_b');

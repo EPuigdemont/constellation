@@ -1,5 +1,11 @@
 <div class="page-glitter-wrapper flex h-full flex-col gap-4 p-4 lg:p-6">
-    <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->theme ?? 'summer' }}"></canvas>
+    <canvas class="page-glitter" data-glitter-theme="{{ auth()->user()?->activeTheme() ?? 'summer' }}"></canvas>
+    @if ($limitError !== '')
+        <div class="rounded-lg border border-[var(--theme-border)] px-3 py-2 text-sm text-[var(--theme-text)]"
+             style="background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-bg));">
+            {{ $limitError }}
+        </div>
+    @endif
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-semibold text-[var(--theme-text)]">{{ __('Reminders & Dates') }}</h1>
     </div>

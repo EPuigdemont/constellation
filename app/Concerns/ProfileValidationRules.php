@@ -12,7 +12,7 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate user profiles.
      *
-     * @return array<string, array<int, \Illuminate\Contracts\Validation\Rule|array<mixed>|string>>
+     * @return array<string, array<int, mixed>>
      */
     protected function profileRules(?int $userId = null): array
     {
@@ -26,7 +26,7 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate user names.
      *
-     * @return array<int, \Illuminate\Contracts\Validation\Rule|array<mixed>|string>
+     * @return array<int, mixed>
      */
     protected function nameRules(): array
     {
@@ -36,7 +36,7 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate usernames.
      *
-     * @return array<int, \Illuminate\Contracts\Validation\Rule|array<mixed>|string>
+     * @return array<int, mixed>
      */
     protected function usernameRules(?int $userId = null): array
     {
@@ -54,7 +54,7 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate user emails.
      *
-     * @return array<int, \Illuminate\Contracts\Validation\Rule|array<mixed>|string>
+     * @return array<int, mixed>
      */
     protected function emailRules(?int $userId = null): array
     {

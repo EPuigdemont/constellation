@@ -22,12 +22,6 @@ class NoteFactory extends Factory
             'body' => fake()->paragraphs(2, true),
             'mood' => fake()->randomElement(Mood::cases()),
             'color_override' => null,
-            'is_public' => false,
         ];
-    }
-
-    public function public(): static
-    {
-        return $this->state(['is_public' => true]);
     }
 }

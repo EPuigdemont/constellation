@@ -28,11 +28,15 @@ class Constellation extends Component
 
     public string $filterWeekday = '';
 
+    /**
+     * @return array{nodes: list<array<string, mixed>>, edges: list<array<string, mixed>>}
+     */
     public function getGraphData(): array
     {
         $user = Auth::user();
-        $service = new ConstellationService();
+        $service = new ConstellationService;
 
+        /** @var array<string, string> $filters */
         $filters = ['type' => $this->filterType];
 
         if ($this->filterTag !== '') {
@@ -50,19 +54,32 @@ class Constellation extends Component
         // Apply client-presentable month/weekday post-filters
         if ($this->filterMonth !== '') {
             $month = (int) $this->filterMonth;
-            $nodeIds = collect($data['nodes'])->filter(fn ($n) => $n['month'] === $month)->pluck('id')->all();
-            $data['nodes'] = array_values(array_filter($data['nodes'], fn ($n) => $n['month'] === $month));
-            $data['edges'] = array_values(array_filter($data['edges'], fn ($e) => in_array($e['source'], $nodeIds) && in_array($e['target'], $nodeIds)));
+            /** @var list<string> $nodeIds */
+            $nodeIds = collect($data['nodes'])->filter(fn (array $n): bool => (int) ($n['month'] ?? 0) === $month)->pluck('id')->all();
+            /** @var list<array<string, mixed>> $filteredNodes */
+            $filteredNodes = array_values(array_filter($data['nodes'], fn (array $n): bool => (int) ($n['month'] ?? 0) === $month));
+            $data['nodes'] = $filteredNodes;
+            /** @var list<array<string, mixed>> $filteredEdges */
+            $filteredEdges = array_values(array_filter($data['edges'], fn (array $e): bool => in_array((string) ($e['source'] ?? ''), $nodeIds, true) && in_array((string) ($e['target'] ?? ''), $nodeIds, true)));
+            $data['edges'] = $filteredEdges;
         }
 
         if ($this->filterWeekday !== '') {
             $weekday = (int) $this->filterWeekday;
-            $nodeIds = collect($data['nodes'])->filter(fn ($n) => $n['day_of_week'] === $weekday)->pluck('id')->all();
-            $data['nodes'] = array_values(array_filter($data['nodes'], fn ($n) => $n['day_of_week'] === $weekday));
-            $data['edges'] = array_values(array_filter($data['edges'], fn ($e) => in_array($e['source'], $nodeIds) && in_array($e['target'], $nodeIds)));
+            /** @var list<string> $nodeIds */
+            $nodeIds = collect($data['nodes'])->filter(fn (array $n): bool => (int) ($n['day_of_week'] ?? 0) === $weekday)->pluck('id')->all();
+            /** @var list<array<string, mixed>> $filteredNodes */
+            $filteredNodes = array_values(array_filter($data['nodes'], fn (array $n): bool => (int) ($n['day_of_week'] ?? 0) === $weekday));
+            $data['nodes'] = $filteredNodes;
+            /** @var list<array<string, mixed>> $filteredEdges */
+            $filteredEdges = array_values(array_filter($data['edges'], fn (array $e): bool => in_array((string) ($e['source'] ?? ''), $nodeIds, true) && in_array((string) ($e['target'] ?? ''), $nodeIds, true)));
+            $data['edges'] = $filteredEdges;
         }
 
-        return $data;
+        return [
+            'nodes' => $data['nodes'],
+            'edges' => $data['edges'],
+        ];
     }
 
     public function render(): View

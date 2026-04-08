@@ -33,10 +33,10 @@ class DataImportService
      */
     public function import(User $user, string $zipPath): array
     {
-        $tempDir = storage_path('app/temp/import_' . $user->id . '_' . time());
+        $tempDir = storage_path('app/temp/import_'.$user->id.'_'.time());
         mkdir($tempDir, 0755, true);
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
             throw new \RuntimeException(__('Could not open the import file.'));
         }
@@ -44,13 +44,19 @@ class DataImportService
         $zip->extractTo($tempDir);
         $zip->close();
 
-        $jsonPath = $tempDir . '/data.json';
+        $jsonPath = $tempDir.'/data.json';
         if (! file_exists($jsonPath)) {
             $this->deleteDirectory($tempDir);
             throw new \RuntimeException(__('Invalid export file: missing data.json.'));
         }
 
-        $data = json_decode(file_get_contents($jsonPath), true);
+        $json = file_get_contents($jsonPath);
+        if ($json === false) {
+            $this->deleteDirectory($tempDir);
+            throw new \RuntimeException(__('Invalid export file: unreadable data.json.'));
+        }
+
+        $data = json_decode($json, true);
         if (! is_array($data) || ! isset($data['version'])) {
             $this->deleteDirectory($tempDir);
             throw new \RuntimeException(__('Invalid export file: corrupt data.'));
@@ -60,12 +66,14 @@ class DataImportService
             $entityCount = 0;
             $imageCount = 0;
             $settingsApplied = false;
+            $userId = max(1, (int) $user->id);
 
             // 1. Apply user settings
             if (! empty($data['user_settings'])) {
                 $settings = $data['user_settings'];
                 $user->update(array_filter([
                     'theme' => $settings['theme'] ?? null,
+                    'automatic_themes' => $settings['automatic_themes'] ?? null,
                     'language' => $settings['language'] ?? null,
                     'desktop_zoom' => $settings['desktop_zoom'] ?? null,
                     'vision_board_zoom' => $settings['vision_board_zoom'] ?? null,
@@ -75,10 +83,13 @@ class DataImportService
 
                 // Import avatar
                 if (! empty($settings['avatar_filename'])) {
-                    $avatarFile = $tempDir . '/avatar/' . $settings['avatar_filename'];
+                    $avatarFile = $tempDir.'/avatar/'.$settings['avatar_filename'];
                     if (file_exists($avatarFile)) {
-                        $avatarPath = 'avatars/' . $user->id . '/' . $settings['avatar_filename'];
-                        Storage::disk('private')->put($avatarPath, file_get_contents($avatarFile));
+                        $avatarPath = 'avatars/'.$user->id.'/'.$settings['avatar_filename'];
+                        $avatarContents = file_get_contents($avatarFile);
+                        if ($avatarContents !== false) {
+                            Storage::disk('private')->put($avatarPath, $avatarContents);
+                        }
                         $user->update(['avatar_path' => $avatarPath, 'avatar_disk' => 'private']);
                     }
                 }
@@ -90,14 +101,14 @@ class DataImportService
                 if ($existing) {
                     $this->idMap[$tag['id']] = $existing->id;
                 } else {
-                    $newTag = new Tag();
+                    $newTag = new Tag;
                     $newTag->id = Str::uuid()->toString();
-                    $newTag->user_id = $user->id;
+                    $newTag->user_id = $userId;
                     $newTag->name = $tag['name'];
                     $newTag->color = $tag['color'] ?? null;
                     $newTag->timestamps = false;
-                    $newTag->created_at = $tag['created_at'] ? Carbon::parse($tag['created_at']) : now();
-                    $newTag->updated_at = $tag['updated_at'] ? Carbon::parse($tag['updated_at']) : now();
+                    $newTag->created_at = ! empty($tag['created_at']) ? Carbon::parse((string) $tag['created_at']) : now();
+                    $newTag->updated_at = ! empty($tag['updated_at']) ? Carbon::parse((string) $tag['updated_at']) : now();
                     $newTag->save();
                     $this->idMap[$tag['id']] = $newTag->id;
                     $entityCount++;
@@ -106,70 +117,70 @@ class DataImportService
 
             // 3. Import diary entries
             foreach ($data['diary_entries'] ?? [] as $entry) {
-                $new = new DiaryEntry();
+                $new = new DiaryEntry;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->title = $entry['title'];
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
                 $new->color_override = $entry['color_override'] ?? null;
                 $new->is_public = $entry['is_public'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at']) : now();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at']) : now();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at']) : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }
 
             // 4. Import notes
             foreach ($data['notes'] ?? [] as $entry) {
-                $new = new Note();
+                $new = new Note;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->title = $entry['title'];
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
                 $new->color_override = $entry['color_override'] ?? null;
                 $new->is_public = $entry['is_public'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at']) : now();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at']) : now();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at']) : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }
 
             // 5. Import postits
             foreach ($data['postits'] ?? [] as $entry) {
-                $new = new Postit();
+                $new = new Postit;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
                 $new->color_override = $entry['color_override'] ?? null;
                 $new->is_public = $entry['is_public'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at']) : now();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at']) : now();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at']) : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }
 
             // 6. Import images (metadata + files)
             foreach ($data['images'] ?? [] as $entry) {
-                $new = new Image();
+                $new = new Image;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->path = $entry['path'];
                 $new->disk = $entry['disk'] ?? 'private';
                 $new->alt = $entry['alt'] ?? null;
@@ -178,15 +189,18 @@ class DataImportService
                 $new->color_override = $entry['color_override'] ?? null;
                 $new->is_public = $entry['is_public'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at']) : now();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at']) : now();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at']) : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
 
                 // Copy image file from export
-                $sourceFile = $tempDir . '/images/' . $entry['path'];
+                $sourceFile = $tempDir.'/images/'.$entry['path'];
                 if (file_exists($sourceFile)) {
-                    Storage::disk($new->disk)->put($entry['path'], file_get_contents($sourceFile));
-                    $imageCount++;
+                    $imageContents = file_get_contents($sourceFile);
+                    if ($imageContents !== false) {
+                        Storage::disk($new->disk)->put($entry['path'], $imageContents);
+                        $imageCount++;
+                    }
                 }
 
                 $new->save();
@@ -195,40 +209,40 @@ class DataImportService
 
             // 7. Import important dates
             foreach ($data['important_dates'] ?? [] as $entry) {
-                $new = new ImportantDate();
+                $new = new ImportantDate;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->label = $entry['label'];
-                $new->date = Carbon::parse($entry['date']);
+                $new->date = Carbon::parse((string) $entry['date']);
                 $new->recurs_annually = $entry['recurs_annually'] ?? false;
                 $new->is_done = $entry['is_done'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at']) : now();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at']) : now();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at']) : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }
 
             // 8. Import reminders
             foreach ($data['reminders'] ?? [] as $entry) {
-                $new = new Reminder();
+                $new = new Reminder;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
-                $new->user_id = $user->id;
+                $new->user_id = $userId;
                 $new->title = $entry['title'];
                 $new->body = $entry['body'] ?? null;
-                $new->remind_at = Carbon::parse($entry['remind_at']);
+                $new->remind_at = Carbon::parse((string) $entry['remind_at']);
                 $new->mood = $entry['mood'];
                 $new->reminder_type = $entry['reminder_type'] ?? null;
                 $new->is_completed = $entry['is_completed'] ?? false;
                 $new->timestamps = false;
-                $new->created_at = $entry['created_at'] ? Carbon::parse($entry['created_at']) : now();
-                $new->updated_at = $entry['updated_at'] ? Carbon::parse($entry['updated_at']) : now();
-                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse($entry['deleted_at']) : null;
+                $new->created_at = ! empty($entry['created_at']) ? Carbon::parse((string) $entry['created_at']) : now();
+                $new->updated_at = ! empty($entry['updated_at']) ? Carbon::parse((string) $entry['updated_at']) : now();
+                $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
                 $new->save();
                 $entityCount++;
             }

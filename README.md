@@ -1,79 +1,89 @@
 # Constellation
 
-A private, intimate journaling and note-taking web app built as a birthday gift. Two users only. Not public-facing beyond the login screen.
+Private journaling and memory-mapping app built with Laravel + Livewire.
 
-## Stack
+## Current Stack
 
-- **Backend**: Laravel 12, PHP 8.5
-- **Frontend**: Livewire 3, Alpine.js, Tiptap (rich text)
-- **Database**: MySQL 8 / SQLite (local dev)
-- **Drag & Drop**: interact.js or SortableJS via Alpine
-- **Node graph**: D3.js (Constellation view)
-- **Styling**: Tailwind CSS + custom theme CSS classes
-- **Hosting**: Hetzner VPS (CAX11, ~€3.29/mo) + Cloudflare DNS + Let's Encrypt SSL
-- **Security**: Fail2ban, Laravel login throttle, robots.txt disallow all
+- Backend: Laravel 12, PHP 8.5, Fortify auth
+- UI: Livewire 4, Alpine.js, Flux UI
+- Rich text: Tiptap 3
+- Canvas interactions: interact.js
+- Graph rendering: D3.js
+- Styling/build: Tailwind CSS 4 + Vite
+- Database: SQLite (local) and MySQL-compatible schema
 
-## Features
+## Implemented Product Areas
 
-### Virtual Desktop (Scratchboard)
-The main screen is a freeform canvas simulating a desktop. Entities (diary entries, notes, post-its, vision board images) are draggable elements. Positions are persisted per user.
+### Main Views
 
-### Entities
-| Type | Description |
-|------|-------------|
-| Diary Entry | Rich text (Tiptap), supports image embeds, paste from Word/PDF |
-| Note | Lightweight rich text |
-| Post-it | Small note, can be pinned anywhere on the canvas or attached to another entity |
-| Image | Vision board asset, uploadable, linkable to other entities |
+- `canvas`: draggable desktop with entity cards, resize support, z-index, filters, and quick actions
+- `diary`: notebook-like diary display and entry browsing
+- `images`: uploaded image gallery
+- `vision-board`: image canvas with independent zoom/position context
+- `calendar`: monthly view with entity/date indicators and filters
+- `constellation`: force-directed graph of entities and relationships
+- `reminders`: reminder management and due-date flows
+- `notifications`: in-app reminders/important-date notifications
+- `friends`: friendship and sharing management
 
-### Entity Relationships
-Stored in `entity_relationships` table with types:
-- `parent_child` — subordination (post-it on entry, note under entry)
-- `sibling` — peer link between same-type entities (two diary entries linked)
+### Entity Types
 
-Relationship is many-to-many, infinitely recursive by design.
+- Diary entries
+- Notes
+- Post-its
+- Images
+- Important dates
+- Reminders
 
-### Moods & Themes
-- Each entity has a **mood** assigned (e.g. Summer, Cozy, Love) which sets background color, font, border style, decorative CSS overlays
-- User can override the base color of any entity regardless of mood
-- The entire app has a **global theme** (Summer, Love, Breeze, Night, Cozy/Hearth, etc.) stored as a user preference string
-- Themes are CSS class swaps + JS animation sets. New themes require a deploy. No theme engine abstraction.
+All core entities use UUID primary keys and soft deletes.
 
-### Constellation View
-A D3.js node-graph toggled from the desktop. Nodes = entities. Edges = relationships. Proximity ranking based on:
-- Shared tags
-- Entity type
-- Entity relationships
-- Creation date proximity
+### Relationships, Tagging, and Sharing
 
-### Other Features
-- Anniversary/date reminders with in-app celebrations
-- If a sad-tagged entry is written, surface a past positive entry
-- Color/mood coding per entity
-- Public/private flag per entity (shared between the two users or private to one)
-- Tag system: default tags + user-created tags
+- Cross-entity links are stored in `entity_relationships`
+- Polymorphic tags are stored in `taggables`
+- Per-user canvas positions/sizes/visibility are stored in `entity_positions`
+- Friend links are stored in `friendships`
+- Explicit per-entity sharing records are stored in `entity_shares`
 
-### Out of MVP Scope
-- AI-powered smart linking between entities
-- Mobile native app
-- Full iOS sync (import/share only)
+### Themes, Mood, and Localization
 
-## Users
+- Global UI theme is stored per user (`users.theme`)
+- Entity mood + optional `color_override` are supported across entity models
+- Supported locales are persisted per user (`users.language`)
 
-Two fixed users. Closed registration. Login throttled. No public content.
+### Auth and Security
+
+- Username-based login (`config/fortify.php` sets username field to `username`)
+- Login rate limit: 5 attempts/minute (`Fortify` rate limiter)
+- Email verification and 2FA are enabled in Fortify features
+- Uploaded images/avatars are served via authenticated routes
+- `public/robots.txt` disallows crawling
+
+## Routes (Web)
+
+- Public entry: `/` redirects to `/login`
+- Authenticated routes include: `/loading`, `/welcome`, `/canvas`, `/diary`, `/images`, `/vision-board`, `/calendar`, `/constellation`, `/reminders`, `/notifications`, `/friends`
+- Authenticated file/theme/data routes include: `/images/{image}`, `/avatar/{user}`, `POST /theme`, `/data/export`
+
+## Scheduled Commands
+
+- `reminders:check` runs daily at 08:00
+- `users:purge-unverified --hours=72` runs daily at 03:00
 
 ## Local Development
 
 ```bash
 cp .env.example .env
 composer install
-npm install
 php artisan key:generate
 php artisan migrate --seed
-npm run dev
 php artisan serve
 ```
 
-## Deployment
+Optional frontend watch/build commands are available in `package.json` (`vite`, `vite build`).
 
-See `docs/DEPLOY.md` for VPS setup, Cloudflare DNS config, Let's Encrypt, and Fail2ban.
+## Testing
+
+```bash
+php artisan test
+```

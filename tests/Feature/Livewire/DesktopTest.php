@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Tests\Feature\Livewire;
 
 use App\Enums\Mood;
+use App\Enums\Tier;
 use App\Livewire\Canvas;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
+use App\Models\EntityShare;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\User;
@@ -147,7 +149,7 @@ class DesktopTest extends TestCase
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
-        $note = Note::factory()->create(['user_id' => $other->id, 'is_public' => true]);
+        $note = Note::factory()->create(['user_id' => $other->id]);
 
         Livewire::actingAs($user)
             ->test(Canvas::class)
@@ -173,21 +175,50 @@ class DesktopTest extends TestCase
         ]);
     }
 
-    public function test_toggle_public_flips_flag(): void
+    public function test_toggle_share_with_friend_creates_share_record(): void
     {
         $user = User::factory()->create();
+        $friend = User::factory()->create();
         $note = Note::factory()->create([
             'user_id' => $user->id,
-            'is_public' => false,
         ]);
 
         Livewire::actingAs($user)
             ->test(Canvas::class)
-            ->call('togglePublic', $note->id, 'note');
+            ->call('toggleShareWithFriend', $note->id, 'note', $friend->id);
 
-        $this->assertDatabaseHas('notes', [
-            'id' => $note->id,
-            'is_public' => true,
+        $this->assertDatabaseHas('entity_shares', [
+            'owner_id' => $user->id,
+            'friend_id' => $friend->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
+        ]);
+    }
+
+    public function test_toggle_share_with_friend_removes_share_record(): void
+    {
+        $user = User::factory()->create();
+        $friend = User::factory()->create();
+        $note = Note::factory()->create(['user_id' => $user->id]);
+
+        EntityShare::create([
+            'owner_id' => $user->id,
+            'friend_id' => $friend->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
+        ]);
+
+        // Load shares first, then unshare
+        Livewire::actingAs($user)
+            ->test(Canvas::class)
+            ->call('loadCurrentShares', $note->id, 'note')
+            ->call('toggleShareWithFriend', $note->id, 'note', $friend->id);
+
+        $this->assertDatabaseMissing('entity_shares', [
+            'owner_id' => $user->id,
+            'friend_id' => $friend->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
         ]);
     }
 
@@ -195,7 +226,7 @@ class DesktopTest extends TestCase
     {
         $user = User::factory()->create();
         $other = User::factory()->create();
-        $note = Note::factory()->create(['user_id' => $other->id, 'is_public' => true]);
+        $note = Note::factory()->create(['user_id' => $other->id]);
 
         Livewire::actingAs($user)
             ->test(Canvas::class)
@@ -214,6 +245,98 @@ class DesktopTest extends TestCase
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'desktop_zoom' => 1.5,
+        ]);
+    }
+
+    public function test_non_owner_can_open_readonly_modal_for_shared_note(): void
+    {
+        $owner = User::factory()->create(['username' => 'owner-user']);
+        $viewer = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $owner->id,
+            'title' => 'Shared note',
+            'body' => '<p>Read only body</p>',
+        ]);
+
+        EntityShare::create([
+            'owner_id' => $owner->id,
+            'friend_id' => $viewer->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
+        ]);
+
+        Livewire::actingAs($viewer)
+            ->test(Canvas::class)
+            ->call('openReadonlyModal', $note->id, 'note')
+            ->assertSet('showReadonlyModal', true)
+            ->assertSet('readonlyEntityType', 'note')
+            ->assertSet('readonlyOwnerUsername', 'owner-user')
+            ->assertSet('readonlyTitle', 'Shared note');
+    }
+
+    public function test_non_owner_cannot_open_readonly_modal_for_private_note(): void
+    {
+        $owner = User::factory()->create();
+        $viewer = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $owner->id,
+        ]);
+
+        Livewire::actingAs($viewer)
+            ->test(Canvas::class)
+            ->call('openReadonlyModal', $note->id, 'note')
+            ->assertForbidden();
+    }
+
+    public function test_close_readonly_modal_resets_state(): void
+    {
+        $owner = User::factory()->create(['username' => 'owner-user']);
+        $viewer = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $owner->id,
+            'title' => 'Shared note',
+            'body' => 'Read only body',
+        ]);
+
+        EntityShare::create([
+            'owner_id' => $owner->id,
+            'friend_id' => $viewer->id,
+            'entity_id' => $note->id,
+            'entity_type' => 'note',
+        ]);
+
+        Livewire::actingAs($viewer)
+            ->test(Canvas::class)
+            ->call('openReadonlyModal', $note->id, 'note')
+            ->call('closeReadonlyModal')
+            ->assertSet('showReadonlyModal', false)
+            ->assertSet('readonlyEntityType', '')
+            ->assertSet('readonlyOwnerUsername', '')
+            ->assertSet('readonlyTitle', '')
+            ->assertSet('readonlyBody', '')
+            ->assertSet('readonlyImageUrl', '')
+            ->assertSet('readonlyUpdatedAt', '');
+    }
+
+    public function test_save_editor_blocks_note_creation_when_daily_limit_reached(): void
+    {
+        $user = User::factory()->create(['tier' => Tier::Basic->value]);
+        Note::factory()->count(10)->create(['user_id' => $user->id]);
+
+        Livewire::actingAs($user)
+            ->test(Canvas::class)
+            ->set('showEditorModal', true)
+            ->set('editorMode', 'note')
+            ->set('editorTitle', 'Blocked note')
+            ->set('editorBody', 'Body')
+            ->set('editorMood', 'plain')
+            ->call('saveEditor')
+            ->assertSet('showEditorModal', true)
+            ->assertSet('limitError', 'You have reached your note limit for today. Remaining: 0.');
+
+        $this->assertDatabaseMissing('notes', [
+            'user_id' => $user->id,
+            'title' => 'Blocked note',
         ]);
     }
 }
