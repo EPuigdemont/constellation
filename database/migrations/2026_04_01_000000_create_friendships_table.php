@@ -12,17 +12,13 @@ return new class extends Migration
     {
         Schema::create('friendships', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id')->index();
-            $table->uuid('friend_id')->index();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('friend_id')->constrained('users')->cascadeOnDelete();
             $table->enum('status', ['pending', 'accepted', 'blocked'])->default('pending');
             $table->timestamps();
 
             // Ensure a user can't friend themselves
             $table->unique(['user_id', 'friend_id']);
-
-            // Foreign keys
-            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
-            $table->foreign('friend_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
 
