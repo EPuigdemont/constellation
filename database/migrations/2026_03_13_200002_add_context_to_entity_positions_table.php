@@ -16,16 +16,16 @@ return new class extends Migration
 
         // Replace old unique index with one that includes context
         Schema::table('entity_positions', function (Blueprint $table): void {
-            $table->dropUnique('entity_pos_user_entity_unique');
             $table->unique(['user_id', 'entity_id', 'entity_type', 'context'], 'entity_pos_user_entity_ctx_unique');
+            $table->dropUnique('entity_pos_user_entity_unique');
         });
     }
 
     public function down(): void
     {
         Schema::table('entity_positions', function (Blueprint $table): void {
-            $table->dropUnique('entity_pos_user_entity_ctx_unique');
             $table->unique(['user_id', 'entity_id', 'entity_type'], 'entity_pos_user_entity_unique');
+            $table->dropUnique('entity_pos_user_entity_ctx_unique');
             $table->dropColumn('context');
         });
     }
