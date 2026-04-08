@@ -171,7 +171,7 @@ class VisionBoard extends Component
             $limitChecker = app(LimitCheckerService::class);
             if (! $limitChecker->canCreateEntity($user, 'image')) {
                 $remaining = $limitChecker->getRemainingCount($user, 'image');
-                $this->limitError = "You have reached your image upload limit. Remaining: {$remaining}.";
+                $this->limitError = __('You have reached your image upload limit. Remaining: :remaining.', ['remaining' => $remaining]);
                 $this->imageUpload = null;
                 $this->dispatch('notify-error', message: $this->limitError);
                 Log::warning('[VisionBoard] uploadImage: limit reached');

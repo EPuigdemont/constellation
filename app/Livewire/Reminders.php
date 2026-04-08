@@ -155,7 +155,7 @@ class Reminders extends Component
             $limitChecker = app(LimitCheckerService::class);
             if (! $limitChecker->canCreateEntity($user, 'reminder')) {
                 $remaining = $limitChecker->getRemainingCount($user, 'reminder');
-                $this->limitError = "You have reached your reminder limit for today. Remaining: {$remaining}.";
+                $this->limitError = __('You have reached your reminder limit for today. Remaining: :remaining.', ['remaining' => $remaining]);
                 $this->dispatch('notify-error', message: $this->limitError);
 
                 return;

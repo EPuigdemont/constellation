@@ -29,7 +29,24 @@ class VisionBoardLimitsTest extends TestCase
             ->test(VisionBoard::class)
             ->set('imageUpload', UploadedFile::fake()->image('blocked.png'))
             ->call('uploadImage')
-            ->assertSet('limitError', 'You have reached your image upload limit. Remaining: 0.');
+            ->assertSet('limitError', __('You have reached your image upload limit. Remaining: :remaining.', ['remaining' => 0]));
+
+        $this->assertDatabaseCount('images', 20);
+    }
+
+    public function test_limit_error_is_localized_when_locale_is_spanish(): void
+    {
+        Storage::fake('private');
+        app()->setLocale('es');
+
+        $user = User::factory()->create(['tier' => Tier::Basic->value]);
+        Image::factory()->count(20)->create(['user_id' => $user->id]);
+
+        Livewire::actingAs($user)
+            ->test(VisionBoard::class)
+            ->set('imageUpload', UploadedFile::fake()->image('bloqueada.png'))
+            ->call('uploadImage')
+            ->assertSet('limitError', __('You have reached your image upload limit. Remaining: :remaining.', ['remaining' => 0]));
 
         $this->assertDatabaseCount('images', 20);
     }
