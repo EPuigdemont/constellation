@@ -22,18 +22,20 @@ Current schema state based on migrations in `database/migrations`.
 | `username` | string unique | Primary login identifier |
 | `email` | string unique | Used for verification/reset flows |
 | `email_verified_at` | timestamp nullable | Email verification status |
+| `first_login_at` | timestamp nullable | Used by welcome/first-login flow |
 | `password` | string | Hashed password |
 | `two_factor_secret` | text nullable | Fortify 2FA secret |
 | `two_factor_recovery_codes` | text nullable | Fortify recovery codes |
 | `two_factor_confirmed_at` | timestamp nullable | 2FA confirmation timestamp |
-| `first_login_at` | timestamp nullable | Used by welcome/first-login flow |
-| `theme` | string default `summer` | Active UI theme |
-| `language` | string(5) default `en` | Preferred locale |
+| `theme` | string default `summer` | Active UI theme; see `Theme` enum |
+| `automatic_themes` | boolean default `true` | When `true`, theme is resolved from date-based seasonal rules instead of `theme` |
+| `language` | string(5) default `en` | Preferred locale (`en`, `es`) |
 | `avatar_path` | string nullable | Avatar storage path |
 | `avatar_disk` | string nullable default `private` | Avatar storage disk |
 | `desktop_zoom` | float default `1.0` | Canvas zoom level |
 | `vision_board_zoom` | float default `1.0` | Vision board zoom level |
-| `diary_display_mode` | string default `paginated` | Diary mode preference |
+| `diary_display_mode` | string default `paginated` | Diary mode preference (`paginated`, `scroll`) |
+| `tier` | string default `basic` | Account tier; see `Tier` enum (`basic`, `premium`, `vip`) |
 | `remember_token` | string nullable | Auth remember token |
 | `created_at`, `updated_at` | timestamps | |
 
@@ -45,7 +47,7 @@ Current schema state based on migrations in `database/migrations`.
 | `user_id` | foreignId FK `users.id` | Owner |
 | `title` | string | Required |
 | `body` | longText | Rich text content |
-| `mood` | string nullable | Mood enum value |
+| `mood` | string nullable | `Mood` enum value |
 | `color_override` | string nullable | Custom theme color |
 | `is_public` | boolean default `false` | Visibility toggle |
 | `created_at`, `updated_at` | timestamps | |
@@ -59,7 +61,7 @@ Current schema state based on migrations in `database/migrations`.
 | `user_id` | foreignId FK `users.id` | Owner |
 | `title` | string nullable | Optional title |
 | `body` | longText | Rich text content |
-| `mood` | string nullable | Mood enum value |
+| `mood` | string nullable | `Mood` enum value |
 | `color_override` | string nullable | Custom theme color |
 | `is_public` | boolean default `false` | Visibility toggle |
 | `created_at`, `updated_at` | timestamps | |
@@ -72,7 +74,7 @@ Current schema state based on migrations in `database/migrations`.
 | `id` | uuid PK | |
 | `user_id` | foreignId FK `users.id` | Owner |
 | `body` | text | Post-it content |
-| `mood` | string nullable | Mood enum value |
+| `mood` | string nullable | `Mood` enum value |
 | `color_override` | string nullable | Custom theme color |
 | `is_public` | boolean default `false` | Visibility toggle |
 | `created_at`, `updated_at` | timestamps | |
@@ -87,8 +89,8 @@ Current schema state based on migrations in `database/migrations`.
 | `path` | string | Stored path on disk |
 | `disk` | string default `private` | Filesystem disk |
 | `alt` | string nullable | Accessibility text |
-| `title` | string nullable | UI title |
-| `mood` | string nullable | Mood enum value |
+| `title` | string nullable | UI title (shown as header on vision board cards) |
+| `mood` | string nullable | `Mood` enum value |
 | `color_override` | string nullable | Custom theme color |
 | `is_public` | boolean default `false` | Visibility toggle |
 | `created_at`, `updated_at` | timestamps | |
@@ -116,8 +118,8 @@ Current schema state based on migrations in `database/migrations`.
 | `title` | string | Reminder title |
 | `body` | text nullable | Optional details |
 | `remind_at` | dateTime | Due date/time |
-| `mood` | string nullable | Mood enum value |
-| `reminder_type` | string(30) default `general` | Reminder category |
+| `mood` | string nullable | `Mood` enum value |
+| `reminder_type` | string(30) default `general` | `ReminderType` enum value (`general`, `menstrual_cycle`, `ovulation`) |
 | `is_completed` | boolean default `false` | Completion state |
 | `created_at`, `updated_at` | timestamps | |
 | `deleted_at` | softDeletes | |
@@ -158,8 +160,8 @@ Index: `index(taggable_id, taggable_type)`
 | `entity_a_type` | string | First entity morph alias |
 | `entity_b_id` | uuid | Second entity ID |
 | `entity_b_type` | string | Second entity morph alias |
-| `relationship_type` | string | Relationship kind (e.g. `parent_child`, `sibling`) |
-| `direction` | string nullable | Direction metadata |
+| `relationship_type` | string | `RelationshipType` enum value (`parent_child`, `sibling`) |
+| `direction` | string nullable | `RelationshipDirection` enum value (`a_to_b`, `b_to_a`), only meaningful for `parent_child` |
 | `created_at`, `updated_at` | timestamps | |
 
 Indexes:
@@ -176,7 +178,7 @@ Indexes:
 | `user_id` | foreignId FK `users.id` | Per-user position state |
 | `entity_id` | uuid | Entity ID |
 | `entity_type` | string | Entity morph alias |
-| `context` | string default `desktop` | View context (`desktop`, `vision_board`, ...) |
+| `context` | string default `desktop` | View context (`desktop`, `vision_board`) |
 | `x` | float | X coordinate |
 | `y` | float | Y coordinate |
 | `z_index` | integer default `0` | Layering |
@@ -193,8 +195,8 @@ Unique: `unique(user_id, entity_id, entity_type, context)`
 |---|---|---|
 | `id` | uuid PK | |
 | `user_id` | foreignId FK `users.id` | Owner |
-| `date` | date | Calendar day |
-| `mood` | string(30) | Applied mood |
+| `date` | date | Calendar day (stored as `Y-m-d`) |
+| `mood` | string(30) | `Mood` enum value applied to this day |
 | `created_at`, `updated_at` | timestamps | |
 
 Unique: `unique(user_id, date)`
@@ -206,7 +208,7 @@ Unique: `unique(user_id, date)`
 | `id` | uuid PK | |
 | `user_id` | uuid indexed FK `users.id` | Requesting user |
 | `friend_id` | uuid indexed FK `users.id` | Target user |
-| `status` | enum(`pending`, `accepted`, `blocked`) default `pending` | Friendship state |
+| `status` | enum(`pending`, `accepted`, `blocked`) default `pending` | `FriendshipStatus` enum value |
 | `created_at`, `updated_at` | timestamps | |
 
 Unique: `unique(user_id, friend_id)`
@@ -250,3 +252,88 @@ Relation::enforceMorphMap([
 ]);
 ```
 
+## Enums
+
+All enums live under `App\Enums\` and are backed string enums.
+
+### `Mood`
+
+Used on `diary_entries.mood`, `notes.mood`, `postits.mood`, `images.mood`, `reminders.mood`, and `calendar_day_moods.mood`.
+
+| Case | Value | Notes |
+|---|---|---|
+| `Spring` | `spring` | |
+| `Summer` | `summer` | |
+| `Autumn` | `autumn` | |
+| `Winter` | `winter` | |
+| `Love` | `love` | |
+| `Breeze` | `breeze` | |
+| `Night` | `night` | |
+| `Cozy` | `cozy` | |
+| `Plain` | `plain` | Neutral/unstyled |
+| `Custom` | `custom` | Uses `color_override` instead of a preset |
+
+### `Theme`
+
+Used on `users.theme`. Drives the active UI theme class on `<body>`.
+
+| Case | Value |
+|---|---|
+| `Spring` | `spring` |
+| `Summer` | `summer` |
+| `Autumn` | `autumn` |
+| `Winter` | `winter` |
+| `Love` | `love` |
+| `Breeze` | `breeze` |
+| `Night` | `night` |
+| `Cozy` | `cozy` |
+
+When `users.automatic_themes` is `true`, the active theme is resolved at runtime by `ThemeResolverService` based on the current date; `users.theme` is used only when automatic themes are disabled.
+
+### `Tier`
+
+Used on `users.tier`. Controls entity creation limits enforced by `LimitCheckerService`.
+
+| Case | Value |
+|---|---|
+| `Basic` | `basic` |
+| `Premium` | `premium` |
+| `VIP` | `vip` |
+
+### `ReminderType`
+
+Used on `reminders.reminder_type`.
+
+| Case | Value |
+|---|---|
+| `General` | `general` |
+| `MenstrualCycle` | `menstrual_cycle` |
+| `Ovulation` | `ovulation` |
+
+### `FriendshipStatus`
+
+Used on `friendships.status`.
+
+| Case | Value |
+|---|---|
+| `Pending` | `pending` |
+| `Accepted` | `accepted` |
+| `Blocked` | `blocked` |
+
+### `RelationshipType`
+
+Used on `entity_relationships.relationship_type`.
+
+| Case | Value |
+|---|---|
+| `ParentChild` | `parent_child` |
+| `Sibling` | `sibling` |
+
+### `RelationshipDirection`
+
+Used on `entity_relationships.direction`. Only meaningful when `relationship_type` is `parent_child`.
+
+| Case | Value | Meaning |
+|---|---|---|
+| `AToB` | `a_to_b` | `entity_a` is the parent of `entity_b` |
+| `BToA` | `b_to_a` | `entity_b` is the parent of `entity_a` |
