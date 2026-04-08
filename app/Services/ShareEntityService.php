@@ -8,7 +8,6 @@ use App\Enums\FriendshipStatus;
 use App\Models\EntityShare;
 use App\Models\Friendship;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 
 class ShareEntityService
 {
@@ -49,8 +48,6 @@ class ShareEntityService
     /**
      * Get currently shared friend IDs for an entity.
      *
-     * @param string $entityId
-     * @param string $entityType
      * @return array<int, string>
      */
     public function getSharedFriendIds(User $owner, string $entityId, string $entityType): array
@@ -65,10 +62,7 @@ class ShareEntityService
     /**
      * Sync entity shares with a list of friend IDs.
      *
-     * @param User   $owner
-     * @param string $entityId
-     * @param string $entityType
-     * @param array<int, string> $friendIds
+     * @param  array<int, string>  $friendIds
      */
     public function syncShares(User $owner, string $entityId, string $entityType, array $friendIds): void
     {
@@ -136,5 +130,3 @@ class ShareEntityService
             ->exists();
     }
 }
-
-

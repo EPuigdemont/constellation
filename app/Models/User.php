@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
-use App\Enums\Theme;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\FriendshipStatus;
+use App\Enums\Theme;
 use App\Enums\Tier;
 use App\Services\ThemeResolverService;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -33,7 +33,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property float $desktop_zoom
  * @property float $vision_board_zoom
  * @property string $diary_display_mode
- * @property \Carbon\CarbonInterface|null $first_login_at
+ * @property CarbonInterface|null $first_login_at
  * @property Tier $tier
  */
 class User extends Authenticatable implements MustVerifyEmail

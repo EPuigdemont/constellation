@@ -34,4 +34,3 @@ class VisionBoardLimitsTest extends TestCase
         $this->assertDatabaseCount('images', 20);
     }
 }
-

@@ -20,4 +20,3 @@ class UserTierTest extends TestCase
         $this->assertSame(Tier::Basic, $user->tier);
     }
 }
-

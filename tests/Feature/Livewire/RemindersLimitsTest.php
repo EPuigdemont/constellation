@@ -34,4 +34,3 @@ class RemindersLimitsTest extends TestCase
         ]);
     }
 }
-

@@ -14,8 +14,8 @@ use App\Models\Reminder;
 use App\Models\Tag;
 use App\Services\LimitCheckerService;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -191,45 +191,45 @@ class Calendar extends Component
                 Gate::authorize('create', DiaryEntry::class);
 
                 return DiaryEntry::create([
-                'user_id' => $user->id,
-                'title' => $this->createTitle ?: 'Untitled',
-                'body' => $this->createBody,
-                'mood' => $mood,
-                'created_at' => $createdAt,
-            ]);
+                    'user_id' => $user->id,
+                    'title' => $this->createTitle ?: 'Untitled',
+                    'body' => $this->createBody,
+                    'mood' => $mood,
+                    'created_at' => $createdAt,
+                ]);
             })(),
             'note' => (function () use ($user, $mood, $createdAt) {
                 Gate::authorize('create', Note::class);
 
                 return Note::create([
-                'user_id' => $user->id,
-                'title' => $this->createTitle ?: 'Untitled',
-                'body' => $this->createBody,
-                'mood' => $mood,
-                'created_at' => $createdAt,
-            ]);
+                    'user_id' => $user->id,
+                    'title' => $this->createTitle ?: 'Untitled',
+                    'body' => $this->createBody,
+                    'mood' => $mood,
+                    'created_at' => $createdAt,
+                ]);
             })(),
             'postit' => (function () use ($user, $mood, $createdAt) {
                 Gate::authorize('create', Postit::class);
 
                 return Postit::create([
-                'user_id' => $user->id,
-                'body' => $this->createBody,
-                'mood' => $mood,
-                'created_at' => $createdAt,
-            ]);
+                    'user_id' => $user->id,
+                    'body' => $this->createBody,
+                    'mood' => $mood,
+                    'created_at' => $createdAt,
+                ]);
             })(),
             'reminder' => (function () use ($user, $mood, $createdAt) {
                 Gate::authorize('create', Reminder::class);
 
                 return Reminder::create([
-                'user_id' => $user->id,
-                'title' => $this->createTitle ?: 'Reminder',
-                'body' => $this->createBody,
-                'remind_at' => $this->selectedDate ? Carbon::parse($this->selectedDate)->setTime(9, 0) : now()->addDay(),
-                'mood' => $mood,
-                'created_at' => $createdAt,
-            ]);
+                    'user_id' => $user->id,
+                    'title' => $this->createTitle ?: 'Reminder',
+                    'body' => $this->createBody,
+                    'remind_at' => $this->selectedDate ? Carbon::parse($this->selectedDate)->setTime(9, 0) : now()->addDay(),
+                    'mood' => $mood,
+                    'created_at' => $createdAt,
+                ]);
             })(),
             default => null,
         };
@@ -238,7 +238,7 @@ class Calendar extends Component
             return;
         }
 
-        if (!empty($this->createTags)) {
+        if (! empty($this->createTags)) {
             if (in_array('menstruation', $this->createTags) && $this->selectedDate !== '') {
                 CalendarDayMood::updateOrCreate(
                     ['user_id' => $user->id, 'date' => $this->selectedDate],
@@ -253,7 +253,7 @@ class Calendar extends Component
             }
         }
 
-        if (!empty($this->createTags)) {
+        if (! empty($this->createTags)) {
             $tagIds = Tag::whereIn('name', $this->createTags)->pluck('id')->toArray();
             $entity->tags()->sync($tagIds);
         }
@@ -346,11 +346,11 @@ class Calendar extends Component
     }
 
     /**
-     * @param Collection<int, DiaryEntry> $diaryEntries
-     * @param Collection<int, Note> $notes
-     * @param Collection<int, Postit> $postits
-     * @param Collection<int, ImportantDate> $importantDates
-     * @param Collection<int, Reminder> $reminders
+     * @param  Collection<int, DiaryEntry>  $diaryEntries
+     * @param  Collection<int, Note>  $notes
+     * @param  Collection<int, Postit>  $postits
+     * @param  Collection<int, ImportantDate>  $importantDates
+     * @param  Collection<int, Reminder>  $reminders
      * @return array<int, array{date: string, day: int, inMonth: bool, isToday: bool, entities: Collection<int, array<string, mixed>>}>
      */
     private function buildCalendarGrid(Carbon $startOfMonth, Collection $diaryEntries, Collection $notes, Collection $postits, Collection $importantDates, Collection $reminders): array
@@ -411,11 +411,11 @@ class Calendar extends Component
     }
 
     /**
-     * @param Collection<int, DiaryEntry> $diaryEntries
-     * @param Collection<int, Note> $notes
-     * @param Collection<int, Postit> $postits
-     * @param Collection<int, ImportantDate> $importantDates
-     * @param Collection<int, Reminder> $reminders
+     * @param  Collection<int, DiaryEntry>  $diaryEntries
+     * @param  Collection<int, Note>  $notes
+     * @param  Collection<int, Postit>  $postits
+     * @param  Collection<int, ImportantDate>  $importantDates
+     * @param  Collection<int, Reminder>  $reminders
      * @return Collection<int, array<string, mixed>>
      */
     private function getEntitiesForDate(string $date, Collection $diaryEntries, Collection $notes, Collection $postits, Collection $importantDates, Collection $reminders): Collection

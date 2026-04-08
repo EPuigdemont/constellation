@@ -174,15 +174,15 @@ class DataExportService
             ])->values()->all(),
         ];
 
-        $tempDir = storage_path('app/temp/export_' . $userId . '_' . time());
+        $tempDir = storage_path('app/temp/export_'.$userId.'_'.time());
         if (! is_dir($tempDir)) {
             mkdir($tempDir, 0755, true);
         }
 
-        file_put_contents($tempDir . '/data.json', json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        file_put_contents($tempDir.'/data.json', json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         // Copy image files into the zip
-        $imagesDir = $tempDir . '/images';
+        $imagesDir = $tempDir.'/images';
         mkdir($imagesDir, 0755, true);
 
         foreach ($images as $image) {
@@ -190,11 +190,11 @@ class DataExportService
             if ($disk->exists($image->path)) {
                 $filename = basename($image->path);
                 $subDir = dirname($image->path);
-                $targetDir = $imagesDir . '/' . $subDir;
+                $targetDir = $imagesDir.'/'.$subDir;
                 if (! is_dir($targetDir)) {
                     mkdir($targetDir, 0755, true);
                 }
-                file_put_contents($targetDir . '/' . $filename, $disk->get($image->path));
+                file_put_contents($targetDir.'/'.$filename, $disk->get($image->path));
             }
         }
 
@@ -202,17 +202,17 @@ class DataExportService
         if ($user->avatar_path && $user->avatar_disk) {
             $avatarDisk = Storage::disk($user->avatar_disk);
             if ($avatarDisk->exists($user->avatar_path)) {
-                $avatarDir = $tempDir . '/avatar';
+                $avatarDir = $tempDir.'/avatar';
                 mkdir($avatarDir, 0755, true);
-                file_put_contents($avatarDir . '/' . basename($user->avatar_path), $avatarDisk->get($user->avatar_path));
+                file_put_contents($avatarDir.'/'.basename($user->avatar_path), $avatarDisk->get($user->avatar_path));
                 $data['user_settings']['avatar_filename'] = basename($user->avatar_path);
                 // Re-write JSON with avatar info
-                file_put_contents($tempDir . '/data.json', json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+                file_put_contents($tempDir.'/data.json', json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
             }
         }
 
-        $zipPath = storage_path('app/temp/constellation_export_' . $userId . '_' . time() . '.zip');
-        $zip = new ZipArchive();
+        $zipPath = storage_path('app/temp/constellation_export_'.$userId.'_'.time().'.zip');
+        $zip = new ZipArchive;
         $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
         $this->addDirectoryToZip($zip, $tempDir, '');
@@ -234,7 +234,7 @@ class DataExportService
 
         foreach ($files as $file) {
             $filePath = $file->getRealPath();
-            $relativePath = $prefix . substr($filePath, strlen($directory) + 1);
+            $relativePath = $prefix.substr($filePath, strlen($directory) + 1);
             $zip->addFile($filePath, $relativePath);
         }
     }

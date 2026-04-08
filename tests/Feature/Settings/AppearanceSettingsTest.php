@@ -49,4 +49,3 @@ class AppearanceSettingsTest extends TestCase
         $this->assertFalse((bool) $freshUser?->automatic_themes);
     }
 }
-

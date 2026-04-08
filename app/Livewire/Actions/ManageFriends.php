@@ -83,4 +83,3 @@ class ManageFriends extends Component
         ]);
     }
 }
-

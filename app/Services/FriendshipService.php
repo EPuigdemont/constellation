@@ -18,7 +18,7 @@ class FriendshipService
     {
         $to = User::where('email', $email)->first();
 
-        if (!$to) {
+        if (! $to) {
             return false; // User not found
         }
 
@@ -55,7 +55,7 @@ class FriendshipService
             ->where('status', FriendshipStatus::Pending->value)
             ->first();
 
-        if (!$friendship) {
+        if (! $friendship) {
             return false;
         }
 
@@ -77,7 +77,7 @@ class FriendshipService
             ->where('status', FriendshipStatus::Pending->value)
             ->first();
 
-        if (!$friendship) {
+        if (! $friendship) {
             return false;
         }
 
@@ -170,4 +170,3 @@ class FriendshipService
             ->get();
     }
 }
-

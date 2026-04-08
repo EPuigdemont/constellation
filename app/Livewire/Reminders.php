@@ -107,7 +107,7 @@ class Reminders extends Component
     public function toggleDateComplete(string $id): void
     {
         $date = ImportantDate::where('user_id', Auth::id())->findOrFail($id);
-        $date->update(['is_done' => !$date->is_done]);
+        $date->update(['is_done' => ! $date->is_done]);
     }
 
     public function closeDateForm(): void

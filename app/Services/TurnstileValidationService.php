@@ -38,4 +38,3 @@ class TurnstileValidationService
         return $response->ok() && $response->json('success') === true;
     }
 }
-

@@ -34,7 +34,7 @@ class Constellation extends Component
     public function getGraphData(): array
     {
         $user = Auth::user();
-        $service = new ConstellationService();
+        $service = new ConstellationService;
 
         /** @var array<string, string> $filters */
         $filters = ['type' => $this->filterType];

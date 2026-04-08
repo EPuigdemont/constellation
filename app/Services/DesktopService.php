@@ -69,7 +69,7 @@ class DesktopService
             });
 
         foreach ($entityTypes as $morphType => $modelClass) {
-            if (!isset($sharedEntities[$morphType])) {
+            if (! isset($sharedEntities[$morphType])) {
                 continue;
             }
 
@@ -97,7 +97,7 @@ class DesktopService
         $deduplicatedEntities = [];
         foreach ($allEntities as $item) {
             $entity = $item['entity'];
-            $deduplicatedEntities[$item['morphType'] . ':' . $entity->id] = $item;
+            $deduplicatedEntities[$item['morphType'].':'.$entity->id] = $item;
         }
 
         $allEntities = array_values($deduplicatedEntities);
@@ -113,21 +113,21 @@ class DesktopService
         /** @var array<string, EntityPosition> $positions */
         $positions = [];
         foreach ($positionRecords as $position) {
-            $positions[$position->entity_id . ':' . $position->entity_type] = $position;
+            $positions[$position->entity_id.':'.$position->entity_type] = $position;
         }
 
         // Load only relationships involving the collected entity IDs
         $relationships = EntityRelationship::query()
             ->where(function ($q) use ($entityIds) {
                 $q->whereIn('entity_a_id', $entityIds)
-                  ->orWhereIn('entity_b_id', $entityIds);
+                    ->orWhereIn('entity_b_id', $entityIds);
             })
             ->get();
 
         foreach ($allEntities as $item) {
             $entity = $item['entity'];
             $morphType = $item['morphType'];
-            $position = $positions[$entity->id . ':' . $morphType] ?? null;
+            $position = $positions[$entity->id.':'.$morphType] ?? null;
 
             $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
         }
@@ -305,7 +305,7 @@ class DesktopService
     /**
      * Get relationship counts and parent info for card enrichment.
      *
-     * @param Collection<int, EntityRelationship> $relationships
+     * @param  Collection<int, EntityRelationship>  $relationships
      * @return array{parent_id: string|null, parent_type: string|null, children_count: int, siblings_count: int}
      */
     public function getRelationshipData(string $entityId, string $entityType, Collection $relationships): array
@@ -344,8 +344,8 @@ class DesktopService
     /**
      * Normalize an entity model into a card array for the frontend.
      *
-     * @param DiaryEntry|Note|Postit|Image|Reminder $entity
-     * @param Collection<int, EntityRelationship>|null $relationships
+     * @param  DiaryEntry|Note|Postit|Image|Reminder  $entity
+     * @param  Collection<int, EntityRelationship>|null  $relationships
      * @return array<string, mixed>
      */
     private function normalizeCard(Model $entity, string $type, mixed $position, ?Collection $relationships = null): array

@@ -20,7 +20,7 @@ class ShareEntityServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ShareEntityService();
+        $this->service = new ShareEntityService;
     }
 
     public function test_get_friends_for_user_includes_only_accepted_sent_friendships(): void
@@ -110,4 +110,3 @@ class ShareEntityServiceTest extends TestCase
         $this->assertSame((string) $zeta->id, $friends[1]['id']);
     }
 }
-

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Models\Concerns\HasEntityDefaults;
+use Carbon\CarbonInterface;
 use Database\Factories\ImportantDateFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,12 +17,12 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property string $id
  * @property int $user_id
  * @property string $label
- * @property \Carbon\CarbonInterface $date
+ * @property CarbonInterface $date
  * @property bool $recurs_annually
  * @property bool $is_done
- * @property \Carbon\CarbonInterface|null $created_at
- * @property \Carbon\CarbonInterface|null $updated_at
- * @property \Carbon\CarbonInterface|null $deleted_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
+ * @property CarbonInterface|null $deleted_at
  */
 class ImportantDate extends Model
 {

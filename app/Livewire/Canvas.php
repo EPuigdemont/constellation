@@ -6,6 +6,8 @@ namespace App\Livewire;
 
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
+use App\Models\EntityPosition;
+use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
@@ -14,14 +16,19 @@ use App\Models\User;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
 use App\Services\LimitCheckerService;
+use App\Services\ShareEntityService;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
@@ -65,10 +72,10 @@ class Canvas extends Component
 
     public ?string $editorColorOverride = null;
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $editorImage = null;
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $imageUpload = null;
 
     /** @var array<int, string> */
@@ -131,7 +138,7 @@ class Canvas extends Component
         $user = Auth::user();
         $newZ = $service->nextZIndex($user);
 
-        \App\Models\EntityPosition::query()
+        EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('entity_id', $entityId)
             ->where('entity_type', $entityType)
@@ -292,7 +299,7 @@ class Canvas extends Component
     public function uploadImage(EditorImageService $imageService, DesktopService $service): void
     {
         try {
-            \Illuminate\Support\Facades\Log::info('[Canvas] uploadImage called', [
+            Log::info('[Canvas] uploadImage called', [
                 'hasFile' => $this->imageUpload !== null,
                 'fileClass' => $this->imageUpload ? get_class($this->imageUpload) : null,
                 'fileName' => $this->imageUpload?->getClientOriginalName(),
@@ -301,7 +308,7 @@ class Canvas extends Component
             ]);
 
             if (! $this->imageUpload) {
-                \Illuminate\Support\Facades\Log::warning('[Canvas] uploadImage: imageUpload is null, aborting');
+                Log::warning('[Canvas] uploadImage: imageUpload is null, aborting');
 
                 return;
             }
@@ -315,20 +322,20 @@ class Canvas extends Component
                 $this->limitError = "You have reached your image upload limit. Remaining: {$remaining}.";
                 $this->imageUpload = null;
                 $this->dispatch('notify-error', message: $this->limitError);
-                \Illuminate\Support\Facades\Log::warning('[Canvas] uploadImage: limit reached');
+                Log::warning('[Canvas] uploadImage: limit reached');
 
                 return;
             }
 
             $this->limitError = '';
 
-            Gate::authorize('create', \App\Models\Image::class);
+            Gate::authorize('create', Image::class);
 
             $image = $imageService->store($user, $this->imageUpload);
-            \Illuminate\Support\Facades\Log::info('[Canvas] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
+            Log::info('[Canvas] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
 
             $position = $service->assignDefaultPosition($user, $image->id, 'image', $this->viewportCenterX, $this->viewportCenterY);
-            \Illuminate\Support\Facades\Log::info('[Canvas] Position assigned', ['positionId' => $position->id, 'x' => $position->x, 'y' => $position->y]);
+            Log::info('[Canvas] Position assigned', ['positionId' => $position->id, 'x' => $position->x, 'y' => $position->y]);
 
             $card = [
                 'id' => $image->id,
@@ -358,11 +365,11 @@ class Canvas extends Component
             $this->imageUpload = null;
 
             $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
-            \Illuminate\Support\Facades\Log::info('[Canvas] uploadImage completed successfully', ['cardId' => $card['id']]);
+            Log::info('[Canvas] uploadImage completed successfully', ['cardId' => $card['id']]);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('[Canvas] uploadImage failed', [
+            Log::error('[Canvas] uploadImage failed', [
                 'error' => $e->getMessage(),
-                'file' => $e->getFile() . ':' . $e->getLine(),
+                'file' => $e->getFile().':'.$e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
@@ -469,7 +476,7 @@ class Canvas extends Component
 
         $this->limitError = '';
 
-        Gate::authorize('create', \App\Models\Image::class);
+        Gate::authorize('create', Image::class);
 
         $image = $service->store($user, $this->editorImage);
         $url = route('images.serve', $image);
@@ -516,7 +523,7 @@ class Canvas extends Component
 
         $this->updateCardInList($this->editingEntityId, [
             'title' => $this->editorTitle,
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($this->editorBody), 120),
+            'preview' => Str::limit(strip_tags($this->editorBody), 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
         ]);
@@ -621,7 +628,7 @@ class Canvas extends Component
         $model->update(['body' => $body]);
 
         $this->updateCardInList($entityId, [
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($body), 120),
+            'preview' => Str::limit(strip_tags($body), 120),
         ]);
     }
 
@@ -682,6 +689,7 @@ class Canvas extends Component
 
         if (! $sourceModel || ! $targetModel) {
             $this->cancelLinking();
+
             return;
         }
 
@@ -714,6 +722,7 @@ class Canvas extends Component
             // Don't link entity to itself
             if ($this->linkingEntityId === $targetEntityId) {
                 $this->cancelLinking();
+
                 return;
             }
 
@@ -777,7 +786,7 @@ class Canvas extends Component
     {
         $user = Auth::user();
 
-        $position = \App\Models\EntityPosition::query()
+        $position = EntityPosition::query()
             ->where('user_id', $user->id)
             ->where('entity_id', $entityId)
             ->where('entity_type', $entityType)
@@ -795,14 +804,13 @@ class Canvas extends Component
         $this->dispatch('card-visibility-changed', entityId: $entityId, isHidden: $position->is_hidden);
     }
 
-
-    public function loadFriendsForSharing(\App\Services\ShareEntityService $service): void
+    public function loadFriendsForSharing(ShareEntityService $service): void
     {
         $user = Auth::user();
         $this->userFriends = $service->getFriendsForUser($user);
     }
 
-    public function loadCurrentShares(\App\Services\ShareEntityService $service, string $entityId, string $entityType): void
+    public function loadCurrentShares(ShareEntityService $service, string $entityId, string $entityType): void
     {
         $user = Auth::user();
         $this->currentEntitySharedFriends = array_map(
@@ -811,7 +819,7 @@ class Canvas extends Component
         );
     }
 
-    public function toggleShareWithFriend(\App\Services\ShareEntityService $service, string $entityId, string $entityType, string $friendId): void
+    public function toggleShareWithFriend(ShareEntityService $service, string $entityId, string $entityType, string $friendId): void
     {
         $model = $this->resolveEntity($entityId, $entityType);
         if (! $model) {
@@ -841,11 +849,11 @@ class Canvas extends Component
     {
         $user = Auth::user();
 
-        return \App\Models\Image::where('user_id', $user->id)
+        return Image::where('user_id', $user->id)
             ->latest()
             ->limit(20)
             ->get()
-            ->map(fn (\App\Models\Image $img): array => [
+            ->map(fn (Image $img): array => [
                 'id' => $img->id,
                 'image_url' => route('images.serve', $img),
                 'title' => $img->title ?? $img->alt ?? '',
@@ -853,7 +861,7 @@ class Canvas extends Component
             ->all();
     }
 
-    public function render(): \Illuminate\Contracts\View\View
+    public function render(): View
     {
         return view('livewire.desktop');
     }
@@ -930,7 +938,7 @@ class Canvas extends Component
             'id' => $entity->id,
             'type' => $type,
             'title' => $entity->title ?? '',
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($entity->body ?? ''), 120),
+            'preview' => Str::limit(strip_tags($entity->body ?? ''), 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
             'x' => $position->x,
@@ -993,7 +1001,7 @@ class Canvas extends Component
 
         $updates = [
             'title' => $this->editorTitle,
-            'preview' => \Illuminate\Support\Str::limit(strip_tags($this->editorBody), 120),
+            'preview' => Str::limit(strip_tags($this->editorBody), 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
             'tag_ids' => $this->editorTagIds,

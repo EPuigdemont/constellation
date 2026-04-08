@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\Tier;
 use App\Models\DiaryEntry;
 use App\Models\Image;
 use App\Models\Note;
@@ -115,4 +114,3 @@ class LimitCheckerService
         return in_array($entityType, ['note', 'postit', 'diary_entry', 'reminder'], true);
     }
 }
-

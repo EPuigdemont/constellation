@@ -16,7 +16,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(TagSeeder::class);
 
-
         User::firstOrCreate(
             ['email' => env('SEED_USER1_EMAIL', 'enric@constellation.com')],
             [

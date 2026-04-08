@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Database\Factories\TagFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -17,8 +18,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property string $name
  * @property int|null $user_id
  * @property string|null $color
- * @property \Carbon\CarbonInterface|null $created_at
- * @property \Carbon\CarbonInterface|null $updated_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
  */
 class Tag extends Model
 {
@@ -68,7 +69,7 @@ class Tag extends Model
     }
 
     /** @param Builder<Tag> $query
-     *  @return Builder<Tag>
+     * @return Builder<Tag>
      */
     public function scopeSystem(Builder $query): Builder
     {
@@ -76,7 +77,7 @@ class Tag extends Model
     }
 
     /** @param Builder<Tag> $query
-     *  @return Builder<Tag>
+     * @return Builder<Tag>
      */
     public function scopeForUser(Builder $query, int|string $userId): Builder
     {

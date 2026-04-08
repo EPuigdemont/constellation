@@ -10,4 +10,3 @@ enum FriendshipStatus: string
     case Accepted = 'accepted';
     case Blocked = 'blocked';
 }
-

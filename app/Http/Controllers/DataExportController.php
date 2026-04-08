@@ -14,7 +14,7 @@ class DataExportController extends Controller
     {
         $user = $request->user();
         $zipPath = $service->export($user);
-        $filename = 'constellation_export_' . now()->format('Y-m-d_His') . '.zip';
+        $filename = 'constellation_export_'.now()->format('Y-m-d_His').'.zip';
 
         return response()->streamDownload(function () use ($zipPath) {
             readfile($zipPath);

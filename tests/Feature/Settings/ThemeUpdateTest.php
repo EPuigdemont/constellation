@@ -33,6 +33,3 @@ class ThemeUpdateTest extends TestCase
         $this->assertFalse((bool) $freshUser?->automatic_themes);
     }
 }
-
-
-

@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\Mood;
 use App\Models\Concerns\HasEntityDefaults;
+use Carbon\CarbonInterface;
 use Database\Factories\ImageFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,9 +24,9 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property Mood|null $mood
  * @property string|null $color_override
  * @property bool $is_public
- * @property \Carbon\CarbonInterface|null $created_at
- * @property \Carbon\CarbonInterface|null $updated_at
- * @property \Carbon\CarbonInterface|null $deleted_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
+ * @property CarbonInterface|null $deleted_at
  */
 class Image extends Model
 {

@@ -8,6 +8,7 @@ use App\Enums\Mood;
 use App\Enums\ReminderType;
 use App\Models\Concerns\HasEntityDefaults;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Database\Factories\ReminderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,13 +21,13 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property int $user_id
  * @property string $title
  * @property string|null $body
- * @property \Carbon\CarbonInterface $remind_at
+ * @property CarbonInterface $remind_at
  * @property Mood|null $mood
  * @property ReminderType $reminder_type
  * @property bool $is_completed
- * @property \Carbon\CarbonInterface|null $created_at
- * @property \Carbon\CarbonInterface|null $updated_at
- * @property \Carbon\CarbonInterface|null $deleted_at
+ * @property CarbonInterface|null $created_at
+ * @property CarbonInterface|null $updated_at
+ * @property CarbonInterface|null $deleted_at
  */
 class Reminder extends Model
 {

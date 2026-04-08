@@ -96,5 +96,3 @@ class ThemeResolverService
         return $monthDay >= $start || $monthDay <= $end;
     }
 }
-
-

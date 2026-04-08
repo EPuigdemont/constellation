@@ -19,7 +19,7 @@ class UnverifiedUserCleanupServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->service = new UnverifiedUserCleanupService();
+        $this->service = new UnverifiedUserCleanupService;
     }
 
     public function test_purge_older_than_hours_deletes_only_stale_unverified_users(): void
@@ -48,4 +48,3 @@ class UnverifiedUserCleanupServiceTest extends TestCase
         $this->assertModelExists($verified);
     }
 }
-

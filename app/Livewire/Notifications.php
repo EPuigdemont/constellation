@@ -20,13 +20,13 @@ class Notifications extends Component
     public function toggleReminderDone(string $id): void
     {
         $reminder = Reminder::where('user_id', Auth::id())->findOrFail($id);
-        $reminder->update(['is_completed' => !$reminder->is_completed]);
+        $reminder->update(['is_completed' => ! $reminder->is_completed]);
     }
 
     public function toggleDateDone(string $id): void
     {
         $date = ImportantDate::where('user_id', Auth::id())->findOrFail($id);
-        $date->update(['is_done' => !$date->is_done]);
+        $date->update(['is_done' => ! $date->is_done]);
     }
 
     public function render(): View
@@ -57,10 +57,11 @@ class Notifications extends Component
 
         $upcomingDates = $allDates->filter(function (ImportantDate $date) {
             $thisYear = Carbon::parse((string) $date->date)->setYear(now()->year);
-            if ($thisYear->isPast() && !$thisYear->isToday()) {
+            if ($thisYear->isPast() && ! $thisYear->isToday()) {
                 $thisYear->addYear();
             }
-            return !$thisYear->isToday() && $thisYear->diffInDays(now()) <= 30;
+
+            return ! $thisYear->isToday() && $thisYear->diffInDays(now()) <= 30;
         });
 
         return view('livewire.notifications-view', [

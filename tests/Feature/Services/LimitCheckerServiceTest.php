@@ -85,4 +85,3 @@ class LimitCheckerServiceTest extends TestCase
         $this->assertSame(19, $service->getRemainingCount($user, 'image'));
     }
 }
-

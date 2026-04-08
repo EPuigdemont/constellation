@@ -23,7 +23,7 @@ class DesktopServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new DesktopService();
+        $this->service = new DesktopService;
     }
 
     public function test_load_cards_returns_user_entities_with_positions(): void

@@ -8,6 +8,7 @@ use App\Models\Image;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -17,8 +18,11 @@ use Livewire\Component;
 class ImagesGallery extends Component
 {
     public bool $showImageModal = false;
+
     public string $modalImageId = '';
+
     public string $modalImageUrl = '';
+
     public string $modalImageAlt = '';
 
     public function openImageModal(string $id, string $url, string $alt): void
@@ -39,11 +43,11 @@ class ImagesGallery extends Component
 
     public function deleteImage(string $id): void
     {
-        $image = \App\Models\Image::where('user_id', Auth::id())->findOrFail($id);
+        $image = Image::where('user_id', Auth::id())->findOrFail($id);
         Gate::authorize('delete', $image);
 
         // Delete file from storage
-        \Illuminate\Support\Facades\Storage::disk('private')->delete($image->path);
+        Storage::disk('private')->delete($image->path);
         $image->delete();
 
         $this->closeImageModal();

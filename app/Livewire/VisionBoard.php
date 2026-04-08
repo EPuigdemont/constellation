@@ -15,12 +15,14 @@ use App\Services\EditorImageService;
 use App\Services\LimitCheckerService;
 use App\Services\ShareEntityService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
@@ -38,7 +40,7 @@ class VisionBoard extends Component
 
     public int $maxZIndex = 0;
 
-    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null */
+    /** @var TemporaryUploadedFile|null */
     public $imageUpload = null;
 
     /** Editor modal state */
@@ -149,7 +151,7 @@ class VisionBoard extends Component
     public function uploadImage(EditorImageService $imageService, DesktopService $service): void
     {
         try {
-            \Illuminate\Support\Facades\Log::info('[VisionBoard] uploadImage called', [
+            Log::info('[VisionBoard] uploadImage called', [
                 'hasFile' => $this->imageUpload !== null,
                 'fileClass' => $this->imageUpload ? get_class($this->imageUpload) : null,
                 'fileName' => $this->imageUpload?->getClientOriginalName(),
@@ -158,7 +160,7 @@ class VisionBoard extends Component
             ]);
 
             if (! $this->imageUpload) {
-                \Illuminate\Support\Facades\Log::warning('[VisionBoard] uploadImage: imageUpload is null, aborting');
+                Log::warning('[VisionBoard] uploadImage: imageUpload is null, aborting');
 
                 return;
             }
@@ -172,7 +174,7 @@ class VisionBoard extends Component
                 $this->limitError = "You have reached your image upload limit. Remaining: {$remaining}.";
                 $this->imageUpload = null;
                 $this->dispatch('notify-error', message: $this->limitError);
-                \Illuminate\Support\Facades\Log::warning('[VisionBoard] uploadImage: limit reached');
+                Log::warning('[VisionBoard] uploadImage: limit reached');
 
                 return;
             }
@@ -182,7 +184,7 @@ class VisionBoard extends Component
             Gate::authorize('create', Image::class);
 
             $image = $imageService->store($user, $this->imageUpload);
-            \Illuminate\Support\Facades\Log::info('[VisionBoard] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
+            Log::info('[VisionBoard] Image stored', ['imageId' => $image->id, 'path' => $image->path]);
 
             $position = $service->assignDefaultPosition(
                 $user,
@@ -192,7 +194,7 @@ class VisionBoard extends Component
                 $this->viewportCenterY,
                 self::CONTEXT,
             );
-            \Illuminate\Support\Facades\Log::info('[VisionBoard] Position assigned', ['positionId' => $position->id]);
+            Log::info('[VisionBoard] Position assigned', ['positionId' => $position->id]);
 
             $card = [
                 'id' => $image->id,
@@ -222,11 +224,11 @@ class VisionBoard extends Component
             $this->imageUpload = null;
 
             $this->dispatch('card-created', card: array_merge($card, ['is_owner' => true]));
-            \Illuminate\Support\Facades\Log::info('[VisionBoard] uploadImage completed successfully', ['cardId' => $card['id']]);
+            Log::info('[VisionBoard] uploadImage completed successfully', ['cardId' => $card['id']]);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('[VisionBoard] uploadImage failed', [
+            Log::error('[VisionBoard] uploadImage failed', [
                 'error' => $e->getMessage(),
-                'file' => $e->getFile() . ':' . $e->getLine(),
+                'file' => $e->getFile().':'.$e->getLine(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
@@ -413,7 +415,7 @@ class VisionBoard extends Component
             $results[] = [
                 'id' => $entry->id,
                 'type' => 'diary_entry',
-                'title' => $entry->title ?: \Illuminate\Support\Str::limit(strip_tags($entry->body ?? ''), 60),
+                'title' => $entry->title ?: Str::limit(strip_tags($entry->body ?? ''), 60),
             ];
         }
 
@@ -429,7 +431,7 @@ class VisionBoard extends Component
             $results[] = [
                 'id' => $note->id,
                 'type' => 'note',
-                'title' => $note->title ?: \Illuminate\Support\Str::limit(strip_tags($note->body ?? ''), 60),
+                'title' => $note->title ?: Str::limit(strip_tags($note->body ?? ''), 60),
             ];
         }
 

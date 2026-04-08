@@ -61,4 +61,3 @@ class ThemeResolverServiceTest extends TestCase
         $this->assertSame(Theme::Night, $resolved);
     }
 }
-

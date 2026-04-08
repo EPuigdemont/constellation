@@ -10,8 +10,8 @@ use App\Models\DiaryEntry;
 use App\Models\EntityRelationship;
 use App\Models\Note;
 use App\Models\User;
-use Illuminate\Database\QueryException;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

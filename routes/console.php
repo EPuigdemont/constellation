@@ -12,7 +12,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Artisan::command('reminders:check', function () {
-    $service = new ReminderService();
+    $service = new ReminderService;
 
     User::all()->each(function (User $user) use ($service) {
         $notifications = $service->getTodayNotifications($user);

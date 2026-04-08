@@ -35,4 +35,3 @@ class CalendarLimitsTest extends TestCase
         ]);
     }
 }
-

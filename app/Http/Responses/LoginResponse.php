@@ -20,7 +20,7 @@ class LoginResponse implements LoginResponseContract
         session()->flash('status', __('Welcome back, :name!', ['name' => $name]));
 
         // Collect today's notifications for the banner
-        $service = new ReminderService();
+        $service = new ReminderService;
         $notifications = $service->getTodayNotifications($user);
         if ($notifications->isNotEmpty()) {
             session()->flash('today_notifications', $notifications->all());

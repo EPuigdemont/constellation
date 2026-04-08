@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Image;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -18,7 +19,7 @@ class EditorImageService
 
     public function store(User $user, UploadedFile $file): Image
     {
-        \Illuminate\Support\Facades\Log::info('[EditorImageService] store called', [
+        Log::info('[EditorImageService] store called', [
             'userId' => $user->id,
             'originalName' => $file->getClientOriginalName(),
             'mime' => $file->getMimeType(),
@@ -30,7 +31,7 @@ class EditorImageService
         $mime = $file->getMimeType();
 
         if (! in_array($mime, self::ALLOWED_MIMES, true)) {
-            \Illuminate\Support\Facades\Log::warning('[EditorImageService] Invalid MIME type', ['mime' => $mime]);
+            Log::warning('[EditorImageService] Invalid MIME type', ['mime' => $mime]);
 
             throw ValidationException::withMessages([
                 'editorImage' => 'Invalid image type. Allowed: jpeg, png, gif, webp.',
@@ -38,7 +39,7 @@ class EditorImageService
         }
 
         if ($file->getSize() > self::MAX_SIZE_BYTES) {
-            \Illuminate\Support\Facades\Log::warning('[EditorImageService] File too large', ['size' => $file->getSize()]);
+            Log::warning('[EditorImageService] File too large', ['size' => $file->getSize()]);
 
             throw ValidationException::withMessages([
                 'editorImage' => 'Image must be under 5MB.',
@@ -46,10 +47,10 @@ class EditorImageService
         }
 
         $extension = $file->guessExtension() ?? 'jpg';
-        $filename = Str::uuid()->toString() . '.' . $extension;
-        $directory = 'editor-images/' . $user->id;
+        $filename = Str::uuid()->toString().'.'.$extension;
+        $directory = 'editor-images/'.$user->id;
 
-        \Illuminate\Support\Facades\Log::info('[EditorImageService] Storing file', [
+        Log::info('[EditorImageService] Storing file', [
             'directory' => $directory,
             'filename' => $filename,
             'disk' => 'private',
@@ -58,13 +59,13 @@ class EditorImageService
         $path = $file->storeAs($directory, $filename, 'private');
 
         if (! $path) {
-            \Illuminate\Support\Facades\Log::error('[EditorImageService] storeAs returned false/null', [
+            Log::error('[EditorImageService] storeAs returned false/null', [
                 'directory' => $directory,
                 'filename' => $filename,
             ]);
         }
 
-        \Illuminate\Support\Facades\Log::info('[EditorImageService] File stored', ['path' => $path]);
+        Log::info('[EditorImageService] File stored', ['path' => $path]);
 
         return Image::create([
             'user_id' => $user->id,

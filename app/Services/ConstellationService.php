@@ -18,7 +18,7 @@ class ConstellationService
     /**
      * Build the full graph data (nodes + edges) for a user.
      *
-     * @param array<string, string> $filters
+     * @param  array<string, string>  $filters
      * @return array{nodes: list<array<string, mixed>>, edges: list<array<string, mixed>>}
      */
     public function buildGraph(User $user, array $filters = []): array
@@ -41,7 +41,7 @@ class ConstellationService
      * Load all entities for a user, applying optional filters.
      */
     /**
-     * @param array<string, string> $filters
+     * @param  array<string, string>  $filters
      * @return Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>
      */
     private function loadEntities(User $user, array $filters): Collection
@@ -95,7 +95,7 @@ class ConstellationService
     /**
      * Convert entities to node data for D3.
      *
-     * @param Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}> $entities
+     * @param  Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>  $entities
      * @return list<array<string, mixed>>
      */
     private function buildNodes(Collection $entities): array
@@ -130,7 +130,7 @@ class ConstellationService
     /**
      * Load explicit entity relationships (parent_child, sibling).
      *
-     * @param Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}> $entities
+     * @param  Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>  $entities
      * @return list<array<string, mixed>>
      */
     private function loadRelationships(User $user, Collection $entities): array
@@ -158,7 +158,7 @@ class ConstellationService
      * Compute implicit edges between entities that share tags.
      * Strength is proportional to the number of shared tags.
      *
-     * @param Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}> $entities
+     * @param  Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>  $entities
      * @return list<array<string, mixed>>
      */
     private function computeTagEdges(Collection $entities): array
@@ -195,7 +195,7 @@ class ConstellationService
     /**
      * Compute implicit edges between entities created on the same day.
      *
-     * @param Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}> $entities
+     * @param  Collection<int, array{model: DiaryEntry|Note|Postit|Image|Reminder, type: string, id: string}>  $entities
      * @return list<array<string, mixed>>
      */
     private function computeDateEdges(Collection $entities): array
@@ -232,7 +232,7 @@ class ConstellationService
     /**
      * Merge all edge sources, deduplicating and keeping strongest.
      *
-     * @param list<array<string, mixed>> ...$edgeSets
+     * @param  list<array<string, mixed>>  ...$edgeSets
      * @return list<array<string, mixed>>
      */
     private function mergeEdges(array ...$edgeSets): array

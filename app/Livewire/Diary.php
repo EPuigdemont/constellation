@@ -280,7 +280,7 @@ class Diary extends Component
             return;
         }
 
-        $service = new ReminderService();
+        $service = new ReminderService;
         $uplift = $service->findUpliftingEntry(Auth::user());
 
         if ($uplift && $uplift->id !== $entry->id) {
@@ -306,8 +306,8 @@ class Diary extends Component
 
         if ($this->search !== '') {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('body', 'like', '%' . $this->search . '%');
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('body', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -342,8 +342,8 @@ class Diary extends Component
 
         if ($this->search !== '') {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%')
-                  ->orWhere('body', 'like', '%' . $this->search . '%');
+                $q->where('title', 'like', '%'.$this->search.'%')
+                    ->orWhere('body', 'like', '%'.$this->search.'%');
             });
         }
 

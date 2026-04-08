@@ -34,4 +34,3 @@ class DiaryLimitsTest extends TestCase
         ]);
     }
 }
-

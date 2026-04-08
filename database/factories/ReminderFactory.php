@@ -28,4 +28,3 @@ class ReminderFactory extends Factory
         ];
     }
 }
-

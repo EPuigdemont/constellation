@@ -33,10 +33,10 @@ class DataImportService
      */
     public function import(User $user, string $zipPath): array
     {
-        $tempDir = storage_path('app/temp/import_' . $user->id . '_' . time());
+        $tempDir = storage_path('app/temp/import_'.$user->id.'_'.time());
         mkdir($tempDir, 0755, true);
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
             throw new \RuntimeException(__('Could not open the import file.'));
         }
@@ -44,7 +44,7 @@ class DataImportService
         $zip->extractTo($tempDir);
         $zip->close();
 
-        $jsonPath = $tempDir . '/data.json';
+        $jsonPath = $tempDir.'/data.json';
         if (! file_exists($jsonPath)) {
             $this->deleteDirectory($tempDir);
             throw new \RuntimeException(__('Invalid export file: missing data.json.'));
@@ -83,9 +83,9 @@ class DataImportService
 
                 // Import avatar
                 if (! empty($settings['avatar_filename'])) {
-                    $avatarFile = $tempDir . '/avatar/' . $settings['avatar_filename'];
+                    $avatarFile = $tempDir.'/avatar/'.$settings['avatar_filename'];
                     if (file_exists($avatarFile)) {
-                        $avatarPath = 'avatars/' . $user->id . '/' . $settings['avatar_filename'];
+                        $avatarPath = 'avatars/'.$user->id.'/'.$settings['avatar_filename'];
                         $avatarContents = file_get_contents($avatarFile);
                         if ($avatarContents !== false) {
                             Storage::disk('private')->put($avatarPath, $avatarContents);
@@ -101,7 +101,7 @@ class DataImportService
                 if ($existing) {
                     $this->idMap[$tag['id']] = $existing->id;
                 } else {
-                    $newTag = new Tag();
+                    $newTag = new Tag;
                     $newTag->id = Str::uuid()->toString();
                     $newTag->user_id = $userId;
                     $newTag->name = $tag['name'];
@@ -117,7 +117,7 @@ class DataImportService
 
             // 3. Import diary entries
             foreach ($data['diary_entries'] ?? [] as $entry) {
-                $new = new DiaryEntry();
+                $new = new DiaryEntry;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
@@ -137,7 +137,7 @@ class DataImportService
 
             // 4. Import notes
             foreach ($data['notes'] ?? [] as $entry) {
-                $new = new Note();
+                $new = new Note;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
@@ -157,7 +157,7 @@ class DataImportService
 
             // 5. Import postits
             foreach ($data['postits'] ?? [] as $entry) {
-                $new = new Postit();
+                $new = new Postit;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
@@ -176,7 +176,7 @@ class DataImportService
 
             // 6. Import images (metadata + files)
             foreach ($data['images'] ?? [] as $entry) {
-                $new = new Image();
+                $new = new Image;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
@@ -194,7 +194,7 @@ class DataImportService
                 $new->deleted_at = ! empty($entry['deleted_at']) ? Carbon::parse((string) $entry['deleted_at']) : null;
 
                 // Copy image file from export
-                $sourceFile = $tempDir . '/images/' . $entry['path'];
+                $sourceFile = $tempDir.'/images/'.$entry['path'];
                 if (file_exists($sourceFile)) {
                     $imageContents = file_get_contents($sourceFile);
                     if ($imageContents !== false) {
@@ -209,7 +209,7 @@ class DataImportService
 
             // 7. Import important dates
             foreach ($data['important_dates'] ?? [] as $entry) {
-                $new = new ImportantDate();
+                $new = new ImportantDate;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
@@ -228,7 +228,7 @@ class DataImportService
 
             // 8. Import reminders
             foreach ($data['reminders'] ?? [] as $entry) {
-                $new = new Reminder();
+                $new = new Reminder;
                 $newId = Str::uuid()->toString();
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
