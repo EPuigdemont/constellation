@@ -243,7 +243,7 @@ class Diary extends Component
         $limitChecker = app(LimitCheckerService::class);
         if (! $limitChecker->canCreateEntity($user, 'diary_entry')) {
             $remaining = $limitChecker->getRemainingCount($user, 'diary_entry');
-            $this->limitError = "You have reached your diary entry limit for today. Remaining: {$remaining}.";
+            $this->limitError = __('You have reached your diary entry limit for today. Remaining: :remaining.', ['remaining' => $remaining]);
             $this->dispatch('notify-error', message: $this->limitError);
 
             return;

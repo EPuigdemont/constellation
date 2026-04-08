@@ -143,8 +143,9 @@
     "Search images...": "Buscar imágenes...",
     "Upload": "Subir",
     "Uploading image...": "Subiendo imagen...",
-    "You have reached your image upload limit. Remaining: :remaining.": "Has alcanzado tu límite de subida de imágenes. Restantes: :remaining.",
-    "You have reached your reminder limit for today. Remaining: :remaining.": "Has alcanzado tu límite de recordatorios para hoy. Restantes: :remaining.",
+    "You have reached your image upload limit. Remaining: :remaining.": "Has alcanzado tu lmite de subida de imgenes. Restantes: :remaining.",
+    "You have reached your reminder limit for today. Remaining: :remaining.": "Has alcanzado tu lmite de recordatorios para hoy. Restantes: :remaining.",
+    "You have reached your diary entry limit for today. Remaining: :remaining.": "Has alcanzado tu lmite de entradas de diario para hoy. Restantes: :remaining.",
 
     "Canvas": "Lienzo",
     "Canvas — your creative workspace": "Lienzo — tu espacio creativo",

@@ -58,11 +58,13 @@ class EditorImageService
 
         $path = $file->storeAs($directory, $filename, 'private');
 
-        if (! $path) {
+        if ($path === false || $path === null || $path === '') {
             Log::error('[EditorImageService] storeAs returned false/null', [
                 'directory' => $directory,
                 'filename' => $filename,
             ]);
+
+            throw new \RuntimeException('Failed to store editor image file.');
         }
 
         Log::info('[EditorImageService] File stored', ['path' => $path]);

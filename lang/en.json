@@ -71,6 +71,7 @@
     "Uploading image...": "Uploading image...",
     "You have reached your image upload limit. Remaining: :remaining.": "You have reached your image upload limit. Remaining: :remaining.",
     "You have reached your reminder limit for today. Remaining: :remaining.": "You have reached your reminder limit for today. Remaining: :remaining.",
+    "You have reached your diary entry limit for today. Remaining: :remaining.": "You have reached your diary entry limit for today. Remaining: :remaining.",
     "Friends": "Friends",
     "Manage your friends list. Items shared with friends are only visible to those on this list.": "Manage your friends list. Items shared with friends are only visible to those on this list.",
     "Add Friend": "Add Friend",

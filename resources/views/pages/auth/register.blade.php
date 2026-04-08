@@ -63,7 +63,7 @@
                 viewable
             />
 
-            @if (config('services.turnstile.site_key'))
+            @if (app(\App\Services\TurnstileValidationService::class)->enabled())
                 <div class="flex flex-col gap-2">
                     <div
                         class="cf-turnstile"
@@ -88,7 +88,7 @@
             <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
         </div>
 
-        @if (config('services.turnstile.site_key'))
+        @if (app(\App\Services\TurnstileValidationService::class)->enabled())
             <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
         @endif
     </div>
