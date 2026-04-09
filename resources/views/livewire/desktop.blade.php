@@ -77,7 +77,7 @@
 
             {{-- Desktop: individual create buttons (hidden on mobile) --}}
             <div class="hidden shrink-0 items-center gap-1 md:flex">
-                <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'diary' })"
+                <flux:button size="sm" x-on:click="$dispatch('create-entity', { mode: 'diary' })"
                              title="{{ __('Diary Entry') }}">
                     <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -86,7 +86,7 @@
                     </svg>
                     <span class="hidden 2xl:inline">{{ __('Diary Entry') }}</span>
                 </flux:button>
-                <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'note' })"
+                <flux:button size="sm" x-on:click="$dispatch('create-entity', { mode: 'note' })"
                              title="{{ __('Note') }}">
                     <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -95,7 +95,7 @@
                     </svg>
                     <span class="hidden 2xl:inline">{{ __('Note') }}</span>
                 </flux:button>
-                <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'postit' })"
+                <flux:button size="sm" x-on:click="$dispatch('create-entity', { mode: 'postit' })"
                              title="{{ __('Post-it') }}">
                     <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -104,7 +104,7 @@
                     </svg>
                     <span class="hidden 2xl:inline">{{ __('Post-it') }}</span>
                 </flux:button>
-                <flux:button size="sm" icon="plus" x-on:click="$refs.standaloneImageInput.click()"
+                <flux:button size="sm" x-on:click="$refs.standaloneImageInput.click()"
                              title="{{ __('Image') }}">
                     <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -113,7 +113,7 @@
                     </svg>
                     <span class="hidden 2xl:inline">{{ __('Image') }}</span>
                 </flux:button>
-                <flux:button size="sm" icon="plus" x-on:click="$dispatch('create-entity', { mode: 'reminder' })"
+                <flux:button size="sm" x-on:click="$dispatch('create-entity', { mode: 'reminder' })"
                              title="{{ __('Reminder') }}">
                     <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -605,7 +605,7 @@
 
     {{-- Editor Modal --}}
     <flux:modal wire:model="showEditorModal" class="w-full max-w-3xl" flyout>
-        <div class="desktop-editor-modal space-y-5" x-data="tiptapEditor" x-on:keydown.escape.window="syncToWire()"
+        <div class="desktop-editor-modal space-y-3 sm:space-y-5" x-data="tiptapEditor" x-on:keydown.escape.window="syncToWire()"
              :class="'mood-' + ($wire.editorMood || 'plain')"
              :style="$wire.editorColorOverride ? 'background-color: ' + $wire.editorColorOverride : ''"
              x-effect="

@@ -48,6 +48,10 @@ class RegistrationTest extends TestCase
 
     public function test_unverified_user_is_redirected_to_email_verification_notice_when_accessing_verified_route(): void
     {
+        $this->markTestSkipped('Email verification is disabled.');
+
+        return;
+
         $this->post(route('register.store'), [
             'name' => 'John Doe',
             'username' => 'john-doe',

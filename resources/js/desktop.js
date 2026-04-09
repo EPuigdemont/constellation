@@ -133,6 +133,7 @@ function buildCardInnerHTML(card) {
         note: 'Note',
         postit: null,
         image: 'Image',
+        reminder: 'Reminder',
     };
 
     let html = '<div class="desktop-card-inner">';
