@@ -1,4 +1,7 @@
-<div class="flex h-screen flex-col overflow-hidden">
+<div class="flex h-screen flex-col overflow-hidden"
+     x-data="{ syncNarrowView() { $wire.setNarrowView(window.matchMedia('(max-width: 767px)').matches); } }"
+     x-init="syncNarrowView()"
+     x-on:resize.window.debounce.150ms="syncNarrowView()">
     @if ($limitError !== '')
         <div class="border-b border-[var(--theme-border)] px-3 py-2 text-sm text-[var(--theme-text)]"
              style="background: color-mix(in srgb, var(--theme-accent) 12%, var(--theme-bg));">

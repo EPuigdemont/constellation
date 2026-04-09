@@ -20,11 +20,15 @@ use Livewire\Component;
 #[Title('Diary')]
 class Diary extends Component
 {
+    private const DESKTOP_ENTRIES_PER_SPREAD = 2;
+
+    private const NARROW_ENTRIES_PER_SPREAD = 1;
+
     public string $displayMode = 'paginated';
 
     public int $currentPage = 1;
 
-    public int $entriesPerSpread = 2;
+    public int $entriesPerSpread = self::DESKTOP_ENTRIES_PER_SPREAD;
 
     public string $editingEntryId = '';
 
@@ -76,6 +80,21 @@ class Diary extends Component
     public function updatedSearch(): void
     {
         $this->currentPage = 1;
+    }
+
+    public function setNarrowView(bool $isNarrow): void
+    {
+        $nextEntriesPerSpread = $isNarrow
+            ? self::NARROW_ENTRIES_PER_SPREAD
+            : self::DESKTOP_ENTRIES_PER_SPREAD;
+
+        if ($nextEntriesPerSpread === $this->entriesPerSpread) {
+            return;
+        }
+
+        $firstVisibleEntryIndex = (($this->currentPage - 1) * $this->entriesPerSpread) + 1;
+        $this->entriesPerSpread = $nextEntriesPerSpread;
+        $this->currentPage = (int) max(1, ceil($firstVisibleEntryIndex / $this->entriesPerSpread));
     }
 
     public function nextPage(): void

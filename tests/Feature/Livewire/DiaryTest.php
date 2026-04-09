@@ -142,6 +142,48 @@ class DiaryTest extends TestCase
             ->assertSet('currentPage', 2);
     }
 
+    public function test_narrow_view_uses_single_entry_pages_without_skipping_entries(): void
+    {
+        $user = User::factory()->create();
+
+        DiaryEntry::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Entry 1',
+            'created_at' => now()->subMinutes(1),
+        ]);
+        DiaryEntry::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Entry 2',
+            'created_at' => now()->subMinutes(2),
+        ]);
+        DiaryEntry::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Entry 3',
+            'created_at' => now()->subMinutes(3),
+        ]);
+        DiaryEntry::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Entry 4',
+            'created_at' => now()->subMinutes(4),
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Diary::class)
+            ->assertSet('entriesPerSpread', 2)
+            ->call('nextPage')
+            ->assertSet('currentPage', 2)
+            ->assertSee('Entry 3')
+            ->assertSee('Entry 4')
+            ->call('setNarrowView', true)
+            ->assertSet('entriesPerSpread', 1)
+            ->assertSet('currentPage', 3)
+            ->assertSee('Entry 3')
+            ->assertDontSee('Entry 4')
+            ->call('nextPage')
+            ->assertSet('currentPage', 4)
+            ->assertSee('Entry 4');
+    }
+
     public function test_previous_page_decrements_page(): void
     {
         $user = User::factory()->create();
