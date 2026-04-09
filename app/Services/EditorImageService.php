@@ -58,8 +58,8 @@ class EditorImageService
 
         $path = $file->storeAs($directory, $filename, 'private');
 
-        if ($path === false || $path === null || $path === '') {
-            Log::error('[EditorImageService] storeAs returned false/null', [
+        if ($path === false) {
+            Log::error('[EditorImageService] storeAs returned false', [
                 'directory' => $directory,
                 'filename' => $filename,
             ]);
