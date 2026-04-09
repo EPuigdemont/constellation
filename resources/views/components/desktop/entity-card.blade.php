@@ -66,6 +66,20 @@
         @else
             <p class="desktop-card-preview">{{ $card['preview'] ?: __('No description') }}</p>
         @endif
+
+    @elseif($card['type'] === 'reminder')
+        <div class="desktop-card-header">
+            <span class="desktop-card-badge">{{ __('Reminder') }}</span>
+            @if($shortDate)
+                <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
+            @endif
+        </div>
+        @if($card['title'])
+            <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
+        @endif
+        @if($card['preview'])
+            <p class="desktop-card-preview">{{ $card['preview'] }}</p>
+        @endif
     @endif
 
     @php

@@ -12,6 +12,7 @@ use App\Models\EntityPosition;
 use App\Models\EntityShare;
 use App\Models\Note;
 use App\Models\Postit;
+use App\Models\Reminder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -131,6 +132,31 @@ class DesktopTest extends TestCase
             'body' => 'Some thoughts',
             'mood' => 'breeze',
         ]);
+    }
+
+    public function test_reminder_card_renders_title_and_preview(): void
+    {
+        $user = User::factory()->create();
+        $reminder = Reminder::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Pay rent',
+            'body' => 'Before Friday afternoon',
+        ]);
+
+        EntityPosition::create([
+            'user_id' => $user->id,
+            'entity_id' => $reminder->id,
+            'entity_type' => 'reminder',
+            'context' => 'desktop',
+            'x' => 320,
+            'y' => 260,
+            'z_index' => 3,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Canvas::class)
+            ->assertSee('Pay rent')
+            ->assertSee('Before Friday afternoon');
     }
 
     public function test_delete_entity_soft_deletes_and_authorizes(): void
