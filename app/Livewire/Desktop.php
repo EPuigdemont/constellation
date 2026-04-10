@@ -381,6 +381,7 @@ class Desktop extends Component
     {
         /** @var User $user */
         $user = Auth::user();
+        $this->editorBody = $this->normalizePlainText($this->editorBody);
         $mood = Mood::tryFrom($this->editorMood) ?? Mood::Plain;
 
         if ($mood !== Mood::Custom) {
@@ -417,7 +418,7 @@ class Desktop extends Component
         $this->editingEntityId = $entityId;
         $this->editorMode = $entityType === 'diary_entry' ? 'diary' : $entityType;
         $this->editorTitle = (string) (data_get($model, 'title') ?? '');
-        $this->editorBody = (string) (data_get($model, 'body') ?? '');
+        $this->editorBody = $this->normalizePlainText((string) (data_get($model, 'body') ?? ''));
         $this->editorMood = $this->moodValue(data_get($model, 'mood'), 'plain');
         $this->editorColorOverride = data_get($model, 'color_override') ?? null;
         $this->editorRemindAt = ($entityType === 'reminder' && data_get($model, 'remind_at'))
@@ -505,7 +506,8 @@ class Desktop extends Component
         Gate::authorize('update', $model);
 
         $mood = Mood::tryFrom($this->editorMood) ?? Mood::Plain;
-        $data = ['body' => $this->editorBody, 'mood' => $mood, 'color_override' => $this->editorColorOverride];
+        $body = $this->normalizePlainText($this->editorBody);
+        $data = ['body' => $body, 'mood' => $mood, 'color_override' => $this->editorColorOverride];
 
         if (in_array($card['type'], ['diary_entry', 'note', 'reminder'], true)) {
             $data['title'] = $this->editorTitle;
@@ -523,7 +525,7 @@ class Desktop extends Component
 
         $this->updateCardInList($this->editingEntityId, [
             'title' => $this->editorTitle,
-            'preview' => Str::limit(strip_tags($this->editorBody), 120),
+            'preview' => Str::limit($body, 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
         ]);
@@ -625,10 +627,11 @@ class Desktop extends Component
 
         Gate::authorize('update', $model);
 
-        $model->update(['body' => $body]);
+        $plainBody = $this->normalizePlainText($body);
+        $model->update(['body' => $plainBody]);
 
         $this->updateCardInList($entityId, [
-            'preview' => Str::limit(strip_tags($body), 120),
+            'preview' => Str::limit($plainBody, 120),
         ]);
     }
 
@@ -910,10 +913,12 @@ class Desktop extends Component
 
         $this->limitError = '';
 
+        $body = $this->normalizePlainText($this->editorBody);
+
         $data = [
             'user_id' => $user->id,
             'title' => $this->editorTitle,
-            'body' => $this->editorBody,
+            'body' => $body,
             'mood' => $mood,
             'color_override' => $this->editorColorOverride,
         ];
@@ -938,7 +943,7 @@ class Desktop extends Component
             'id' => $entity->id,
             'type' => $type,
             'title' => $entity->title ?? '',
-            'preview' => Str::limit(strip_tags($entity->body ?? ''), 120),
+            'preview' => Str::limit($body, 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
             'x' => $position->x,
@@ -979,8 +984,10 @@ class Desktop extends Component
 
         Gate::authorize('update', $model);
 
+        $body = $this->normalizePlainText($this->editorBody);
+
         $data = [
-            'body' => $this->editorBody,
+            'body' => $body,
             'mood' => $mood,
             'color_override' => $this->editorColorOverride,
         ];
@@ -1005,7 +1012,7 @@ class Desktop extends Component
 
         $updates = [
             'title' => $this->editorTitle,
-            'preview' => Str::limit(strip_tags($this->editorBody), 120),
+            'preview' => Str::limit($body, 120),
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
             'tag_ids' => $this->editorTagIds,
@@ -1036,5 +1043,17 @@ class Desktop extends Component
     private function moodValue(mixed $mood, string $fallback = 'summer'): string
     {
         return $mood instanceof Mood ? $mood->value : (is_string($mood) && $mood !== '' ? $mood : $fallback);
+    }
+
+    private function normalizePlainText(string $value): string
+    {
+        $withLineBreaks = preg_replace('/<\s*br\s*\/?\s*>/i', "\n", $value) ?? $value;
+        $withParagraphBreaks = preg_replace('/<\s*\/p\s*>/i', "\n", $withLineBreaks) ?? $withLineBreaks;
+        $stripped = strip_tags($withParagraphBreaks);
+        $decoded = html_entity_decode($stripped, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $normalized = preg_replace("/\r\n?/", "\n", $decoded) ?? $decoded;
+        $compacted = preg_replace("/\n{3,}/", "\n\n", $normalized) ?? $normalized;
+
+        return trim($compacted);
     }
 }
