@@ -69,5 +69,11 @@
                 {{ __('Register here') }}
             </flux:link>
         </div>
+
+        <div class="text-center text-sm text-zinc-600 dark:text-zinc-400">
+            <flux:link :href="route('about')" wire:navigate class="text-sm font-medium">
+                {{ __('About Constellation') }}
+            </flux:link>
+        </div>
     </div>
 </x-layouts::auth>

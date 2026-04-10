@@ -88,6 +88,12 @@
             <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
         </div>
 
+        <div class="text-center text-sm text-zinc-600 dark:text-zinc-400">
+            <flux:link :href="route('about')" wire:navigate class="text-sm font-medium">
+                {{ __('About Constellation') }}
+            </flux:link>
+        </div>
+
         @if (app(\App\Services\TurnstileValidationService::class)->enabled())
             <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
         @endif

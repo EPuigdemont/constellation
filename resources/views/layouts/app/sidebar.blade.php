@@ -165,6 +165,9 @@
                         <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
                             {{ __('Settings') }}
                         </flux:menu.item>
+                        <flux:menu.item :href="route('about')" icon="information-circle" wire:navigate>
+                            {{ __('About Constellation') }}
+                        </flux:menu.item>
                     </flux:menu.radio.group>
 
                     <flux:menu.separator />

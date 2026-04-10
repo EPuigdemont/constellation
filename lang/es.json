@@ -380,5 +380,22 @@
      "Accept": "Aceptar",
      "Reject": "Rechazar",
      "Your Friends": "Tus amigos",
-     "No friends added yet. Add someone to share items with them.": "Aún no hay amigos. Añade a alguien para compartir elementos con ellos."
+      "No friends added yet. Add someone to share items with them.": "Aún no hay amigos. Añade a alguien para compartir elementos con ellos.",
+    "About Constellation": "Sobre Constellation",
+    "A private journaling app for capturing memories, notes, and relationships between ideas.": "Una aplicación privada de diario para capturar recuerdos, notas y relaciones entre ideas.",
+    "What it does": "Qué hace",
+    "Constellation helps you keep diary entries, notes, reminders, images, and visual connections in one private space.": "Constellation te ayuda a guardar entradas de diario, notas, recordatorios, imágenes y conexiones visuales en un espacio privado.",
+    "Technology": "Tecnología",
+    "Built with Laravel, Livewire, Alpine.js, Tailwind CSS, and D3.js.": "Hecho con Laravel, Livewire, Alpine.js, Tailwind CSS y D3.js.",
+    "Privacy and access": "Privacidad y acceso",
+    "Constellation is designed for authenticated users only. Search engine crawling is disabled, and account access is protected by login rate limiting. User data unencrypted. Don't store sensitive information you don't want me to potentially see!": "Constellation está diseñada solo para usuarios autenticados. El rastreo por motores de búsqueda está deshabilitado y el acceso a la cuenta está protegido por limitación de intentos de inicio de sesión. Los datos de usuario no están cifrados. No guardes información sensible que no quieras que pueda ver!",
+    "Ownership and licensing": "Propiedad y licencia",
+    "Constellation is an independent solo-developer project and is closed-source software.": "Constellation es un proyecto independiente de un único desarrollador y es software de código cerrado.",
+    "No registered trademark, company, or LLC is associated with this application at this time.": "Actualmente no hay ninguna marca registrada, empresa o LLC asociada a esta aplicación.",
+    "Developer contact": "Contacto del desarrollador",
+    "Created and maintained by Enric Puigdemont.": "Creada y mantenida por Enric Puigdemont.",
+    "Portfolio": "Portfolio",
+    "LinkedIn": "LinkedIn",
+    "Back to diary": "Volver al diario",
+    "Back to login": "Volver a iniciar sesión"
 }

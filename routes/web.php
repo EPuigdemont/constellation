@@ -16,8 +16,11 @@ use App\Livewire\Reminders;
 use App\Livewire\VisionBoard;
 use App\Livewire\Welcome;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\View;
 
 Route::redirect('/', '/login')->name('home');
+
+Route::get('/about', fn (): View => view('pages.about'))->name('about');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('loading', LoadingScreen::class)->name('loading');
