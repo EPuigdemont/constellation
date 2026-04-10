@@ -33,7 +33,7 @@ use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
 #[Title('Canvas')]
-class Canvas extends Component
+class Desktop extends Component
 {
     use WithFileUploads;
 
