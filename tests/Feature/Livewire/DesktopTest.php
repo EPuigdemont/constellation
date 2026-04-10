@@ -386,4 +386,25 @@ class DesktopTest extends TestCase
             'title' => 'Blocked note',
         ]);
     }
+
+    public function test_mount_opens_editor_modal_from_query_parameters(): void
+    {
+        $user = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Query edit note',
+            'body' => 'Body from query',
+        ]);
+
+        Livewire::withQueryParams([
+            'edit_entity_id' => $note->id,
+            'edit_entity_type' => 'note',
+        ])
+            ->actingAs($user)
+            ->test(Desktop::class)
+            ->assertSet('showEditorModal', true)
+            ->assertSet('editingEntityId', $note->id)
+            ->assertSet('editorMode', 'note')
+            ->assertSet('editorTitle', 'Query edit note');
+    }
 }

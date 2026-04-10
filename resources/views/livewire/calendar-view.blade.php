@@ -129,7 +129,7 @@
                              x-transition:leave="transition ease-in duration-75"
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
-                             class="absolute right-0 top-full z-20 mt-1 min-w-40 rounded-lg border border-(--theme-border) p-1 shadow-lg"
+                             class="absolute bottom-full right-0 z-20 mb-1 min-w-40 rounded-lg border border-(--theme-border) p-1 shadow-lg"
                              style="background: var(--theme-bg);">
                             <button type="button"
                                     wire:click="openCreateForm('diary')"
@@ -343,7 +343,16 @@
                             </div>
                         </div>
                     </div>
-                    <flux:button size="sm" variant="subtle" wire:click="closeEntityModal" icon="x-mark"/>
+                    <div class="flex items-center gap-2">
+                        @if($this->canManageModalEntity())
+                            <flux:button size="sm" variant="subtle" wire:click="openModalEntityInCanvas" icon="pencil-square"
+                                         title="{{ __('Open in canvas editor') }}"/>
+                            <flux:button size="sm" variant="subtle" icon="trash"
+                                         x-on:click="if (confirm('{{ __('Delete this element? This action cannot be undone.') }}')) { $wire.deleteModalEntity() }"
+                                         title="{{ __('Delete element') }}"/>
+                        @endif
+                        <flux:button size="sm" variant="subtle" wire:click="closeEntityModal" icon="x-mark"/>
+                    </div>
                 </div>
 
                 {{-- Body --}}

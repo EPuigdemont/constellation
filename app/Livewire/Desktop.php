@@ -126,6 +126,13 @@ class Desktop extends Component
             ->get()
             ->map(fn (Tag $tag): array => ['id' => $tag->id, 'name' => $tag->name])
             ->all();
+
+        $editEntityId = (string) request()->query('edit_entity_id', '');
+        $editEntityType = (string) request()->query('edit_entity_type', '');
+
+        if ($editEntityId !== '' && $editEntityType !== '') {
+            $this->openEditModal($editEntityId, $editEntityType);
+        }
     }
 
     public function savePosition(DesktopService $service, string $entityId, string $entityType, float $x, float $y, int $zIndex): void

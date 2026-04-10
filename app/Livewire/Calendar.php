@@ -42,6 +42,8 @@ class Calendar extends Component
 
     public string $modalEntityType = '';
 
+    public string $modalEntityId = '';
+
     public string $modalEntityTitle = '';
 
     public string $modalEntityBody = '';
@@ -108,6 +110,7 @@ class Calendar extends Component
             'diary' => DiaryEntry::where('user_id', $userId)->find($id),
             'note' => Note::where('user_id', $userId)->find($id),
             'postit' => Postit::where('user_id', $userId)->find($id),
+            'reminder' => Reminder::where('user_id', $userId)->find($id),
             default => null,
         };
 
@@ -116,6 +119,7 @@ class Calendar extends Component
         }
 
         $this->modalEntityType = $type;
+        $this->modalEntityId = (string) $id;
         if ($type === 'postit') {
             $this->modalEntityTitle = 'Post-it';
         } else {
@@ -130,6 +134,51 @@ class Calendar extends Component
     public function closeEntityModal(): void
     {
         $this->showEntityModal = false;
+        $this->modalEntityType = '';
+        $this->modalEntityId = '';
+        $this->modalEntityTitle = '';
+        $this->modalEntityBody = '';
+        $this->modalEntityMood = '';
+        $this->modalEntityTime = '';
+    }
+
+    public function deleteModalEntity(): void
+    {
+        if (! $this->canManageModalEntity()) {
+            return;
+        }
+
+        $entity = $this->resolveModalEntityModel();
+        if (! $entity) {
+            return;
+        }
+
+        Gate::authorize('delete', $entity);
+        $entity->delete();
+
+        $this->closeEntityModal();
+    }
+
+    public function openModalEntityInCanvas(): void
+    {
+        if (! $this->canManageModalEntity()) {
+            return;
+        }
+
+        $entityType = $this->modalEntityCanvasType();
+        if ($entityType === null || $this->modalEntityId === '') {
+            return;
+        }
+
+        $this->redirectRoute('canvas', [
+            'edit_entity_id' => $this->modalEntityId,
+            'edit_entity_type' => $entityType,
+        ], navigate: true);
+    }
+
+    public function canManageModalEntity(): bool
+    {
+        return $this->modalEntityCanvasType() !== null && $this->modalEntityId !== '';
     }
 
     public function openCreateForm(string $type = 'diary', string $tag = ''): void
@@ -488,5 +537,29 @@ class Calendar extends Component
     private function moodValue(mixed $mood): string
     {
         return $mood instanceof Mood ? $mood->value : (is_string($mood) && $mood !== '' ? $mood : 'summer');
+    }
+
+    private function modalEntityCanvasType(): ?string
+    {
+        return match ($this->modalEntityType) {
+            'diary' => 'diary_entry',
+            'note' => 'note',
+            'postit' => 'postit',
+            'reminder' => 'reminder',
+            default => null,
+        };
+    }
+
+    private function resolveModalEntityModel(): ?Model
+    {
+        $userId = Auth::id();
+
+        return match ($this->modalEntityType) {
+            'diary' => DiaryEntry::where('user_id', $userId)->find($this->modalEntityId),
+            'note' => Note::where('user_id', $userId)->find($this->modalEntityId),
+            'postit' => Postit::where('user_id', $userId)->find($this->modalEntityId),
+            'reminder' => Reminder::where('user_id', $userId)->find($this->modalEntityId),
+            default => null,
+        };
     }
 }

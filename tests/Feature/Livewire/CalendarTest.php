@@ -7,6 +7,8 @@ namespace Tests\Feature\Livewire;
 use App\Livewire\Calendar;
 use App\Models\CalendarDayMood;
 use App\Models\DiaryEntry;
+use App\Models\Note;
+use App\Models\Reminder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -195,6 +197,40 @@ class CalendarTest extends TestCase
             ->call('openEntityModal', 'diary', $entry->id)
             ->call('closeEntityModal')
             ->assertSet('showEntityModal', false);
+    }
+
+    public function test_delete_modal_entity_soft_deletes_note(): void
+    {
+        $user = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Calendar note',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Calendar::class)
+            ->call('openEntityModal', 'note', $note->id)
+            ->call('deleteModalEntity')
+            ->assertSet('showEntityModal', false);
+
+        $this->assertSoftDeleted('notes', ['id' => $note->id]);
+    }
+
+    public function test_open_modal_entity_in_canvas_redirects_to_canvas_editor(): void
+    {
+        $user = User::factory()->create();
+        $reminder = Reminder::factory()->create([
+            'user_id' => $user->id,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Calendar::class)
+            ->call('openEntityModal', 'reminder', $reminder->id)
+            ->call('openModalEntityInCanvas')
+            ->assertRedirect(route('canvas', [
+                'edit_entity_id' => $reminder->id,
+                'edit_entity_type' => 'reminder',
+            ]));
     }
 
     public function test_open_create_form_opens_form(): void
