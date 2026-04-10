@@ -1,5 +1,7 @@
 <x-layouts::auth :title="__('Log in')">
     <div class="flex flex-col gap-6">
+        <x-auth-language-picker />
+
         <x-auth-header :title="__('Welcome to Constellation')" />
 
         <div x-data="{

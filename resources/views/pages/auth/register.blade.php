@@ -1,5 +1,7 @@
 <x-layouts::auth :title="__('Register')">
     <div class="flex flex-col gap-6">
+        <x-auth-language-picker />
+
         <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
 
         <!-- Session Status -->

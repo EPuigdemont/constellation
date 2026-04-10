@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AvatarServeController;
 use App\Http\Controllers\DataExportController;
+use App\Http\Controllers\GuestLocaleController;
 use App\Http\Controllers\ImageServeController;
 use App\Http\Controllers\ThemeController;
 use App\Livewire\Actions\ManageFriends;
@@ -21,6 +22,7 @@ use Illuminate\View\View;
 Route::redirect('/', '/login')->name('home');
 
 Route::get('/about', fn (): View => view('pages.about'))->name('about');
+Route::post('/locale', [GuestLocaleController::class, 'update'])->name('locale.guest.update');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('loading', LoadingScreen::class)->name('loading');
