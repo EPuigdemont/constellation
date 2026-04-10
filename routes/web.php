@@ -6,8 +6,8 @@ use App\Http\Controllers\ImageServeController;
 use App\Http\Controllers\ThemeController;
 use App\Livewire\Actions\ManageFriends;
 use App\Livewire\Calendar;
-use App\Livewire\Canvas;
 use App\Livewire\Constellation;
+use App\Livewire\Desktop;
 use App\Livewire\Diary;
 use App\Livewire\ImagesGallery;
 use App\Livewire\LoadingScreen;
@@ -25,7 +25,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('canvas', Canvas::class)->name('canvas');
+    Route::get('canvas', Desktop::class)->name('canvas');
     Route::get('diary', Diary::class)->name('diary');
     Route::get('images', ImagesGallery::class)->name('images');
     Route::get('vision-board', VisionBoard::class)->name('vision-board');

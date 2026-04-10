@@ -6,10 +6,11 @@ namespace Tests\Feature\Livewire;
 
 use App\Enums\Mood;
 use App\Enums\Tier;
-use App\Livewire\Canvas;
+use App\Livewire\Desktop;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
 use App\Models\EntityShare;
+use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
@@ -27,7 +28,7 @@ class DesktopTest extends TestCase
         $user = User::factory()->create();
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->assertStatus(200)
             ->assertSee('Diary Entry')
             ->assertSee('Note')
@@ -46,7 +47,7 @@ class DesktopTest extends TestCase
         $diary = DiaryEntry::factory()->create(['user_id' => $user->id]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('savePosition', $diary->id, 'diary_entry', 100.0, 200.0, 1);
 
         $this->assertDatabaseHas('entity_positions', [
@@ -73,7 +74,7 @@ class DesktopTest extends TestCase
         ]);
 
         $result = Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('bringToFront', $diary->id, 'diary_entry');
 
         $result->assertSet('maxZIndex', 6);
@@ -84,7 +85,7 @@ class DesktopTest extends TestCase
         $user = User::factory()->create();
 
         $component = Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('createPostit');
 
         $this->assertDatabaseCount('postits', 1);
@@ -99,7 +100,7 @@ class DesktopTest extends TestCase
         $user = User::factory()->create();
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->set('editorMode', 'diary')
             ->set('editorTitle', 'My Diary')
             ->set('editorBody', 'Today was great')
@@ -119,7 +120,7 @@ class DesktopTest extends TestCase
         $user = User::factory()->create();
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->set('editorMode', 'note')
             ->set('editorTitle', 'My Note')
             ->set('editorBody', 'Some thoughts')
@@ -131,6 +132,26 @@ class DesktopTest extends TestCase
             'title' => 'My Note',
             'body' => 'Some thoughts',
             'mood' => 'breeze',
+        ]);
+    }
+
+    public function test_save_editor_updates_image_title(): void
+    {
+        $user = User::factory()->create();
+        $image = Image::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Old image title',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Desktop::class)
+            ->call('openEditModal', $image->id, 'image')
+            ->set('editorTitle', 'New image title')
+            ->call('saveEditor');
+
+        $this->assertDatabaseHas('images', [
+            'id' => $image->id,
+            'title' => 'New image title',
         ]);
     }
 
@@ -154,7 +175,7 @@ class DesktopTest extends TestCase
         ]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->assertSee('Pay rent')
             ->assertSee('Before Friday afternoon');
     }
@@ -165,7 +186,7 @@ class DesktopTest extends TestCase
         $note = Note::factory()->create(['user_id' => $user->id]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('deleteEntity', $note->id, 'note');
 
         $this->assertSoftDeleted('notes', ['id' => $note->id]);
@@ -178,7 +199,7 @@ class DesktopTest extends TestCase
         $note = Note::factory()->create(['user_id' => $other->id]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('deleteEntity', $note->id, 'note')
             ->assertForbidden();
     }
@@ -192,7 +213,7 @@ class DesktopTest extends TestCase
         ]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('changeMood', $diary->id, 'diary_entry', 'love');
 
         $this->assertDatabaseHas('diary_entries', [
@@ -210,7 +231,7 @@ class DesktopTest extends TestCase
         ]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('toggleShareWithFriend', $note->id, 'note', $friend->id);
 
         $this->assertDatabaseHas('entity_shares', [
@@ -236,7 +257,7 @@ class DesktopTest extends TestCase
 
         // Load shares first, then unshare
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('loadCurrentShares', $note->id, 'note')
             ->call('toggleShareWithFriend', $note->id, 'note', $friend->id);
 
@@ -255,7 +276,7 @@ class DesktopTest extends TestCase
         $note = Note::factory()->create(['user_id' => $other->id]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('changeMood', $note->id, 'note', 'summer')
             ->assertForbidden();
     }
@@ -265,7 +286,7 @@ class DesktopTest extends TestCase
         $user = User::factory()->create(['desktop_zoom' => 1.0]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('saveZoom', 1.5);
 
         $this->assertDatabaseHas('users', [
@@ -292,7 +313,7 @@ class DesktopTest extends TestCase
         ]);
 
         Livewire::actingAs($viewer)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('openReadonlyModal', $note->id, 'note')
             ->assertSet('showReadonlyModal', true)
             ->assertSet('readonlyEntityType', 'note')
@@ -309,7 +330,7 @@ class DesktopTest extends TestCase
         ]);
 
         Livewire::actingAs($viewer)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('openReadonlyModal', $note->id, 'note')
             ->assertForbidden();
     }
@@ -332,7 +353,7 @@ class DesktopTest extends TestCase
         ]);
 
         Livewire::actingAs($viewer)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->call('openReadonlyModal', $note->id, 'note')
             ->call('closeReadonlyModal')
             ->assertSet('showReadonlyModal', false)
@@ -350,7 +371,7 @@ class DesktopTest extends TestCase
         Note::factory()->count(10)->create(['user_id' => $user->id]);
 
         Livewire::actingAs($user)
-            ->test(Canvas::class)
+            ->test(Desktop::class)
             ->set('showEditorModal', true)
             ->set('editorMode', 'note')
             ->set('editorTitle', 'Blocked note')
@@ -364,5 +385,26 @@ class DesktopTest extends TestCase
             'user_id' => $user->id,
             'title' => 'Blocked note',
         ]);
+    }
+
+    public function test_mount_opens_editor_modal_from_query_parameters(): void
+    {
+        $user = User::factory()->create();
+        $note = Note::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Query edit note',
+            'body' => 'Body from query',
+        ]);
+
+        Livewire::withQueryParams([
+            'edit_entity_id' => $note->id,
+            'edit_entity_type' => 'note',
+        ])
+            ->actingAs($user)
+            ->test(Desktop::class)
+            ->assertSet('showEditorModal', true)
+            ->assertSet('editingEntityId', $note->id)
+            ->assertSet('editorMode', 'note')
+            ->assertSet('editorTitle', 'Query edit note');
     }
 }

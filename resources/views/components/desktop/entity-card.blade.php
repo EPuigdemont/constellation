@@ -61,6 +61,9 @@
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             @endif
         </div>
+        @if($card['title'])
+            <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
+        @endif
         @if(!empty($card['image_url']))
             <img src="{{ $card['image_url'] }}" alt="{{ $card['preview'] ?: __('Image') }}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />
         @else

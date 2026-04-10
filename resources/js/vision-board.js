@@ -115,6 +115,24 @@ function vbClearGuideLines() {
     if (guidesContainer) guidesContainer.innerHTML = '';
 }
 
+function vbBringToFrontLocally(el) {
+    const canvas = document.getElementById('vb-canvas');
+    if (!canvas || !el) return 1;
+
+    let maxZ = 0;
+    canvas.querySelectorAll('[data-card-id]').forEach((cardEl) => {
+        const z = parseInt(cardEl.style.zIndex, 10) || 0;
+        if (z > maxZ) {
+            maxZ = z;
+        }
+    });
+
+    const nextZ = maxZ + 1;
+    el.style.zIndex = String(nextZ);
+
+    return nextZ;
+}
+
 document.addEventListener('alpine:init', () => {
 
     /**
@@ -228,6 +246,11 @@ document.addEventListener('alpine:init', () => {
                         }
 
                         this._debouncedSave();
+
+                        // Allow dblclick again after drag completes.
+                        setTimeout(() => {
+                            this._hasDragged = false;
+                        }, 0);
                     },
                 },
             });
@@ -241,11 +264,7 @@ document.addEventListener('alpine:init', () => {
                 document.querySelectorAll('.vb-card.vb-card-selected').forEach(el => el.classList.remove('vb-card-selected'));
                 this.$el.classList.add('vb-card-selected');
 
-                this.$wire.bringToFront(this.entityId, 'image').then((newZ) => {
-                    if (newZ) {
-                        this.cardZ = newZ;
-                    }
-                });
+                this.cardZ = vbBringToFrontLocally(this.$el);
             });
 
             // Double-click to edit
@@ -713,6 +732,11 @@ document.addEventListener('alpine:init', () => {
                         debounceTimer = setTimeout(() => {
                             wire.savePosition(card.id, 'image', Math.round(cardX), Math.round(cardY), cardZ);
                         }, 300);
+
+                        // Allow dblclick again after drag completes.
+                        setTimeout(() => {
+                            hasDragged = false;
+                        }, 0);
                     },
                 },
             });
@@ -743,12 +767,7 @@ document.addEventListener('alpine:init', () => {
                 document.querySelectorAll('.vb-card.vb-card-selected').forEach(s => s.classList.remove('vb-card-selected'));
                 el.classList.add('vb-card-selected');
 
-                wire.bringToFront(card.id, 'image').then((newZ) => {
-                    if (newZ) {
-                        cardZ = newZ;
-                        el.style.zIndex = newZ;
-                    }
-                });
+                cardZ = vbBringToFrontLocally(el);
             });
 
             el.addEventListener('dblclick', () => {
