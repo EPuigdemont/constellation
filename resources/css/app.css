@@ -1271,3 +1271,46 @@ html:not(.dark) .theme-night {
 .constellation-wrapper svg:active {
     cursor: grabbing;
 }
+
+/* ─── Notes View ─── */
+
+.notes-day-card {
+    min-height: 16rem;
+}
+
+.notes-stack-preview {
+    min-height: 12rem;
+}
+
+.notes-day-card.notes-day-card-collapsed {
+    min-height: 0;
+}
+
+.notes-stack-preview.notes-stack-preview-collapsed {
+    min-height: 0;
+    height: calc(4.75rem + (max(var(--stack-count, 1), 1) - 1) * 0.875rem + 0.5rem);
+}
+
+.notes-stack-item {
+    background: var(--card-bg, color-mix(in srgb, var(--theme-bg) 92%, transparent));
+    box-shadow: 0 10px 25px -20px color-mix(in srgb, var(--theme-text) 35%, transparent);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.notes-stack-preview:hover .notes-stack-item:first-child,
+.notes-stack-preview:focus-visible .notes-stack-item:first-child {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px -20px color-mix(in srgb, var(--theme-text) 45%, transparent);
+}
+
+.notes-note-card {
+    background: var(--card-bg, color-mix(in srgb, var(--theme-bg) 95%, transparent));
+    transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.notes-note-card:hover,
+.notes-note-card:focus-visible {
+    border-color: var(--theme-accent);
+    transform: translateY(-1px);
+}
+

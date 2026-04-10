@@ -21,11 +21,14 @@
                     <flux:sidebar.item icon="book-open" :href="route('diary')" :current="request()->routeIs('diary')" wire:navigate>
                         {{ __('Diary') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="calendar-days" :href="route('calendar')" :current="request()->routeIs('calendar')" wire:navigate>
-                        {{ __('Calendar') }}
+                    <flux:sidebar.item icon="document-text" :href="route('notes')" :current="request()->routeIs('notes')" wire:navigate>
+                        {{ __('Notes') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="bell" :href="route('reminders')" :current="request()->routeIs('reminders')" wire:navigate>
                         {{ __('Reminders') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="calendar-days" :href="route('calendar')" :current="request()->routeIs('calendar')" wire:navigate>
+                        {{ __('Calendar') }}
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="squares-2x2" :href="route('canvas')" :current="request()->routeIs('canvas')" wire:navigate>
                         {{ __('Canvas') }}
@@ -57,16 +60,22 @@
                             <flux:icon name="book-open" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
-                    <flux:tooltip :content="__('Calendar')" position="right">
-                        <a href="{{ route('calendar') }}" wire:navigate
-                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('calendar'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('calendar')])>
-                            <flux:icon name="calendar-days" variant="outline" class="size-5" />
+                    <flux:tooltip :content="__('Notes')" position="right">
+                        <a href="{{ route('notes') }}" wire:navigate
+                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('notes'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('notes')])>
+                            <flux:icon name="document-text" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
                     <flux:tooltip :content="__('Reminders')" position="right">
                         <a href="{{ route('reminders') }}" wire:navigate
                             @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('reminders'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('reminders')])>
                             <flux:icon name="bell" variant="outline" class="size-5" />
+                        </a>
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Calendar')" position="right">
+                        <a href="{{ route('calendar') }}" wire:navigate
+                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('calendar'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('calendar')])>
+                            <flux:icon name="calendar-days" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
                     <flux:tooltip :content="__('Canvas')" position="right">

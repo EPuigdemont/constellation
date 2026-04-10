@@ -12,6 +12,7 @@ use App\Livewire\Desktop;
 use App\Livewire\Diary;
 use App\Livewire\ImagesGallery;
 use App\Livewire\LoadingScreen;
+use App\Livewire\Notes;
 use App\Livewire\Notifications;
 use App\Livewire\Reminders;
 use App\Livewire\VisionBoard;
@@ -32,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('canvas', Desktop::class)->name('canvas');
     Route::get('diary', Diary::class)->name('diary');
+    Route::get('notes', Notes::class)->name('notes');
     Route::get('images', ImagesGallery::class)->name('images');
     Route::get('vision-board', VisionBoard::class)->name('vision-board');
     Route::get('calendar', Calendar::class)->name('calendar');
