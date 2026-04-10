@@ -16,6 +16,10 @@ document.addEventListener('alpine:init', () => {
         _autosaveTimer: null,
 
         _createEditor() {
+            if (!this.$refs.editorElement) {
+                return;
+            }
+
             if (this.editor) {
                 this.editor.destroy();
                 this.editor = null;
@@ -61,6 +65,10 @@ document.addEventListener('alpine:init', () => {
         },
 
         init() {
+            if (!this.$refs.editorElement) {
+                return;
+            }
+
             // Delay initial creation until the modal is visible
             this.$nextTick(() => {
                 this._createEditor();

@@ -989,6 +989,10 @@ class Desktop extends Component
             $data['title'] = $this->editorTitle;
         }
 
+        if ($card['type'] === 'image') {
+            $data = ['title' => $this->editorTitle];
+        }
+
         if ($card['type'] === 'reminder' && $this->editorRemindAt !== '') {
             $data['remind_at'] = $this->editorRemindAt;
         }
@@ -1006,6 +1010,12 @@ class Desktop extends Component
             'color_override' => $this->editorColorOverride,
             'tag_ids' => $this->editorTagIds,
         ];
+
+        if ($card['type'] === 'image') {
+            $updates = [
+                'title' => $this->editorTitle,
+            ];
+        }
 
         $this->updateCardInList($this->editingEntityId, $updates);
 

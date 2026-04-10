@@ -618,13 +618,13 @@
             <flux:heading size="lg">
                 <span x-text="$wire.editingEntityId ? '{{ __('Edit') }}' : '{{ __('New') }}'"></span>
                 <span
-                    x-text="$wire.editorMode === 'diary' ? '{{ __('Diary Entry') }}' : ($wire.editorMode === 'postit' ? '{{ __('Post-it') }}' : ($wire.editorMode === 'reminder' ? '{{ __('Reminder') }}' : '{{ __('Note') }}'))"></span>
+                    x-text="$wire.editorMode === 'diary' ? '{{ __('Diary Entry') }}' : ($wire.editorMode === 'postit' ? '{{ __('Post-it') }}' : ($wire.editorMode === 'reminder' ? '{{ __('Reminder') }}' : ($wire.editorMode === 'image' ? '{{ __('Image') }}' : '{{ __('Note') }}')))"></span>
             </flux:heading>
 
-            @if($editorMode === 'diary' || $editorMode === 'note' || $editorMode === 'reminder')
+            @if($editorMode === 'diary' || $editorMode === 'note' || $editorMode === 'reminder' || $editorMode === 'image')
                 <flux:field>
                     <flux:label>{{ $editorMode === 'reminder' ? __('Reminder title') : __('Title') }}</flux:label>
-                    <flux:input wire:model="editorTitle" placeholder="{{ __('Enter title...') }}"/>
+                    <flux:input wire:model="editorTitle" placeholder="{{ $editorMode === 'image' ? __('Enter image title...') : __('Enter title...') }}"/>
                 </flux:field>
             @endif
 
@@ -636,9 +636,10 @@
                 </flux:field>
             @endif
 
-            {{-- Tiptap Toolbar (hidden for now) --}}
-            <div
-                class="hidden flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-(--card-border,var(--color-zinc-200)) bg-(--card-bg,var(--color-zinc-50)) px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
+            @if($editorMode !== 'image')
+                {{-- Tiptap Toolbar (hidden for now) --}}
+                <div
+                    class="hidden flex-wrap items-center gap-1 rounded-t-lg border border-b-0 border-(--card-border,var(--color-zinc-200)) bg-(--card-bg,var(--color-zinc-50)) px-2 py-1.5 dark:border-zinc-700 dark:bg-zinc-900">
                 <button type="button" x-on:click="toggleBold()"
                         :class="isActive('bold') ? 'bg-zinc-200 dark:bg-zinc-700' : ''"
                         class="rounded px-2 py-1 text-sm font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700"
@@ -719,16 +720,16 @@
                 </button>
                 <input type="file" x-ref="imageInput" accept="image/jpeg,image/png,image/gif,image/webp" class="hidden"
                        x-on:change="handleImageSelect($event)"/>
-            </div>
+                </div>
 
-            {{-- Tiptap Editor Content --}}
-            <div wire:ignore
-                 class="tiptap-editor-content min-h-48 rounded-lg border border-(--card-border,var(--color-zinc-200)) p-3 dark:border-zinc-700">
-                <div x-ref="editorElement"></div>
-            </div>
+                {{-- Tiptap Editor Content --}}
+                <div wire:ignore
+                     class="tiptap-editor-content min-h-48 rounded-lg border border-(--card-border,var(--color-zinc-200)) p-3 dark:border-zinc-700">
+                    <div x-ref="editorElement"></div>
+                </div>
 
-            {{-- Metadata Row --}}
-            <div class="grid grid-cols-1 gap-5 {{ $editorMood === 'custom' ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }}">
+                {{-- Metadata Row --}}
+                <div class="grid grid-cols-1 gap-5 {{ $editorMood === 'custom' ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }}">
                 {{-- Mood --}}
                 <flux:field>
                     <flux:label>{{ __('Mood') }}</flux:label>
@@ -841,7 +842,8 @@
                         </div>
                     </div>
                 </flux:field>
-            </div>
+                </div>
+            @endif
 
             <div class="flex items-center justify-between">
                 @if($editingEntityId !== '')

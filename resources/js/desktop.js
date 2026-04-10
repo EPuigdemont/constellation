@@ -151,6 +151,9 @@ function buildCardInnerHTML(card) {
         }
         html += '</div>';
         if (type === 'image' && card.image_url) {
+            if (title) {
+                html += `<h3 class="desktop-card-title">${escapeHtml(title)}</h3>`;
+            }
             html += `<img src="${escapeHtml(card.image_url)}" alt="${escapeHtml(preview || 'Image')}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />`;
         } else {
             if (title) {

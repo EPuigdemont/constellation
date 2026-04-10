@@ -10,6 +10,7 @@ use App\Livewire\Desktop;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
 use App\Models\EntityShare;
+use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
@@ -131,6 +132,26 @@ class DesktopTest extends TestCase
             'title' => 'My Note',
             'body' => 'Some thoughts',
             'mood' => 'breeze',
+        ]);
+    }
+
+    public function test_save_editor_updates_image_title(): void
+    {
+        $user = User::factory()->create();
+        $image = Image::factory()->create([
+            'user_id' => $user->id,
+            'title' => 'Old image title',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Desktop::class)
+            ->call('openEditModal', $image->id, 'image')
+            ->set('editorTitle', 'New image title')
+            ->call('saveEditor');
+
+        $this->assertDatabaseHas('images', [
+            'id' => $image->id,
+            'title' => 'New image title',
         ]);
     }
 
