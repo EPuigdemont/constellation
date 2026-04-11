@@ -18,6 +18,7 @@
             <span x-text="greeting + ' ✨'"></span>
         </div>
 
+
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
@@ -63,6 +64,16 @@
                     {{ __('Log in') }}
                 </flux:button>
             </div>
+
+            <!-- Enter as Guest Button -->
+            <div class="flex items-center justify-center">
+                <flux:button :href="route('guest.show')" wire:navigate class="w-full" style="background-color: #3b82f6; color: white;">
+                    {{ __('Enter as Guest') }}
+                </flux:button>
+            </div>
+            <p class="text-xs text-center text-zinc-500 dark:text-zinc-400 mt-2">
+                {{ __('Try the app without registering and create an account later!') }}
+            </p>
         </form>
 
         <div class="text-center text-sm text-zinc-600 dark:text-zinc-400">

@@ -19,7 +19,7 @@
             <div class="grid grid-cols-2 gap-4 p-0 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 @foreach($images as $image)
                     <div class="group cursor-pointer overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900"
-                         x-on:dblclick="$wire.openImageModal('{{ $image['id'] }}', '{{ $image['url'] }}', '{{ addslashes($image['alt']) }}')">
+                         x-on:dblclick="$wire.openImageModal('{{ $image['id'] }}', '{{ $image['url'] }}', '{{ addslashes($image['alt']) }}', {{ ($image['is_demo'] ?? false) ? 'true' : 'false' }})">
                         <div class="aspect-square overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                             <img src="{{ $image['url'] }}"
                                  alt="{{ $image['alt'] }}"
@@ -30,7 +30,12 @@
                             <p class="truncate text-xs font-medium text-zinc-700 dark:text-zinc-300" title="{{ $image['alt'] }}">
                                 {{ $image['alt'] ?: __('Untitled') }}
                             </p>
-                            <p class="text-[0.65rem] text-zinc-400">{{ $image['created_at'] }}</p>
+                            <p class="text-[0.65rem] text-zinc-400">
+                                {{ $image['created_at'] }}
+                                @if($image['is_demo'] ?? false)
+                                    <span class="ml-1">• {{ __('Guest demo') }}</span>
+                                @endif
+                            </p>
                         </div>
                     </div>
                 @endforeach
@@ -53,6 +58,9 @@
                 <div class="flex items-center justify-between border-t border-(--theme-border) px-5 py-3">
                     <div class="text-sm font-medium text-(--theme-text)">
                         {{ $modalImageAlt ?: __('Untitled') }}
+                        @if($modalImageIsDemo)
+                            <span class="ml-2 text-xs font-normal text-(--theme-text-muted)">• {{ __('Guest demo') }}</span>
+                        @endif
                     </div>
                     <div class="flex items-center gap-2">
                         <a href="{{ $modalImageUrl }}" target="_blank"
@@ -65,10 +73,12 @@
                             <flux:icon name="arrow-down-tray" variant="outline" class="size-4" />
                             {{ __('Download') }}
                         </a>
-                        <flux:button size="sm" variant="danger" wire:click="deleteImage('{{ $modalImageId }}')" wire:confirm="{{ __('Are you sure you want to delete this image?') }}">
-                            <flux:icon name="trash" variant="outline" class="size-4" />
-                            {{ __('Delete') }}
-                        </flux:button>
+                        @unless($modalImageIsDemo)
+                            <flux:button size="sm" variant="danger" wire:click="deleteImage('{{ $modalImageId }}')" wire:confirm="{{ __('Are you sure you want to delete this image?') }}">
+                                <flux:icon name="trash" variant="outline" class="size-4" />
+                                {{ __('Delete') }}
+                            </flux:button>
+                        @endunless
                         <flux:button size="sm" variant="subtle" wire:click="closeImageModal" icon="x-mark" />
                     </div>
                 </div>

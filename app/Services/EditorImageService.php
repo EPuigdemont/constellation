@@ -69,11 +69,36 @@ class EditorImageService
 
         Log::info('[EditorImageService] File stored', ['path' => $path]);
 
+        $dimensions = $this->extractDimensions($file);
+
         return Image::create([
             'user_id' => $user->id,
             'path' => $path,
             'disk' => 'private',
             'alt' => $file->getClientOriginalName(),
+            'image_width' => $dimensions['width'],
+            'image_height' => $dimensions['height'],
         ]);
+    }
+
+    /** @return array{width: int|null, height: int|null} */
+    private function extractDimensions(UploadedFile $file): array
+    {
+        $realPath = $file->getRealPath();
+
+        if (! is_string($realPath) || $realPath === '') {
+            return ['width' => null, 'height' => null];
+        }
+
+        $size = @getimagesize($realPath);
+
+        if ($size === false) {
+            return ['width' => null, 'height' => null];
+        }
+
+        return [
+            'width' => $size[0],
+            'height' => $size[1],
+        ];
     }
 }

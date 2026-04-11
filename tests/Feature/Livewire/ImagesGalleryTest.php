@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Livewire;
 
+use App\Enums\Tier;
 use App\Livewire\ImagesGallery;
 use App\Models\Image;
 use App\Models\User;
@@ -100,5 +101,34 @@ class ImagesGalleryTest extends TestCase
             ->call('openImageModal', $image->id, 'url', 'alt')
             ->call('deleteImage', $image->id)
             ->assertSet('showImageModal', false);
+    }
+
+    public function test_guest_user_sees_demo_images_in_gallery(): void
+    {
+        $guest = User::factory()->create([
+            'tier' => Tier::Guest->value,
+            'guest_created_at' => now(),
+            'guest_expires_at' => now()->addDay(),
+        ]);
+
+        Livewire::actingAs($guest)
+            ->test(ImagesGallery::class)
+            ->assertSee('Guest demo')
+            ->assertSee('A cozy memory wall full of pinned notes, photos, and flowers.');
+    }
+
+    public function test_open_demo_image_modal_marks_image_as_demo(): void
+    {
+        $guest = User::factory()->create([
+            'tier' => Tier::Guest->value,
+            'guest_created_at' => now(),
+            'guest_expires_at' => now()->addDay(),
+        ]);
+
+        Livewire::actingAs($guest)
+            ->test(ImagesGallery::class)
+            ->call('openImageModal', 'guest-demo-memory-wall', 'http://example.com/demo.svg', 'Demo alt', true)
+            ->assertSet('showImageModal', true)
+            ->assertSet('modalImageIsDemo', true);
     }
 }

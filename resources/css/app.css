@@ -134,6 +134,17 @@ select:focus[data-flux-control] {
     @apply flex items-center justify-between gap-2 flex-wrap;
 }
 
+.desktop-card-image-frame {
+    @apply mt-1 w-full overflow-hidden rounded;
+    max-height: 220px;
+    aspect-ratio: 16 / 10;
+    background: color-mix(in srgb, var(--card-border) 22%, transparent);
+}
+
+.desktop-card-image {
+    @apply block h-full w-full object-contain;
+}
+
 .desktop-card-date {
     @apply whitespace-nowrap text-[0.6rem] opacity-50;
     cursor: default;

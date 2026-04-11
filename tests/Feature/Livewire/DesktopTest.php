@@ -407,4 +407,34 @@ class DesktopTest extends TestCase
             ->assertSet('editorMode', 'note')
             ->assertSet('editorTitle', 'Query edit note');
     }
+
+    public function test_guest_request_image_upload_opens_warning_modal(): void
+    {
+        $guest = User::factory()->create([
+            'tier' => Tier::Guest->value,
+            'guest_created_at' => now(),
+            'guest_expires_at' => now()->addDay(),
+        ]);
+
+        Livewire::actingAs($guest)
+            ->test(Desktop::class)
+            ->call('requestImageUpload')
+            ->assertSet('showGuestUploadWarning', true);
+    }
+
+    public function test_guest_can_open_demo_image_in_readonly_modal(): void
+    {
+        $guest = User::factory()->create([
+            'tier' => Tier::Guest->value,
+            'guest_created_at' => now(),
+            'guest_expires_at' => now()->addDay(),
+        ]);
+
+        Livewire::actingAs($guest)
+            ->test(Desktop::class)
+            ->call('openReadonlyModal', 'guest-demo-memory-wall', 'image')
+            ->assertSet('showReadonlyModal', true)
+            ->assertSet('readonlyTitle', 'Memory Wall')
+            ->assertSet('readonlyOwnerUsername', 'demo');
+    }
 }

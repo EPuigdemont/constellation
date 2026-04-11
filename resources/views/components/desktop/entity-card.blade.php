@@ -55,6 +55,13 @@
            x-on:dblclick.stop>{{ $card['preview'] ?: __('Empty post-it') }}</p>
 
     @elseif($card['type'] === 'image')
+        @php
+            $imageWidth = is_numeric($card['image_width'] ?? null) ? (int) $card['image_width'] : null;
+            $imageHeight = is_numeric($card['image_height'] ?? null) ? (int) $card['image_height'] : null;
+            $imageRatio = ($imageWidth && $imageHeight && $imageWidth > 0 && $imageHeight > 0)
+                ? $imageWidth . ' / ' . $imageHeight
+                : null;
+        @endphp
         <div class="desktop-card-header">
             <span class="desktop-card-badge">{{ __('Image') }}</span>
             @if($shortDate)
@@ -65,7 +72,9 @@
             <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
         @endif
         @if(!empty($card['image_url']))
-            <img src="{{ $card['image_url'] }}" alt="{{ $card['preview'] ?: __('Image') }}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />
+            <div class="desktop-card-image-frame" @if($imageRatio) style="aspect-ratio: {{ $imageRatio }};" @endif>
+                <img src="{{ $card['image_url'] }}" alt="{{ $card['preview'] ?: __('Image') }}" class="desktop-card-image" loading="lazy" />
+            </div>
         @else
             <p class="desktop-card-preview">{{ $card['preview'] ?: __('No description') }}</p>
         @endif

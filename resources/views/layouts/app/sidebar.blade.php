@@ -42,9 +42,11 @@
                     <flux:sidebar.item icon="photo" :href="route('images')" :current="request()->routeIs('images')" wire:navigate>
                         {{ __('Images') }}
                     </flux:sidebar.item>
-                    <flux:sidebar.item icon="users" :href="route('friends')" :current="request()->routeIs('friends')" wire:navigate>
-                        {{ __('Friends') }}
-                    </flux:sidebar.item>
+                    @unless(auth()->user()->isGuest())
+                        <flux:sidebar.item icon="users" :href="route('friends')" :current="request()->routeIs('friends')" wire:navigate>
+                            {{ __('Friends') }}
+                        </flux:sidebar.item>
+                    @endunless
                 </flux:sidebar.group>
 
                 {{-- Collapsed: icon-only navigation with tooltips --}}
@@ -102,12 +104,14 @@
                             <flux:icon name="photo" variant="outline" class="size-5" />
                         </a>
                     </flux:tooltip>
-                    <flux:tooltip :content="__('Friends')" position="right">
-                        <a href="{{ route('friends') }}" wire:navigate
-                            @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('friends'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('friends')])>
-                            <flux:icon name="users" variant="outline" class="size-5" />
-                        </a>
-                    </flux:tooltip>
+                    @unless(auth()->user()->isGuest())
+                        <flux:tooltip :content="__('Friends')" position="right">
+                            <a href="{{ route('friends') }}" wire:navigate
+                                @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-[var(--theme-accent)] bg-[var(--theme-accent)]/10' => request()->routeIs('friends'), 'text-[var(--theme-text-muted)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-accent)]/5' => !request()->routeIs('friends')])>
+                                <flux:icon name="users" variant="outline" class="size-5" />
+                            </a>
+                        </flux:tooltip>
+                    @endunless
                 </div>
             </flux:sidebar.nav>
 
@@ -115,6 +119,11 @@
 
             <flux:sidebar.nav>
                 <x-theme-switcher />
+                @if(auth()->user()->isGuest())
+                    <flux:sidebar.item icon="user-plus" :href="route('guest.convert.show')" wire:navigate>
+                        {{ __('Register') }}
+                    </flux:sidebar.item>
+                @endif
             </flux:sidebar.nav>
 
             <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
@@ -171,6 +180,11 @@
                     <flux:menu.separator />
 
                     <flux:menu.radio.group>
+                        @if(auth()->user()->isGuest())
+                            <flux:menu.item :href="route('guest.convert.show')" icon="user-plus" wire:navigate>
+                                {{ __('Register Account') }}
+                            </flux:menu.item>
+                        @endif
                         <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
                             {{ __('Settings') }}
                         </flux:menu.item>

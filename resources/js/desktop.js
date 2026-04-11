@@ -116,6 +116,10 @@ function buildCardInnerHTML(card) {
         ? card.is_owner
         : String(card.owner_id ?? '') === String(currentUserId);
     const isShared = !isOwner && String(card.owner_id ?? '') !== '';
+    const imageWidth = Number(card.image_width || 0);
+    const imageHeight = Number(card.image_height || 0);
+    const hasImageRatio = Number.isFinite(imageWidth) && Number.isFinite(imageHeight) && imageWidth > 0 && imageHeight > 0;
+    const imageRatioStyle = hasImageRatio ? ` style="aspect-ratio: ${imageWidth} / ${imageHeight};"` : '';
 
     const date = card.updated_at || card.created_at;
     let shortDate = '';
@@ -154,7 +158,9 @@ function buildCardInnerHTML(card) {
             if (title) {
                 html += `<h3 class="desktop-card-title">${escapeHtml(title)}</h3>`;
             }
-            html += `<img src="${escapeHtml(card.image_url)}" alt="${escapeHtml(preview || 'Image')}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />`;
+            html += `<div class="desktop-card-image-frame"${imageRatioStyle}>`;
+            html += `<img src="${escapeHtml(card.image_url)}" alt="${escapeHtml(preview || 'Image')}" class="desktop-card-image" loading="lazy" />`;
+            html += '</div>';
         } else {
             if (title) {
                 html += `<h3 class="desktop-card-title">${escapeHtml(title)}</h3>`;

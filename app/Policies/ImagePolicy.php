@@ -32,6 +32,11 @@ class ImagePolicy
 
     public function create(User $user): bool
     {
+        // Guest users cannot upload images
+        if ($user->isGuest()) {
+            return false;
+        }
+
         $limitChecker = app(LimitCheckerService::class);
 
         return $limitChecker->canCreateEntity($user, 'image');

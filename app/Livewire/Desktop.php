@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
+use App\Models\EntityShare;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
@@ -15,6 +16,7 @@ use App\Models\Tag;
 use App\Models\User;
 use App\Services\DesktopService;
 use App\Services\EditorImageService;
+use App\Services\GuestDemoImageService;
 use App\Services\LimitCheckerService;
 use App\Services\ShareEntityService;
 use Carbon\Carbon;
@@ -113,6 +115,9 @@ class Desktop extends Component
     public array $currentEntitySharedFriends = [];
 
     public string $limitError = '';
+
+    /** Guest upload warning modal */
+    public bool $showGuestUploadWarning = false;
 
     public function mount(DesktopService $service): void
     {
@@ -300,7 +305,26 @@ class Desktop extends Component
 
     public function updatedImageUpload(): void
     {
+        $user = Auth::user();
+        if ($user->isGuest()) {
+            $this->showGuestUploadWarning = true;
+            $this->imageUpload = null;
+
+            return;
+        }
+
         $this->uploadImage(app(EditorImageService::class), app(DesktopService::class));
+    }
+
+    public function requestImageUpload(): void
+    {
+        if (Auth::user()->isGuest()) {
+            $this->showGuestUploadWarning = true;
+
+            return;
+        }
+
+        $this->dispatch('open-desktop-image-picker');
     }
 
     public function uploadImage(EditorImageService $imageService, DesktopService $service): void
@@ -344,6 +368,8 @@ class Desktop extends Component
             $position = $service->assignDefaultPosition($user, $image->id, 'image', $this->viewportCenterX, $this->viewportCenterY);
             Log::info('[Canvas] Position assigned', ['positionId' => $position->id, 'x' => $position->x, 'y' => $position->y]);
 
+            $defaultSize = $service->calculateDefaultImageCardSize($image->image_width, $image->image_height);
+
             $card = [
                 'id' => $image->id,
                 'type' => 'image',
@@ -361,10 +387,12 @@ class Desktop extends Component
                 'parent_type' => null,
                 'children_count' => 0,
                 'siblings_count' => 0,
-                'width' => null,
-                'height' => null,
+                'width' => $defaultSize['width'],
+                'height' => $defaultSize['height'],
                 'tag_ids' => [],
                 'image_url' => route('images.serve', $image),
+                'image_width' => $image->image_width,
+                'image_height' => $image->image_height,
             ];
 
             $this->cards[] = $card;
@@ -437,6 +465,22 @@ class Desktop extends Component
 
     public function openReadonlyModal(string $entityId, string $entityType): void
     {
+        if ($entityType === 'image' && Auth::user()->isGuest()) {
+            $demoImage = app(GuestDemoImageService::class)->find($entityId);
+
+            if ($demoImage !== null) {
+                $this->showReadonlyModal = true;
+                $this->readonlyEntityType = $entityType;
+                $this->readonlyOwnerUsername = 'demo';
+                $this->readonlyTitle = (string) ($demoImage['title'] ?? '');
+                $this->readonlyBody = (string) ($demoImage['alt'] ?? '');
+                $this->readonlyImageUrl = (string) ($demoImage['url'] ?? '');
+                $this->readonlyUpdatedAt = __('Guest demo');
+
+                return;
+            }
+        }
+
         $model = $this->resolveEntity($entityId, $entityType);
         if (! $model) {
             return;
@@ -817,12 +861,26 @@ class Desktop extends Component
     public function loadFriendsForSharing(ShareEntityService $service): void
     {
         $user = Auth::user();
+
+        if ($user->isGuest()) {
+            $this->userFriends = [];
+
+            return;
+        }
+
         $this->userFriends = $service->getFriendsForUser($user);
     }
 
     public function loadCurrentShares(ShareEntityService $service, string $entityId, string $entityType): void
     {
         $user = Auth::user();
+
+        if ($user->isGuest()) {
+            $this->currentEntitySharedFriends = [];
+
+            return;
+        }
+
         $this->currentEntitySharedFriends = array_map(
             'strval',
             $service->getSharedFriendIds($user, $entityId, $entityType),
@@ -839,6 +897,12 @@ class Desktop extends Component
         Gate::authorize('update', $model);
 
         $user = Auth::user();
+
+        if ($user->isGuest()) {
+            return;
+        }
+
+        Gate::authorize('create', EntityShare::class);
 
         if (in_array($friendId, $this->currentEntitySharedFriends, true)) {
             $service->unshareWithFriend($user, $entityId, $entityType, $friendId);

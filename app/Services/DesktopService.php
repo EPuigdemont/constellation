@@ -20,6 +20,18 @@ use Illuminate\Support\Str;
 
 class DesktopService
 {
+    private const int IMAGE_CARD_MIN_WIDTH = 224;
+
+    private const int IMAGE_CARD_MIN_HEIGHT = 180;
+
+    private const int IMAGE_PREVIEW_MIN_WIDTH = 180;
+
+    private const int IMAGE_PREVIEW_MIN_HEIGHT = 120;
+
+    private const int IMAGE_PREVIEW_MAX_WIDTH = 360;
+
+    private const int IMAGE_PREVIEW_MAX_HEIGHT = 220;
+
     /**
      * Load all entity cards for a user's desktop.
      *
@@ -132,6 +144,13 @@ class DesktopService
             $cards[] = $this->normalizeCard($entity, $morphType, $position, $relationships);
         }
 
+        if ($user->isGuest() && isset($entityTypes['image'])) {
+            $cards = array_merge(
+                $cards,
+                app(GuestDemoImageService::class)->cardsForContext($context),
+            );
+        }
+
         return $cards;
     }
 
@@ -164,7 +183,40 @@ class DesktopService
             ->where('context', $context)
             ->max('z_index');
 
+        if ($user->isGuest()) {
+            $demoMax = collect(app(GuestDemoImageService::class)->cardsForContext($context))
+                ->max('z_index');
+
+            $max = max((int) ($max ?? 0), (int) ($demoMax ?? 0));
+        }
+
         return ($max ?? 0) + 1;
+    }
+
+    /** @return array{width: int, height: int} */
+    public function calculateDefaultImageCardSize(?int $imageWidth, ?int $imageHeight): array
+    {
+        $previewWidth = self::IMAGE_PREVIEW_MIN_WIDTH;
+        $previewHeight = self::IMAGE_PREVIEW_MIN_HEIGHT;
+
+        if (($imageWidth ?? 0) > 0 && ($imageHeight ?? 0) > 0) {
+            $rawWidth = (float) $imageWidth;
+            $rawHeight = (float) $imageHeight;
+
+            $scale = min(
+                self::IMAGE_PREVIEW_MAX_WIDTH / $rawWidth,
+                self::IMAGE_PREVIEW_MAX_HEIGHT / $rawHeight,
+                1.0,
+            );
+
+            $previewWidth = max(self::IMAGE_PREVIEW_MIN_WIDTH, (int) round($rawWidth * $scale));
+            $previewHeight = max(self::IMAGE_PREVIEW_MIN_HEIGHT, (int) round($rawHeight * $scale));
+        }
+
+        $cardWidth = max(self::IMAGE_CARD_MIN_WIDTH, $previewWidth + 24);
+        $cardHeight = max(self::IMAGE_CARD_MIN_HEIGHT, $previewHeight + 112);
+
+        return ['width' => $cardWidth, 'height' => $cardHeight];
     }
 
     /**
@@ -352,6 +404,14 @@ class DesktopService
     {
         $position = $position instanceof EntityPosition ? $position : null;
 
+        $imageWidth = $type === 'image' && $entity instanceof Image ? $entity->image_width : null;
+        $imageHeight = $type === 'image' && $entity instanceof Image ? $entity->image_height : null;
+        $defaultImageSize = $type === 'image'
+            ? $this->calculateDefaultImageCardSize($imageWidth, $imageHeight)
+            : ['width' => null, 'height' => null];
+        $positionWidth = $position instanceof EntityPosition ? $position->width : null;
+        $positionHeight = $position instanceof EntityPosition ? $position->height : null;
+
         $title = match ($type) {
             'diary_entry' => $entity->title ?? '',
             'note' => $entity->title ?? '',
@@ -392,8 +452,8 @@ class DesktopService
             'x' => $position->x ?? 0.0,
             'y' => $position->y ?? 0.0,
             'z_index' => $position->z_index ?? 0,
-            'width' => $position?->width,
-            'height' => $position?->height,
+            'width' => $positionWidth ?? $defaultImageSize['width'],
+            'height' => $positionHeight ?? $defaultImageSize['height'],
             'owner_id' => $entity->user_id,
             'owner_name' => $entity->user->name ?? '',
             'owner_username' => $entity->user->username ?? '',
@@ -405,6 +465,8 @@ class DesktopService
             'siblings_count' => $relData['siblings_count'],
             'tag_ids' => $tagIds,
             'image_url' => $imageUrl,
+            'image_width' => $imageWidth,
+            'image_height' => $imageHeight,
             'is_hidden' => (bool) ($position->is_hidden ?? false),
         ];
     }

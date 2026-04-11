@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
+use App\Models\EntityShare;
 use App\Models\Image;
 use App\Models\Note;
 use App\Models\Tag;
@@ -79,6 +80,9 @@ class VisionBoard extends Component
 
     public string $limitError = '';
 
+    /** Guest upload warning modal */
+    public bool $showGuestUploadWarning = false;
+
     /** Linking state */
     public string $linkingMode = '';
 
@@ -145,7 +149,26 @@ class VisionBoard extends Component
 
     public function updatedImageUpload(): void
     {
+        $user = Auth::user();
+        if ($user->isGuest()) {
+            $this->showGuestUploadWarning = true;
+            $this->imageUpload = null;
+
+            return;
+        }
+
         $this->uploadImage(app(EditorImageService::class), app(DesktopService::class));
+    }
+
+    public function requestImageUpload(): void
+    {
+        if (Auth::user()->isGuest()) {
+            $this->showGuestUploadWarning = true;
+
+            return;
+        }
+
+        $this->dispatch('open-vision-board-image-picker');
     }
 
     public function uploadImage(EditorImageService $imageService, DesktopService $service): void
@@ -345,12 +368,26 @@ class VisionBoard extends Component
     public function loadFriendsForSharing(ShareEntityService $service): void
     {
         $user = Auth::user();
+
+        if ($user->isGuest()) {
+            $this->userFriends = [];
+
+            return;
+        }
+
         $this->userFriends = $service->getFriendsForUser($user);
     }
 
     public function loadCurrentShares(ShareEntityService $service, string $imageId): void
     {
         $user = Auth::user();
+
+        if ($user->isGuest()) {
+            $this->currentEntitySharedFriends = [];
+
+            return;
+        }
+
         $this->currentEntitySharedFriends = array_map(
             'strval',
             $service->getSharedFriendIds($user, $imageId, 'image'),
@@ -367,6 +404,12 @@ class VisionBoard extends Component
         Gate::authorize('update', $image);
 
         $user = Auth::user();
+
+        if ($user->isGuest()) {
+            return;
+        }
+
+        Gate::authorize('create', EntityShare::class);
 
         if (in_array($friendId, $this->currentEntitySharedFriends, true)) {
             $service->unshareWithFriend($user, $imageId, 'image', $friendId);

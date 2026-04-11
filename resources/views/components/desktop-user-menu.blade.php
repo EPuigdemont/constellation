@@ -25,6 +25,11 @@
         </div>
         <flux:menu.separator />
         <flux:menu.radio.group>
+            @if(auth()->user()->isGuest())
+                <flux:menu.item :href="route('guest.convert.show')" icon="user-plus" wire:navigate>
+                    {{ __('Register Account') }}
+                </flux:menu.item>
+            @endif
             <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
                 {{ __('Settings') }}
             </flux:menu.item>

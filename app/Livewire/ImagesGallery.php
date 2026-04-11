@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Models\Image;
+use App\Services\GuestDemoImageService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -25,11 +26,14 @@ class ImagesGallery extends Component
 
     public string $modalImageAlt = '';
 
-    public function openImageModal(string $id, string $url, string $alt): void
+    public bool $modalImageIsDemo = false;
+
+    public function openImageModal(string $id, string $url, string $alt, bool $isDemo = false): void
     {
         $this->modalImageId = $id;
         $this->modalImageUrl = $url;
         $this->modalImageAlt = $alt;
+        $this->modalImageIsDemo = $isDemo;
         $this->showImageModal = true;
     }
 
@@ -39,6 +43,7 @@ class ImagesGallery extends Component
         $this->modalImageId = '';
         $this->modalImageUrl = '';
         $this->modalImageAlt = '';
+        $this->modalImageIsDemo = false;
     }
 
     public function deleteImage(string $id): void
@@ -66,10 +71,15 @@ class ImagesGallery extends Component
                 'alt' => $image->alt ?? '',
                 'url' => route('images.serve', $image),
                 'created_at' => $image->created_at?->format('d/m/Y H:i'),
+                'is_demo' => false,
             ]);
 
+        if ($user->isGuest()) {
+            $images = $images->concat(app(GuestDemoImageService::class)->galleryImages());
+        }
+
         return view('livewire.images-gallery', [
-            'images' => $images,
+            'images' => $images->values(),
         ]);
     }
 }

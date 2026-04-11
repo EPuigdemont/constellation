@@ -35,6 +35,8 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $diary_display_mode
  * @property CarbonInterface|null $first_login_at
  * @property Tier $tier
+ * @property CarbonInterface|null $guest_expires_at
+ * @property CarbonInterface|null $guest_created_at
  */
 class User extends Authenticatable // implements MustVerifyEmail
 {
@@ -61,6 +63,8 @@ class User extends Authenticatable // implements MustVerifyEmail
         'diary_display_mode',
         'tier',
         'first_login_at',
+        'guest_expires_at',
+        'guest_created_at',
     ];
 
     /**
@@ -85,6 +89,8 @@ class User extends Authenticatable // implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'first_login_at' => 'datetime',
+            'guest_expires_at' => 'datetime',
+            'guest_created_at' => 'datetime',
             'password' => 'hashed',
             'desktop_zoom' => 'float',
             'vision_board_zoom' => 'float',
@@ -125,6 +131,26 @@ class User extends Authenticatable // implements MustVerifyEmail
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * Check if this is a guest user.
+     */
+    public function isGuest(): bool
+    {
+        return $this->tier === Tier::Guest;
+    }
+
+    /**
+     * Check if guest account has expired.
+     */
+    public function isGuestExpired(): bool
+    {
+        if (! $this->isGuest() || ! $this->guest_expires_at) {
+            return false;
+        }
+
+        return now()->greaterThanOrEqualTo($this->guest_expires_at);
     }
 
     /** @return HasMany<DiaryEntry, $this> */

@@ -37,6 +37,8 @@ class EditorImageServiceTest extends TestCase
         $this->assertSame($user->id, $image->user_id);
         $this->assertSame('private', $image->disk);
         $this->assertNotNull($image->path);
+        $this->assertSame(100, $image->image_width);
+        $this->assertSame(100, $image->image_height);
     }
 
     public function test_store_persists_file_to_private_disk(): void

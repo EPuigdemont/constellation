@@ -6,6 +6,7 @@ namespace App\Enums;
 
 enum Tier: string
 {
+    case Guest = 'guest';
     case Basic = 'basic';
     case Premium = 'premium';
     case VIP = 'vip';
@@ -13,6 +14,7 @@ enum Tier: string
     public function label(): string
     {
         return match ($this) {
+            self::Guest => 'Guest',
             self::Basic => 'Basic',
             self::Premium => 'Premium',
             self::VIP => 'VIP',
