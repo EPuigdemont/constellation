@@ -201,32 +201,43 @@ Tasks sorted by implementation priority. Do not skip phases.
 
 ## Phase 11 — Deployment
 
-- [ ] Provision Hetzner CAX11 VPS (Ubuntu 24 LTS)
-- [ ] Install: PHP 8.5, Composer, MySQL 8, Nginx, Node.js, Certbot
-- [ ] Configure Nginx vhost for Laravel
-- [ ] Set up Let's Encrypt SSL via Certbot (auto-renew)
-- [ ] Point domain DNS through Cloudflare (proxy enabled)
-- [ ] Set Cloudflare SSL mode to Full (Strict)
-- [ ] Configure Fail2ban for SSH and Nginx login route
-- [ ] Deploy app: clone repo, `.env` production config, `php artisan migrate --force`, `npm run build`
+- [x] Provision Hetzner CAX11 VPS (Ubuntu 24 LTS)
+- [x] Install: PHP 8.5, Composer, MySQL 8, Nginx, Node.js, Certbot
+- [x] Configure Nginx vhost for Laravel
+- [x] Set up Let's Encrypt SSL via Certbot (auto-renew)
+- [x] Point domain DNS through Cloudflare (proxy enabled)
+- [x] Set Cloudflare SSL mode to Full (Strict)
+- [x] Configure Fail2ban for SSH and Nginx login route
+- [x] Deploy app: clone repo, `.env` production config, `php artisan migrate --force`, `npm run build`
 - [ ] Set up Laravel scheduler in crontab
 - [ ] Configure Laravel queue worker (if used for notifications)
-- [ ] Test login throttle in production
-- [ ] Verify `robots.txt` is served correctly
-- [ ] Write `docs/DEPLOY.md` with all steps documented
+- [x] Test login throttle in production
+- [x] Verify `robots.txt` is served correctly
+- [x] Write `docs/DEPLOY.md` with all steps documented
 
 ---
 
 ## Phase 12 — Polish & QA
 
-- [ ] Responsive check: desktop view on tablet/mobile (degraded but usable)
+- [x] Responsive check: desktop view on tablet/mobile (degraded but usable)
 - [ ] Error states on all forms
-- [ ] Empty states on desktop (first-time user experience)
-- [ ] Loading states on Livewire components
-- [ ] Accessibility: keyboard navigation on modals, focus trapping
+- [x] Empty states on desktop (first-time user experience)
+- [x] Loading states on Livewire components
+- [x] Accessibility: keyboard navigation on modals, focus trapping
 - [ ] Performance: eager load relationships in Constellation endpoint, cache proximity scores
 
 ---
+
+## Phase 13 - Post deployment features
+
+- [x] Notes page: list all notes in a grid view, allow creating notes, groups by date
+- [x] About page: static page with info about the app, contact info, etc.
+- [ ] Guest mode: allow users to try the app without registering, with data stored in database with a temporary user account that expires after a certain time (e.g. 24 hours), with a prompt to register and migrate data before expiration
+- [ ] Open source the project on GitHub, with a public repository and documentation for local development setup
+- [ ] API to allow third-party integrations (e.g. mobile app, browser extension), with token-based authentication and rate limiting
+- [ ] Mobile app (Flutter or React Native) that connects to the API, with offline support and local caching
+- [ ] Notifications: email reminders for important dates, push notifications for reminders and important dates (requires mobile app or browser push support)
+- [ ] Emails: daily/weekly summary of entries, reminders for important dates, etc. (requires email service integration like SendGrid or Mailgun)
 
 ## Backlog (Post-MVP)
 
