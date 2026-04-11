@@ -16,7 +16,6 @@ use App\Models\Reminder;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 class DesktopService
 {
@@ -422,7 +421,7 @@ class DesktopService
         };
 
         $preview = match ($type) {
-            'diary_entry', 'note', 'postit', 'reminder' => Str::limit(strip_tags($entity->body ?? ''), 120),
+            'diary_entry', 'note', 'postit', 'reminder' => trim(strip_tags((string) ($entity->body ?? ''))),
             'image' => $entity->alt ?? '',
             default => '',
         };

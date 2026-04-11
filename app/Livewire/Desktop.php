@@ -26,7 +26,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -576,7 +575,7 @@ class Desktop extends Component
 
         $this->updateCardInList($this->editingEntityId, [
             'title' => $this->editorTitle,
-            'preview' => Str::limit($body, 120),
+            'preview' => $body,
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
         ]);
@@ -682,7 +681,7 @@ class Desktop extends Component
         $model->update(['body' => $plainBody]);
 
         $this->updateCardInList($entityId, [
-            'preview' => Str::limit($plainBody, 120),
+            'preview' => $plainBody,
         ]);
     }
 
@@ -1014,7 +1013,7 @@ class Desktop extends Component
             'id' => $entity->id,
             'type' => $type,
             'title' => $entity->title ?? '',
-            'preview' => Str::limit($body, 120),
+            'preview' => $body,
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
             'x' => $position->x,
@@ -1083,7 +1082,7 @@ class Desktop extends Component
 
         $updates = [
             'title' => $this->editorTitle,
-            'preview' => Str::limit($body, 120),
+            'preview' => $body,
             'mood' => $mood->value,
             'color_override' => $this->editorColorOverride,
             'tag_ids' => $this->editorTagIds,
