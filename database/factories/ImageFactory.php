@@ -20,6 +20,8 @@ class ImageFactory extends Factory
             'path' => 'images/'.fake()->uuid().'.jpg',
             'disk' => 'private',
             'alt' => fake()->optional()->sentence(),
+            'image_width' => 1600,
+            'image_height' => 900,
         ];
     }
 }

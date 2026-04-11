@@ -53,7 +53,7 @@
                         {{ __('Post-it') }}
                     </button>
                     <button type="button"
-                            x-on:click="document.getElementById('standaloneImageInput').click(); mobileCreateOpen = false"
+                            x-on:click="$wire.requestImageUpload(); mobileCreateOpen = false"
                             class="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
                         <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                              stroke-width="1.5" stroke="currentColor">
@@ -104,7 +104,7 @@
                     </svg>
                     <span class="hidden 2xl:inline">{{ __('Post-it') }}</span>
                 </flux:button>
-                <flux:button size="sm" x-on:click="$refs.standaloneImageInput.click()"
+                <flux:button size="sm" x-on:click="$wire.requestImageUpload()"
                              title="{{ __('Image') }}">
                     <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                          stroke-width="1.5" stroke="currentColor">
@@ -127,6 +127,7 @@
             <input type="file"
                    id="standaloneImageInput"
                    x-ref="standaloneImageInput"
+                   x-on:open-desktop-image-picker.window="$refs.standaloneImageInput.click()"
                    accept="image/jpeg,image/png,image/gif,image/webp"
                    class="hidden"
                    wire:model="imageUpload"/>
@@ -835,7 +836,7 @@
         </div>
     </flux:modal>
 
-    {{-- Upload overlay --}}
+     {{-- Upload overlay --}}
     <div wire:loading.flex wire:target="imageUpload, uploadImage"
          class="fixed inset-0 z-99999 items-center justify-center bg-black/50 backdrop-blur-sm">
         <div class="flex flex-col items-center gap-3">
@@ -848,4 +849,22 @@
             <span class="text-sm font-medium text-white">{{ __('Uploading image...') }}</span>
         </div>
     </div>
+
+    {{-- Guest Upload Warning Modal --}}
+    @if($showGuestUploadWarning)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+             x-on:keydown.escape.window="$wire.showGuestUploadWarning = false">
+            <div
+                class="w-full max-w-md rounded-xl border border-amber-200 bg-white p-6 shadow-2xl dark:border-amber-800 dark:bg-zinc-900"
+                x-on:click.away="$wire.showGuestUploadWarning = false">
+                <h2 class="mb-3 text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ __('Guest Mode') }}</h2>
+                <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+                    {{ __('Guest uploads are not allowed. You can browse demo images instead.') }}
+                </p>
+                <div class="flex justify-end">
+                    <flux:button size="sm" wire:click="$set('showGuestUploadWarning', false)">{{ __('Got it') }}</flux:button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

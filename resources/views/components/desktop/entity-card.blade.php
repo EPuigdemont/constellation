@@ -15,28 +15,32 @@
 <div class="desktop-card-inner">
     @if($card['type'] === 'diary_entry')
         <div class="desktop-card-header">
-            <span class="desktop-card-badge">{{ __('Diary') }}</span>
+            <div class="desktop-card-header-main">
+                <span class="desktop-card-badge">{{ __('Diary') }}</span>
+                @if($card['title'])
+                    <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
+                @endif
+            </div>
             @if($shortDate)
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             @endif
         </div>
-        @if($card['title'])
-            <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
-        @endif
         @if($card['preview'])
-            <p class="desktop-card-preview">{{ $card['preview'] }}</p>
+            <p class="desktop-card-preview-full">{{ $card['preview'] }}</p>
         @endif
 
     @elseif($card['type'] === 'note')
         <div class="desktop-card-header">
-            <span class="desktop-card-badge">{{ __('Note') }}</span>
+            <div class="desktop-card-header-main">
+                <span class="desktop-card-badge">{{ __('Note') }}</span>
+                @if($card['title'])
+                    <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
+                @endif
+            </div>
             @if($shortDate)
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             @endif
         </div>
-        @if($card['title'])
-            <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
-        @endif
         @if($card['preview'])
             <p class="desktop-card-preview">{{ $card['preview'] }}</p>
         @endif
@@ -55,31 +59,44 @@
            x-on:dblclick.stop>{{ $card['preview'] ?: __('Empty post-it') }}</p>
 
     @elseif($card['type'] === 'image')
+        @php
+            $imageWidth = is_numeric($card['image_width'] ?? null) ? (int) $card['image_width'] : null;
+            $imageHeight = is_numeric($card['image_height'] ?? null) ? (int) $card['image_height'] : null;
+            $imageRatio = ($imageWidth && $imageHeight && $imageWidth > 0 && $imageHeight > 0)
+                ? $imageWidth . ' / ' . $imageHeight
+                : null;
+        @endphp
         <div class="desktop-card-header">
-            <span class="desktop-card-badge">{{ __('Image') }}</span>
+            <div class="desktop-card-header-main">
+                <span class="desktop-card-badge">{{ __('Image') }}</span>
+                @if($card['title'])
+                    <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
+                @endif
+            </div>
             @if($shortDate)
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             @endif
         </div>
-        @if($card['title'])
-            <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
-        @endif
         @if(!empty($card['image_url']))
-            <img src="{{ $card['image_url'] }}" alt="{{ $card['preview'] ?: __('Image') }}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />
+            <div class="desktop-card-image-frame" @if($imageRatio) style="aspect-ratio: {{ $imageRatio }};" @endif>
+                <img src="{{ $card['image_url'] }}" alt="{{ $card['preview'] ?: __('Image') }}" class="desktop-card-image" loading="lazy" />
+            </div>
         @else
             <p class="desktop-card-preview">{{ $card['preview'] ?: __('No description') }}</p>
         @endif
 
     @elseif($card['type'] === 'reminder')
         <div class="desktop-card-header">
-            <span class="desktop-card-badge">{{ __('Reminder') }}</span>
+            <div class="desktop-card-header-main">
+                <span class="desktop-card-badge">{{ __('Reminder') }}</span>
+                @if($card['title'])
+                    <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
+                @endif
+            </div>
             @if($shortDate)
                 <span class="desktop-card-date" title="{{ $tooltip }}">{{ $shortDate }}{{ $wasEdited ? '*' : '' }}</span>
             @endif
         </div>
-        @if($card['title'])
-            <h3 class="desktop-card-title">{{ $card['title'] }}</h3>
-        @endif
         @if($card['preview'])
             <p class="desktop-card-preview">{{ $card['preview'] }}</p>
         @endif

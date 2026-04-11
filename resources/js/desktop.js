@@ -116,6 +116,10 @@ function buildCardInnerHTML(card) {
         ? card.is_owner
         : String(card.owner_id ?? '') === String(currentUserId);
     const isShared = !isOwner && String(card.owner_id ?? '') !== '';
+    const imageWidth = Number(card.image_width || 0);
+    const imageHeight = Number(card.image_height || 0);
+    const hasImageRatio = Number.isFinite(imageWidth) && Number.isFinite(imageHeight) && imageWidth > 0 && imageHeight > 0;
+    const imageRatioStyle = hasImageRatio ? ` style="aspect-ratio: ${imageWidth} / ${imageHeight};"` : '';
 
     const date = card.updated_at || card.created_at;
     let shortDate = '';
@@ -145,22 +149,26 @@ function buildCardInnerHTML(card) {
         html += `<p class="desktop-card-preview postit-editable-text" contenteditable="${isOwner ? 'true' : 'false'}">${escapeHtml(preview) || 'Empty post-it'}</p>`;
     } else {
         const badge = badgeLabels[type] || type;
-        html += `<div class="desktop-card-header"><span class="desktop-card-badge">${badge}</span>`;
+        html += '<div class="desktop-card-header"><div class="desktop-card-header-main">';
+        html += `<span class="desktop-card-badge">${badge}</span>`;
+        if (title) {
+            html += `<h3 class="desktop-card-title">${escapeHtml(title)}</h3>`;
+        }
+        html += '</div>';
         if (shortDate) {
             html += `<span class="desktop-card-date">${shortDate}</span>`;
         }
         html += '</div>';
         if (type === 'image' && card.image_url) {
-            if (title) {
-                html += `<h3 class="desktop-card-title">${escapeHtml(title)}</h3>`;
-            }
-            html += `<img src="${escapeHtml(card.image_url)}" alt="${escapeHtml(preview || 'Image')}" class="mt-1 max-h-40 w-full rounded object-cover" loading="lazy" />`;
+            html += `<div class="desktop-card-image-frame"${imageRatioStyle}>`;
+            html += `<img src="${escapeHtml(card.image_url)}" alt="${escapeHtml(preview || 'Image')}" class="desktop-card-image" loading="lazy" />`;
+            html += '</div>';
         } else {
-            if (title) {
-                html += `<h3 class="desktop-card-title">${escapeHtml(title)}</h3>`;
-            }
+            const previewClass = type === 'note'
+                ? 'desktop-card-preview-full'
+                : 'desktop-card-preview';
             if (preview) {
-                html += `<p class="desktop-card-preview">${escapeHtml(preview)}</p>`;
+                html += `<p class="${previewClass}">${escapeHtml(preview)}</p>`;
             }
         }
     }
@@ -212,6 +220,16 @@ function escapeHtml(text) {
  * Uses scrollWidth/scrollHeight to measure actual content dimensions.
  */
 function calculateCardMinSize(el) {
+    const cardType = el.dataset.cardType || '';
+
+    if (cardType === 'note') {
+        return { minWidth: 180, minHeight: 100 };
+    }
+
+    if (cardType === 'diary_entry' || cardType === 'reminder') {
+        return { minWidth: 200, minHeight: 110 };
+    }
+
     // Create a temporary container to measure the card at its natural size
     const cardInner = el.querySelector('.desktop-card-inner');
     if (!cardInner) {
@@ -230,6 +248,13 @@ function calculateCardMinSize(el) {
     clone.style.minHeight = 'unset';
     clone.style.maxHeight = 'unset';
 
+    // Remove line-clamp restrictions so we measure true content height
+    const previewEls = clone.querySelectorAll('.desktop-card-preview, .desktop-card-preview-full');
+    previewEls.forEach(el => {
+        el.style.webkitLineClamp = 'unset';
+        el.style.lineClamp = 'unset';
+    });
+
     document.body.appendChild(clone);
 
     const contentWidth = Math.ceil(clone.scrollWidth) + 12; // 12px padding
@@ -242,6 +267,57 @@ function calculateCardMinSize(el) {
         minWidth: Math.max(140, contentWidth),
         minHeight: Math.max(80, contentHeight),
     };
+}
+
+/**
+ * Dynamically clamp preview text based on currently available card height.
+ */
+function applyPreviewClampToCard(el) {
+    const previewEl = el.querySelector('.desktop-card-preview, .desktop-card-preview-full');
+    if (!previewEl) {
+        return;
+    }
+
+    const lineHeight = parseFloat(window.getComputedStyle(previewEl).lineHeight || '16');
+    const effectiveLineHeight = Number.isFinite(lineHeight) && lineHeight > 0 ? lineHeight : 16;
+
+    // Get the card's total height
+    const cardHeight = el.offsetHeight;
+
+    // Measure other elements to subtract their height
+    const cardInner = el.querySelector('.desktop-card-inner');
+    if (!cardInner) return;
+
+    // Calculate height of all siblings of the preview element
+    let otherElementsHeight = 0;
+    cardInner.childNodes.forEach(node => {
+        if (node.nodeType === Node.ELEMENT_NODE && node !== previewEl) {
+            const style = window.getComputedStyle(node);
+            const marginTop = parseFloat(style.marginTop || '0');
+            const marginBottom = parseFloat(style.marginBottom || '0');
+            otherElementsHeight += node.offsetHeight + marginTop + marginBottom;
+        }
+    });
+
+    // Calculate the gap between flex items
+    const cardInnerStyle = window.getComputedStyle(cardInner);
+    const gapValue = parseFloat(cardInnerStyle.gap || '0');
+    const numberOfGaps = Math.max(0, cardInner.querySelectorAll(':scope > *').length - 1);
+    const totalGapHeight = gapValue * numberOfGaps;
+
+    // Calculate padding of card-inner
+    const innerPadding = parseFloat(cardInnerStyle.paddingTop || '0') + parseFloat(cardInnerStyle.paddingBottom || '0');
+
+    // Calculate padding of card itself
+    const cardStyle = window.getComputedStyle(el);
+    const cardPadding = parseFloat(cardStyle.paddingTop || '0') + parseFloat(cardStyle.paddingBottom || '0');
+
+    // Calculate available height for the preview
+    const availableHeight = cardHeight - cardPadding - innerPadding - otherElementsHeight - totalGapHeight;
+    const lines = Math.max(1, Math.floor(availableHeight / effectiveLineHeight));
+
+    previewEl.style.webkitLineClamp = String(lines);
+    previewEl.style.lineClamp = String(lines);
 }
 
 /**
@@ -750,6 +826,29 @@ function createCardElement(card, wire) {
 
     el.innerHTML = buildCardInnerHTML(card);
 
+    const enforceMinSize = (persist = false) => {
+        const minSize = calculateCardMinSize(el);
+        const currentWidth = parseFloat(el.style.width) || el.offsetWidth || minSize.minWidth;
+        const currentHeight = parseFloat(el.style.height) || el.offsetHeight || minSize.minHeight;
+
+        const nextWidth = Math.max(minSize.minWidth, Math.round(currentWidth));
+        const nextHeight = Math.max(minSize.minHeight, Math.round(currentHeight));
+
+        const changed = nextWidth !== Math.round(currentWidth) || nextHeight !== Math.round(currentHeight);
+        if (!changed) {
+            return;
+        }
+
+        el.style.width = nextWidth + 'px';
+        el.style.height = nextHeight + 'px';
+
+        if (persist && (card.is_owner ?? false)) {
+            wire.saveSize(card.id, card.type, nextWidth, nextHeight);
+        }
+
+        applyPreviewClampToCard(el);
+    };
+
     // Set up interact.js drag
     let debounceTimer = null;
     let isDragging = false;
@@ -847,6 +946,7 @@ function createCardElement(card, wire) {
 
                 el.style.width = constrainedWidth + 'px';
                 el.style.height = constrainedHeight + 'px';
+                applyPreviewClampToCard(el);
             },
             end: (event) => {
                 if (Alpine.store('desktop').autoArrangeGrid) return;
@@ -865,6 +965,19 @@ function createCardElement(card, wire) {
             },
         },
     });
+
+    // Ensure preconfigured/default sizes never start smaller than actual content.
+    setTimeout(() => enforceMinSize(true), 0);
+    setTimeout(() => applyPreviewClampToCard(el), 0);
+
+    // Images can change measured minimum after load; clamp again once loaded.
+    const imageEl = el.querySelector('.desktop-card-image');
+    if (imageEl) {
+        imageEl.addEventListener('load', () => {
+            enforceMinSize(true);
+            applyPreviewClampToCard(el);
+        }, { once: true });
+    }
 
     el.addEventListener('mousedown', (event) => {
         // If in linking mode, complete the link on click
@@ -1011,6 +1124,36 @@ document.addEventListener('alpine:init', () => {
         _debounceTimer: null,
         _isDragging: false,
 
+        _minSizePersistTimer: null,
+
+        _ensureMinimumSize(persist = false) {
+            const minSize = calculateCardMinSize(this.$el);
+            const currentWidth = this.cardW ?? this.$el.offsetWidth ?? minSize.minWidth;
+            const currentHeight = this.cardH ?? this.$el.offsetHeight ?? minSize.minHeight;
+
+            const nextWidth = Math.max(minSize.minWidth, Math.round(currentWidth));
+            const nextHeight = Math.max(minSize.minHeight, Math.round(currentHeight));
+
+            const changed = nextWidth !== Math.round(currentWidth) || nextHeight !== Math.round(currentHeight);
+            if (!changed) {
+                return;
+            }
+
+            this.cardW = nextWidth;
+            this.cardH = nextHeight;
+            this.$el.style.width = nextWidth + 'px';
+            this.$el.style.height = nextHeight + 'px';
+
+            if (persist && this.isOwner) {
+                clearTimeout(this._minSizePersistTimer);
+                this._minSizePersistTimer = setTimeout(() => {
+                    this._debouncedSaveSize(nextWidth, nextHeight);
+                }, 100);
+            }
+
+            applyPreviewClampToCard(this.$el);
+        },
+
         initDrag() {
             interact(this.$el).draggable({
                 inertia: false,
@@ -1139,6 +1282,7 @@ document.addEventListener('alpine:init', () => {
                         // Apply to the element
                         this.$el.style.width = this.cardW + 'px';
                         this.$el.style.height = this.cardH + 'px';
+                        applyPreviewClampToCard(this.$el);
                     },
                     end: () => {
                         if (Alpine.store('desktop').autoArrangeGrid) return;
@@ -1146,6 +1290,20 @@ document.addEventListener('alpine:init', () => {
                         this._debouncedSaveSize(this.cardW, this.cardH);
                     },
                 },
+            });
+
+            // Clamp configured/default sizes against actual measured content.
+            this.$nextTick(() => {
+                this._ensureMinimumSize(true);
+                applyPreviewClampToCard(this.$el);
+
+                const imageEl = this.$el.querySelector('.desktop-card-image');
+                if (imageEl) {
+                    imageEl.addEventListener('load', () => {
+                        this._ensureMinimumSize(true);
+                        applyPreviewClampToCard(this.$el);
+                    }, { once: true });
+                }
             });
         },
 
@@ -1172,6 +1330,7 @@ document.addEventListener('alpine:init', () => {
 
         destroy() {
             clearTimeout(this._debounceTimer);
+            clearTimeout(this._minSizePersistTimer);
             interact(this.$el).unset();
         },
     }));

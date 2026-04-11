@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
  * @property string $disk
  * @property string|null $alt
  * @property string|null $title
+ * @property int|null $image_width
+ * @property int|null $image_height
  * @property Mood|null $mood
  * @property string|null $color_override
  * @property bool $is_public
@@ -39,6 +41,8 @@ class Image extends Model
         'disk',
         'alt',
         'title',
+        'image_width',
+        'image_height',
         'mood',
         'color_override',
     ];
@@ -46,6 +50,8 @@ class Image extends Model
     protected function casts(): array
     {
         return [
+            'image_width' => 'integer',
+            'image_height' => 'integer',
             'mood' => Mood::class,
         ];
     }

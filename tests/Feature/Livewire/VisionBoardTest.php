@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Livewire;
 
+use App\Enums\Tier;
 use App\Livewire\VisionBoard;
 use App\Models\Image;
 use App\Models\User;
@@ -176,5 +177,33 @@ class VisionBoardTest extends TestCase
             ->assertSet('showLinkSearchModal', false)
             ->assertSet('linkingSourceId', '')
             ->assertSet('linkSearchQuery', '');
+    }
+
+    public function test_guest_request_image_upload_opens_warning_modal(): void
+    {
+        $guest = User::factory()->create([
+            'tier' => Tier::Guest->value,
+            'guest_created_at' => now(),
+            'guest_expires_at' => now()->addDay(),
+        ]);
+
+        Livewire::actingAs($guest)
+            ->test(VisionBoard::class)
+            ->call('requestImageUpload')
+            ->assertSet('showGuestUploadWarning', true);
+    }
+
+    public function test_guest_user_sees_demo_images_on_vision_board(): void
+    {
+        $guest = User::factory()->create([
+            'tier' => Tier::Guest->value,
+            'guest_created_at' => now(),
+            'guest_expires_at' => now()->addDay(),
+        ]);
+
+        Livewire::actingAs($guest)
+            ->test(VisionBoard::class)
+            ->assertSee('Memory Wall')
+            ->assertSee('Summer Postcard');
     }
 }

@@ -26,6 +26,12 @@ class ManageFriends extends Component
         $this->errorMessage = '';
         $this->successMessage = '';
 
+        if (Auth::user()->isGuest()) {
+            $this->errorMessage = __('Friends feature is not available for guest accounts.');
+
+            return;
+        }
+
         $email = trim($this->newFriendEmail);
         if ($email === '') {
             $this->errorMessage = __('Please enter an email address');
@@ -49,6 +55,12 @@ class ManageFriends extends Component
 
     public function acceptRequest(FriendshipService $service, string $friendshipId): void
     {
+        if (Auth::user()->isGuest()) {
+            $this->errorMessage = __('Friends feature is not available for guest accounts.');
+
+            return;
+        }
+
         if ($service->acceptFriendRequest(Auth::user(), $friendshipId)) {
             $this->successMessage = __('Friend request accepted');
             $this->dispatch('refresh');
@@ -57,6 +69,12 @@ class ManageFriends extends Component
 
     public function rejectRequest(FriendshipService $service, string $friendshipId): void
     {
+        if (Auth::user()->isGuest()) {
+            $this->errorMessage = __('Friends feature is not available for guest accounts.');
+
+            return;
+        }
+
         if ($service->rejectFriendRequest(Auth::user(), $friendshipId)) {
             $this->successMessage = __('Friend request rejected');
             $this->dispatch('refresh');
@@ -65,6 +83,12 @@ class ManageFriends extends Component
 
     public function removeFriend(FriendshipService $service, string $friendId): void
     {
+        if (Auth::user()->isGuest()) {
+            $this->errorMessage = __('Friends feature is not available for guest accounts.');
+
+            return;
+        }
+
         if ($service->removeFriend(Auth::user(), $friendId)) {
             $this->successMessage = __('Friend removed');
             $this->dispatch('refresh');

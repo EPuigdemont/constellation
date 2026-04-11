@@ -86,6 +86,7 @@ select:focus[data-flux-control] {
     @apply cursor-grab rounded-lg border bg-[var(--card-bg)] p-3 shadow-md transition-shadow hover:shadow-lg active:cursor-grabbing;
     border-color: var(--card-border);
     color: var(--card-text);
+    min-height: 60px;
 }
 
 .dark .desktop-card {
@@ -123,15 +124,46 @@ select:focus[data-flux-control] {
 }
 
 .desktop-card-title {
-    @apply text-sm font-semibold leading-tight line-clamp-3 break-words;
+    @apply text-sm font-semibold leading-tight line-clamp-1 min-w-0;
 }
 
 .desktop-card-preview {
-    @apply text-xs leading-relaxed opacity-75 line-clamp-4 break-words;
+    @apply text-xs leading-relaxed opacity-75 break-words;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+}
+
+.desktop-card-preview-full {
+    @apply text-xs leading-relaxed opacity-75 break-words;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .desktop-card-header {
     @apply flex items-center justify-between gap-2 flex-wrap;
+}
+
+.desktop-card-header-main {
+    @apply flex min-w-0 items-center gap-2;
+}
+
+.desktop-card-image-frame {
+    @apply mt-1 w-full overflow-hidden rounded;
+    max-height: 220px;
+    aspect-ratio: 16 / 10;
+    background: color-mix(in srgb, var(--card-border) 22%, transparent);
+}
+
+.desktop-card-image {
+    @apply block h-full w-full object-contain;
 }
 
 .desktop-card-date {

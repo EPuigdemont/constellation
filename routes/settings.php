@@ -11,16 +11,19 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('settings/appearance', 'pages::settings.appearance')->name('appearance.edit');
-    Route::livewire('settings/data', 'pages::settings.data')->name('data.edit');
 
-    Route::livewire('settings/security', 'pages::settings.security')
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                [],
-            ),
-        )
+    Route::livewire('settings/data', 'pages::settings.data')
+        ->middleware('App\\Http\\Middleware\\RejectGuestSettings')
+        ->name('data.edit');
+
+    $security = Route::livewire('settings/security', 'pages::settings.security')
+        ->middleware('App\\Http\\Middleware\\RejectGuestSettings')
         ->name('security.edit');
+
+    if (
+        Features::canManageTwoFactorAuthentication()
+        && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword')
+    ) {
+        $security->middleware('password.confirm');
+    }
 });

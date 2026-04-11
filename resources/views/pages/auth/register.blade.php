@@ -4,6 +4,16 @@
 
         <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
 
+        <!-- Enter as Guest Button -->
+        <div class="bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+            <flux:link :href="route('guest.show')" wire:navigate class="block text-center font-medium text-purple-600 dark:text-purple-300 hover:text-purple-700 dark:hover:text-purple-200">
+                {{ __('Enter as Guest') }}
+            </flux:link>
+            <p class="text-xs text-purple-600 dark:text-purple-400 text-center mt-1">
+                {{ __('Try the app without registering and create an account later!') }}
+            </p>
+        </div>
+
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 

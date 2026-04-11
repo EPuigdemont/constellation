@@ -13,7 +13,7 @@
         <div class="flex min-w-0 items-center gap-2 min-[836px]:contents">
             <flux:button size="sm"
                          icon="plus"
-                         x-on:click="$refs.vbImageInput.click()"
+                         x-on:click="$wire.requestImageUpload()"
                          wire:loading.attr="disabled"
                          wire:target="imageUpload"
                          title="{{ __('Upload Image') }}"
@@ -26,6 +26,7 @@
 
             <input type="file"
                    x-ref="vbImageInput"
+                   x-on:open-vision-board-image-picker.window="$refs.vbImageInput.click()"
                    accept="image/jpeg,image/png,image/gif,image/webp"
                    class="hidden"
                    wire:model="imageUpload"/>
@@ -423,4 +424,22 @@
             <span class="text-sm font-medium text-white">{{ __('Uploading image...') }}</span>
         </div>
     </div>
+
+    {{-- Guest Upload Warning Modal --}}
+    @if($showGuestUploadWarning)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+             x-on:keydown.escape.window="$wire.showGuestUploadWarning = false">
+            <div
+                class="w-full max-w-md rounded-xl border border-amber-200 bg-white p-6 shadow-2xl dark:border-amber-800 dark:bg-zinc-900"
+                x-on:click.away="$wire.showGuestUploadWarning = false">
+                <h2 class="mb-3 text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ __('Guest Mode') }}</h2>
+                <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+                    {{ __('Guest uploads are not allowed. You can browse demo images instead.') }}
+                </p>
+                <div class="flex justify-end">
+                    <flux:button size="sm" wire:click="$set('showGuestUploadWarning', false)">{{ __('Got it') }}</flux:button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

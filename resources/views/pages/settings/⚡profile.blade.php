@@ -36,6 +36,12 @@ new #[Title('Profile settings')] class extends Component {
     {
         $user = Auth::user();
 
+        if ($user->isGuest()) {
+            $this->addError('name', __('This feature is not available for guest accounts.'));
+
+            return;
+        }
+
         $validated = $this->validate($this->profileRules($user->id));
 
         $user->fill($validated);
@@ -54,6 +60,12 @@ new #[Title('Profile settings')] class extends Component {
      */
     public function uploadAvatar(): void
     {
+        if (Auth::user()->isGuest()) {
+            $this->addError('avatar', __('This feature is not available for guest accounts.'));
+
+            return;
+        }
+
         $this->validate([
             'avatar' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:2048'],
         ]);
@@ -70,6 +82,12 @@ new #[Title('Profile settings')] class extends Component {
      */
     public function removeAvatar(): void
     {
+        if (Auth::user()->isGuest()) {
+            $this->addError('avatar', __('This feature is not available for guest accounts.'));
+
+            return;
+        }
+
         $service = app(AvatarService::class);
         $service->delete(Auth::user());
 
@@ -115,6 +133,9 @@ new #[Title('Profile settings')] class extends Component {
 
     {{-- Avatar --}}
     <x-pages::settings.layout :heading="__('Avatar')" :subheading="__('Upload a profile photo')">
+        @if(auth()->user()->isGuest())
+            <p class="my-4 text-sm text-(--theme-text-muted)">{{ __('This feature is not available for guest accounts.') }}</p>
+        @endif
         <div class="my-6 flex items-center gap-6">
             <div class="relative">
                 @if(auth()->user()->avatarUrl())
@@ -132,19 +153,22 @@ new #[Title('Profile settings')] class extends Component {
                 <div>
                     <input type="file"
                            wire:model="avatar"
+                           @disabled(auth()->user()->isGuest())
                            accept="image/jpeg,image/png,image/webp"
                            class="text-sm text-zinc-500 file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200 dark:text-zinc-400 dark:file:bg-zinc-700 dark:file:text-zinc-300" />
-                    @error('avatar') <span class="mt-1 text-sm text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+                    @error('avatar')
+                        <span class="mt-1 text-sm text-(--theme-accent)">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="flex gap-2">
-                    @if($avatar)
+                    @if($avatar && !auth()->user()->isGuest())
                         <flux:button size="sm" variant="primary" wire:click="uploadAvatar">
                             {{ __('Upload') }}
                         </flux:button>
                     @endif
 
-                    @if(auth()->user()->avatarUrl())
+                    @if(auth()->user()->avatarUrl() && !auth()->user()->isGuest())
                         <flux:button size="sm" variant="ghost" wire:click="removeAvatar" wire:confirm="{{ __('Remove your avatar?') }}">
                             {{ __('Remove') }}
                         </flux:button>
@@ -162,18 +186,24 @@ new #[Title('Profile settings')] class extends Component {
     <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name, username, and email address')" :show-nav="false">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
             <div>
-                <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
-                @error('name') <span class="mt-1 text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+                <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" :disabled="auth()->user()->isGuest()" />
+                @error('name')
+                    <span class="mt-1 text-xs text-(--theme-accent)">{{ $message }}</span>
+                @enderror
             </div>
 
             <div>
-                <flux:input wire:model="username" :label="__('Username')" type="text" required autocomplete="username" placeholder="your-username" />
-                @error('username') <span class="mt-1 text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+                <flux:input wire:model="username" :label="__('Username')" type="text" required autocomplete="username" placeholder="your-username" :disabled="auth()->user()->isGuest()" />
+                @error('username')
+                    <span class="mt-1 text-xs text-(--theme-accent)">{{ $message }}</span>
+                @enderror
             </div>
 
             <div>
-                <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
-                @error('email') <span class="mt-1 text-xs text-[var(--theme-accent)]">{{ $message }}</span> @enderror
+                <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" :disabled="auth()->user()->isGuest()" />
+                @error('email')
+                    <span class="mt-1 text-xs text-(--theme-accent)">{{ $message }}</span>
+                @enderror
 
                 @if ($this->hasUnverifiedEmail)
                     <div>
@@ -195,11 +225,13 @@ new #[Title('Profile settings')] class extends Component {
             </div>
 
             <div class="flex items-center gap-4">
-                <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full" data-test="update-profile-button">
-                        {{ __('Save') }}
-                    </flux:button>
-                </div>
+                @if(!auth()->user()->isGuest())
+                    <div class="flex items-center justify-end">
+                        <flux:button variant="primary" type="submit" class="w-full" data-test="update-profile-button">
+                            {{ __('Save') }}
+                        </flux:button>
+                    </div>
+                @endif
 
                 <x-action-message class="me-3" on="profile-updated">
                     {{ __('Saved.') }}

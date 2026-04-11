@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Services;
 
+use App\Enums\Tier;
 use App\Models\DiaryEntry;
 use App\Models\EntityPosition;
 use App\Models\EntityShare;
+use App\Models\Image;
 use App\Models\Note;
 use App\Models\Postit;
 use App\Models\User;
@@ -194,5 +196,44 @@ class DesktopServiceTest extends TestCase
         $this->assertEquals($diary->id, $position->entity_id);
         $this->assertGreaterThan(0, $position->x);
         $this->assertGreaterThan(0, $position->y);
+    }
+
+    public function test_load_cards_appends_guest_demo_images_for_guest_users(): void
+    {
+        $guest = User::factory()->create([
+            'tier' => Tier::Guest->value,
+            'guest_created_at' => now(),
+            'guest_expires_at' => now()->addDay(),
+        ]);
+
+        $cards = $this->service->loadCards($guest);
+
+        $demoCards = collect($cards)
+            ->where('type', 'image')
+            ->filter(fn (array $card): bool => (bool) ($card['is_demo'] ?? false));
+
+        $this->assertCount(4, $demoCards);
+        $this->assertSame('guest-demo-memory-wall', $demoCards->first()['id']);
+    }
+
+    public function test_load_cards_assigns_safe_default_size_for_large_images(): void
+    {
+        $user = User::factory()->create();
+
+        $image = Image::factory()->create([
+            'user_id' => $user->id,
+            'image_width' => 4200,
+            'image_height' => 2800,
+        ]);
+
+        $cards = $this->service->loadCards($user);
+        $imageCard = collect($cards)->firstWhere('id', $image->id);
+
+        $this->assertNotNull($imageCard);
+        $this->assertSame('image', $imageCard['type']);
+        $this->assertIsInt($imageCard['width']);
+        $this->assertIsInt($imageCard['height']);
+        $this->assertLessThanOrEqual(400, $imageCard['width']);
+        $this->assertLessThanOrEqual(350, $imageCard['height']);
     }
 }
