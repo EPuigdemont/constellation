@@ -216,6 +216,53 @@ function escapeHtml(text) {
 }
 
 /**
+ * Setup long-press handler for mobile devices.
+ * Detects when user holds down on an element for 500ms and triggers the callback.
+ */
+function setupLongPressHandler(el, callback) {
+    let longPressTimer = null;
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const LONG_PRESS_DURATION = 500;
+    const TOUCH_MOVE_THRESHOLD = 10; // pixels
+
+    el.addEventListener('touchstart', (event) => {
+        touchStartX = event.touches[0].clientX;
+        touchStartY = event.touches[0].clientY;
+
+        longPressTimer = setTimeout(() => {
+            callback();
+        }, LONG_PRESS_DURATION);
+    });
+
+    el.addEventListener('touchmove', (event) => {
+        // Cancel long-press if user moves their finger too much (dragging)
+        const touchX = event.touches[0].clientX;
+        const touchY = event.touches[0].clientY;
+        const distance = Math.sqrt(
+            Math.pow(touchX - touchStartX, 2) +
+            Math.pow(touchY - touchStartY, 2)
+        );
+
+        if (distance > TOUCH_MOVE_THRESHOLD) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    });
+
+    el.addEventListener('touchend', () => {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    });
+
+    el.addEventListener('touchcancel', () => {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    });
+}
+
+/**
  * Calculate minimum width/height for a card element based on its content.
  * Uses scrollWidth/scrollHeight to measure actual content dimensions.
  */
@@ -672,7 +719,7 @@ function moveGridDrag(el, event, state) {
     if (target && swapDesktopGridItems(el, target)) {
         // Capture the element's grid position before the layout moves it.
         const oldLeft = parseFloat(el.style.left) || 0;
-        const oldTop  = parseFloat(el.style.top)  || 0;
+        const oldTop  = parseFloat(el.style.top) || 0;
 
         applyDesktopGridLayout();
 
@@ -1031,6 +1078,15 @@ function createCardElement(card, wire) {
         }));
     });
 
+    // Setup long-press handler for mobile devices
+    setupLongPressHandler(el, () => {
+        if (card.is_owner ?? false) {
+            wire.openEditModal(card.id, card.type);
+        } else {
+            wire.openReadonlyModal(card.id, card.type);
+        }
+    });
+
     return el;
 }
 
@@ -1254,6 +1310,15 @@ document.addEventListener('alpine:init', () => {
                     return;
                 }
 
+                if (this.isOwner) {
+                    this.$wire.openEditModal(this.entityId, this.entityType);
+                } else {
+                    this.$wire.openReadonlyModal(this.entityId, this.entityType);
+                }
+            });
+
+            // Setup long-press handler for mobile devices
+            setupLongPressHandler(this.$el, () => {
                 if (this.isOwner) {
                     this.$wire.openEditModal(this.entityId, this.entityType);
                 } else {
