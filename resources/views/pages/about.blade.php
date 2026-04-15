@@ -29,7 +29,7 @@
                 <p>
                     {{ __('Source code') }}:
                     <a
-                        href="https://github.com/enricpuigdemont/constellation"
+                        href="https://github.com/EPuigdemont/constellation"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="font-medium underline underline-offset-2"
@@ -45,7 +45,7 @@
                 <p>
                     {{ __('Portfolio') }}:
                     <a
-                        href="https://github.com/enricpuigdemont"
+                        href="https://github.com/EPuigdemont"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="font-medium underline underline-offset-2"
