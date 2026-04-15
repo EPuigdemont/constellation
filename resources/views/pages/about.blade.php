@@ -23,8 +23,20 @@
 
             <section class="space-y-1">
                 <h2 class="text-base font-semibold">{{ __('Ownership and licensing') }}</h2>
-                <p>{{ __('Constellation is an independent solo-developer project and is closed-source software.') }}</p>
+                <p>{{ __('Constellation is an independent solo-developer project, published as source-available software under the PolyForm Noncommercial 1.0.0 license.') }}</p>
+                <p>{{ __('Personal use, self-hosting, and modification are permitted. Commercial use and resale are not.') }}</p>
                 <p>{{ __('No registered trademark, company, or LLC is associated with this application at this time.') }}</p>
+                <p>
+                    {{ __('Source code') }}:
+                    <a
+                        href="https://github.com/enricpuigdemont/constellation"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="font-medium underline underline-offset-2"
+                    >
+                        github.com/enricpuigdemont/constellation
+                    </a>
+                </p>
             </section>
 
             <section class="space-y-1">

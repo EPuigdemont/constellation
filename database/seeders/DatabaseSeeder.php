@@ -17,20 +17,20 @@ class DatabaseSeeder extends Seeder
         $this->call(TagSeeder::class);
 
         User::firstOrCreate(
-            ['email' => env('SEED_USER1_EMAIL', 'enric@constellation.com')],
+            ['email' => env('SEED_USER1_EMAIL', 'user1@example.com')],
             [
-                'name' => env('SEED_USER1_NAME', 'Enric'),
-                'username' => env('SEED_USER1_USERNAME', 'enric'),
+                'name' => env('SEED_USER1_NAME', 'User One'),
+                'username' => env('SEED_USER1_USERNAME', 'user1'),
                 'password' => env('SEED_USER1_PASSWORD', 'password'),
                 'email_verified_at' => now(),
             ],
         );
 
         User::firstOrCreate(
-            ['email' => env('SEED_USER2_EMAIL', 'sheila@constellation.com')],
+            ['email' => env('SEED_USER2_EMAIL', 'user2@example.com')],
             [
-                'name' => env('SEED_USER2_NAME', 'Sheila'),
-                'username' => env('SEED_USER2_USERNAME', 'sheila'),
+                'name' => env('SEED_USER2_NAME', 'User Two'),
+                'username' => env('SEED_USER2_USERNAME', 'user2'),
                 'password' => env('SEED_USER2_PASSWORD', 'password'),
                 'email_verified_at' => now(),
             ],

@@ -233,7 +233,7 @@ Tasks sorted by implementation priority. Do not skip phases.
 - [x] Notes page: list all notes in a grid view, allow creating notes, groups by date
 - [x] About page: static page with info about the app, contact info, etc.
 - [x] Guest mode: allow users to try the app without registering, with data stored in database with a temporary user account that expires after a certain time (e.g. 24 hours), with a prompt to register and migrate data before expiration
-- [ ] Open source the project on GitHub, with a public repository and documentation for local development setup
+- [x] Publish the project as source-available on GitHub, with documentation for local development setup
 - [ ] API to allow third-party integrations (e.g. mobile app, browser extension), with token-based authentication and rate limiting
 - [ ] Mobile app (Flutter or React Native) that connects to the API, with offline support and local caching
 - [ ] Notifications: email reminders for important dates, push notifications for reminders and important dates (requires mobile app or browser push support)

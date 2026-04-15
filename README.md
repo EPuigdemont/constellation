@@ -1,76 +1,35 @@
 # Constellation
 
-Private journaling and memory-mapping app built with Laravel + Livewire.
+Constellation is a private-feeling journaling and memory-mapping app with a draggable desktop, notebook diary, and constellation graph view for linked thoughts.
 
-## Current Stack
+## Tech Stack
 
-- Backend: Laravel 12, PHP 8.5, Fortify auth
-- UI: Livewire 4, Alpine.js, Flux UI
-- Rich text: Tiptap 3
-- Canvas interactions: interact.js
-- Graph rendering: D3.js
-- Styling/build: Tailwind CSS 4 + Vite
-- Database: SQLite (local) and MySQL-compatible schema
+- PHP 8.5 + Laravel 12
+- Livewire + Alpine.js
+- Tiptap (rich text)
+- interact.js (drag/resize)
+- D3.js (constellation graph)
+- Tailwind CSS + Vite
+- SQLite for local development
 
-## Implemented Product Areas
+## Features
 
-### Main Views
+- Draggable desktop canvas with diary entries, notes, post-its, reminders, and images
+- Rich text editing with mood styling and color overrides
+- Entity linking (`parent_child`, `sibling`) and tagging
+- Calendar and reminder workflows
+- Constellation graph view for relationships
+- Theme and mood system with per-user preferences
+- Username-based authentication with route protection and throttled login
 
-- `canvas`: draggable desktop with entity cards, resize support, z-index, filters, and quick actions
-- `diary`: notebook-like diary display and entry browsing
-- `images`: uploaded image gallery
-- `vision-board`: image canvas with independent zoom/position context
-- `calendar`: monthly view with entity/date indicators and filters
-- `constellation`: force-directed graph of entities and relationships
-- `reminders`: reminder management and due-date flows
-- `notifications`: in-app reminders/important-date notifications
-- `friends`: friendship and sharing management
+## Security Model (High-Level)
 
-### Entity Types
+- Entity access is policy-based
+- Login attempts are rate-limited (`throttle:5,1`)
+- Uploaded files are stored privately and served through protected routes
+- Crawlers are blocked via `public/robots.txt`
 
-- Diary entries
-- Notes
-- Post-its
-- Images
-- Important dates
-- Reminders
-
-All core entities use UUID primary keys and soft deletes.
-
-### Relationships, Tagging, and Sharing
-
-- Cross-entity links are stored in `entity_relationships`
-- Polymorphic tags are stored in `taggables`
-- Per-user canvas positions/sizes/visibility are stored in `entity_positions`
-- Friend links are stored in `friendships`
-- Explicit per-entity sharing records are stored in `entity_shares`
-
-### Themes, Mood, and Localization
-
-- Global UI theme is stored per user (`users.theme`)
-- Entity mood + optional `color_override` are supported across entity models
-- Supported locales are persisted per user (`users.language`)
-
-### Auth and Security
-
-- Username-based login (`config/fortify.php` sets username field to `username`)
-- Login rate limit: 5 attempts/minute (`Fortify` rate limiter)
-- Email verification and 2FA are enabled in Fortify features
-- Uploaded images/avatars are served via authenticated routes
-- `public/robots.txt` disallows crawling
-
-## Routes (Web)
-
-- Public entry: `/` redirects to `/login`
-- Authenticated routes include: `/loading`, `/welcome`, `/canvas`, `/diary`, `/images`, `/vision-board`, `/calendar`, `/constellation`, `/reminders`, `/notifications`, `/friends`
-- Authenticated file/theme/data routes include: `/images/{image}`, `/avatar/{user}`, `POST /theme`, `/data/export`
-
-## Scheduled Commands
-
-- `reminders:check` runs daily at 08:00
-- `users:purge-unverified --hours=72` runs daily at 03:00
-
-## Local Development
+## Quick Start (Local)
 
 ```bash
 cp .env.example .env
@@ -80,10 +39,26 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-Optional frontend watch/build commands are available in `package.json` (`vite`, `vite build`).
+Open http://127.0.0.1:8000 after the server starts.
 
 ## Testing
 
 ```bash
 php artisan test
 ```
+
+## License
+
+Constellation is source-available under the PolyForm Noncommercial 1.0.0 terms.
+
+- Personal use is allowed.
+- Self-hosting is allowed.
+- Modification is allowed.
+- Commercial use and resale are not allowed.
+
+See `LICENSE` for details.
+
+## Project Status
+
+Roadmap and priorities live in `TODO.md`.
+
