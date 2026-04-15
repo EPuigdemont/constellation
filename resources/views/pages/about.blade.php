@@ -43,7 +43,6 @@
                 <h2 class="text-base font-semibold">{{ __('Developer contact') }}</h2>
                 <p>{{ __('Created and maintained by Enric Puigdemont.') }}</p>
                 <p>
-                    {{ __('Portfolio') }}:
                     <a
                         href="https://github.com/EPuigdemont"
                         target="_blank"
@@ -54,7 +53,6 @@
                     </a>
                 </p>
                 <p>
-                    {{ __('LinkedIn') }}:
                     <a
                         href="https://www.linkedin.com/in/epuigdemont/"
                         target="_blank"
