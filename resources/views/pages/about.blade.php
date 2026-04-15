@@ -34,7 +34,7 @@
                         rel="noopener noreferrer"
                         class="font-medium underline underline-offset-2"
                     >
-                        github.com/EPpuigdemont/constellation
+                        github.com/EPuigdemont/constellation
                     </a>
                 </p>
             </section>
