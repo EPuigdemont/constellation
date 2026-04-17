@@ -44,6 +44,13 @@ return [
         ],
     ],
 
+    'image_upload' => [
+        'max_bytes' => [
+            'default' => 2 * 1024 * 1024,
+            'vip' => 10 * 1024 * 1024,
+        ],
+    ],
+
     'automatic_themes' => [
         // Special dates override seasonal mapping (MM-DD => theme enum value).
         'special_dates' => [
