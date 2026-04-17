@@ -19,7 +19,7 @@ class AboutPageTest extends TestCase
         $response
             ->assertOk()
             ->assertSeeText('About Constellation')
-            ->assertSeeText('closed-source software');
+            ->assertSeeText('source-available software');
     }
 
     public function test_about_link_is_visible_on_auth_entry_screens(): void
