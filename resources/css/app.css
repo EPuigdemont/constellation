@@ -1304,6 +1304,13 @@ html:not(.dark) .theme-night {
     cursor: grabbing;
 }
 
+/* ─── Mobile Sidebar Z-Index Fix ─── */
+/* Note stack items use inline z-index: 30. Flux sidebar only gets z-20 !important.
+   Unlayered !important beats any layered !important, so this wins. */
+[data-flux-sidebar][data-flux-sidebar-on-mobile] {
+    z-index: 40 !important;
+}
+
 /* ─── Notes View ─── */
 
 .notes-day-card {
