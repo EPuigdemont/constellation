@@ -106,13 +106,10 @@ class NotesTest extends TestCase
             ->set('editorDate', '2026-04-05')
             ->call('saveEditor');
 
-        $this->assertDatabaseHas('notes', [
-            'id' => $note->id,
-            'title' => 'Updated title',
-            'body' => 'Updated body',
-        ]);
-
-        $this->assertSame('2026-04-05', $note->fresh()?->created_at?->toDateString());
+        $fresh = $note->fresh();
+        $this->assertSame('Updated title', $fresh?->title);
+        $this->assertSame('Updated body', $fresh?->body);
+        $this->assertSame('2026-04-05', $fresh?->created_at?->toDateString());
     }
 
     public function test_delete_from_editor_soft_deletes_note(): void

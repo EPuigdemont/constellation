@@ -107,12 +107,11 @@ class DesktopTest extends TestCase
             ->set('editorMood', 'summer')
             ->call('saveEditor');
 
-        $this->assertDatabaseHas('diary_entries', [
-            'user_id' => $user->id,
-            'title' => 'My Diary',
-            'body' => 'Today was great',
-            'mood' => 'summer',
-        ]);
+        $entry = DiaryEntry::where('user_id', $user->id)->first();
+        $this->assertNotNull($entry);
+        $this->assertSame('My Diary', $entry->title);
+        $this->assertSame('Today was great', $entry->body);
+        $this->assertSame('summer', $entry->mood?->value);
     }
 
     public function test_save_editor_creates_note(): void
@@ -127,12 +126,11 @@ class DesktopTest extends TestCase
             ->set('editorMood', 'breeze')
             ->call('saveEditor');
 
-        $this->assertDatabaseHas('notes', [
-            'user_id' => $user->id,
-            'title' => 'My Note',
-            'body' => 'Some thoughts',
-            'mood' => 'breeze',
-        ]);
+        $note = Note::where('user_id', $user->id)->first();
+        $this->assertNotNull($note);
+        $this->assertSame('My Note', $note->title);
+        $this->assertSame('Some thoughts', $note->body);
+        $this->assertSame('breeze', $note->mood?->value);
     }
 
     public function test_save_editor_updates_image_title(): void
@@ -149,10 +147,7 @@ class DesktopTest extends TestCase
             ->set('editorTitle', 'New image title')
             ->call('saveEditor');
 
-        $this->assertDatabaseHas('images', [
-            'id' => $image->id,
-            'title' => 'New image title',
-        ]);
+        $this->assertSame('New image title', $image->fresh()?->title);
     }
 
     public function test_reminder_card_renders_title_and_preview(): void
@@ -381,10 +376,10 @@ class DesktopTest extends TestCase
             ->assertSet('showEditorModal', true)
             ->assertSet('limitError', 'You have reached your note limit for today. Remaining: 0.');
 
-        $this->assertDatabaseMissing('notes', [
-            'user_id' => $user->id,
-            'title' => 'Blocked note',
-        ]);
+        $this->assertFalse(
+            Note::where('user_id', $user->id)->get()
+                ->contains(fn (Note $n): bool => $n->title === 'Blocked note')
+        );
     }
 
     public function test_mount_opens_editor_modal_from_query_parameters(): void

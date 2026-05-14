@@ -29,9 +29,9 @@ class CalendarLimitsTest extends TestCase
             ->call('saveNewEntity')
             ->assertSet('limitError', 'You have reached your diary entry limit. Remaining: 0.');
 
-        $this->assertDatabaseMissing('diary_entries', [
-            'user_id' => $user->id,
-            'title' => 'Blocked from calendar',
-        ]);
+        $this->assertFalse(
+            DiaryEntry::where('user_id', $user->id)->get()
+                ->contains(fn (DiaryEntry $e): bool => $e->title === 'Blocked from calendar')
+        );
     }
 }

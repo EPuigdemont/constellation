@@ -211,16 +211,19 @@ class Notes extends Component
     {
         $notes = Note::query()
             ->where('user_id', Auth::id())
-            ->with('tags')
-            ->when($this->search !== '', function ($query): void {
-                $query->where(function ($searchQuery): void {
-                    $searchQuery
-                        ->where('title', 'like', '%'.$this->search.'%')
-                        ->orWhere('body', 'like', '%'.$this->search.'%');
-                });
-            })
+            ->with(['tags', 'user'])
             ->orderByDesc('created_at')
             ->get();
+
+        if ($this->search !== '') {
+            $needle = mb_strtolower($this->search);
+            $notes = $notes->filter(function (Note $note) use ($needle): bool {
+                $title = mb_strtolower((string) ($note->title ?? ''));
+                $body = mb_strtolower((string) ($note->body ?? ''));
+
+                return str_contains($title, $needle) || str_contains($body, $needle);
+            })->values();
+        }
 
         /** @var Collection<string, Collection<int, Note>> $notesByDay */
         $notesByDay = $notes->groupBy(fn (Note $note): string => $note->created_at?->toDateString() ?? now()->toDateString());

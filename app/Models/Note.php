@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\UserContentEncrypted;
 use App\Enums\Mood;
 use App\Models\Concerns\HasEntityDefaults;
 use Carbon\CarbonInterface;
@@ -44,6 +45,8 @@ class Note extends Model
     {
         return [
             'mood' => Mood::class,
+            'title' => UserContentEncrypted::class,
+            'body' => UserContentEncrypted::class,
         ];
     }
 

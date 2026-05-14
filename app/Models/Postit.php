@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\UserContentEncrypted;
 use App\Enums\Mood;
 use App\Models\Concerns\HasEntityDefaults;
 use Carbon\CarbonInterface;
@@ -42,6 +43,7 @@ class Postit extends Model
     {
         return [
             'mood' => Mood::class,
+            'body' => UserContentEncrypted::class,
         ];
     }
 

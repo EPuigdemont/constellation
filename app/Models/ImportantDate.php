@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\UserContentEncrypted;
 use App\Models\Concerns\HasEntityDefaults;
 use Carbon\CarbonInterface;
 use Database\Factories\ImportantDateFactory;
@@ -43,6 +44,7 @@ class ImportantDate extends Model
             'date' => 'date',
             'recurs_annually' => 'boolean',
             'is_done' => 'boolean',
+            'label' => UserContentEncrypted::class,
         ];
     }
 

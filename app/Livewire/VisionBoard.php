@@ -443,16 +443,17 @@ class VisionBoard extends Component
         }
 
         $user = Auth::user();
-        $query = $this->linkSearchQuery;
+        $needle = mb_strtolower($this->linkSearchQuery);
         $results = [];
 
         $diaryEntries = DiaryEntry::where('user_id', $user->id)
-            ->where(function ($q) use ($query): void {
-                $q->where('title', 'like', "%{$query}%")
-                    ->orWhere('body', 'like', "%{$query}%");
-            })
-            ->limit(5)
-            ->get();
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get()
+            ->filter(fn (DiaryEntry $entry): bool => str_contains(mb_strtolower((string) ($entry->title ?? '')), $needle)
+                || str_contains(mb_strtolower((string) ($entry->body ?? '')), $needle))
+            ->take(5);
 
         foreach ($diaryEntries as $entry) {
             $results[] = [
@@ -463,12 +464,13 @@ class VisionBoard extends Component
         }
 
         $notes = Note::where('user_id', $user->id)
-            ->where(function ($q) use ($query): void {
-                $q->where('title', 'like', "%{$query}%")
-                    ->orWhere('body', 'like', "%{$query}%");
-            })
-            ->limit(5)
-            ->get();
+            ->with('user')
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get()
+            ->filter(fn (Note $note): bool => str_contains(mb_strtolower((string) ($note->title ?? '')), $needle)
+                || str_contains(mb_strtolower((string) ($note->body ?? '')), $needle))
+            ->take(5);
 
         foreach ($notes as $note) {
             $results[] = [

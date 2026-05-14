@@ -51,12 +51,10 @@ class VisionBoardTest extends TestCase
             ->set('editorMood', 'love')
             ->call('saveEditor');
 
-        $this->assertDatabaseHas('images', [
-            'id' => $image->id,
-            'title' => 'New Title',
-            'alt' => 'New Alt',
-            'mood' => 'love',
-        ]);
+        $fresh = $image->fresh();
+        $this->assertSame('New Title', $fresh?->title);
+        $this->assertSame('New Alt', $fresh?->alt);
+        $this->assertSame('love', $fresh?->mood?->value);
     }
 
     public function test_save_editor_closes_modal(): void

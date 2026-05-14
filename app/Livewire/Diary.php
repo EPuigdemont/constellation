@@ -99,8 +99,9 @@ class Diary extends Component
 
     public function nextPage(): void
     {
-        $total = $this->getTotalPages();
-        if ($this->currentPage < $total) {
+        $total = $this->filteredEntries()->count();
+        $totalPages = (int) max(1, ceil($total / $this->entriesPerSpread));
+        if ($this->currentPage < $totalPages) {
             $this->currentPage++;
         }
     }
@@ -316,22 +317,9 @@ class Diary extends Component
 
     public function render(): View
     {
-        $user = Auth::user();
-
-        $query = DiaryEntry::query()
-            ->where('user_id', $user->id)
-            ->with('tags')
-            ->orderByDesc('created_at');
-
-        if ($this->search !== '') {
-            $query->where(function ($q) {
-                $q->where('title', 'like', '%'.$this->search.'%')
-                    ->orWhere('body', 'like', '%'.$this->search.'%');
-            });
-        }
+        $entries = $this->filteredEntries();
 
         if ($this->displayMode === 'paginated') {
-            $entries = $query->get();
             $total = $entries->count();
             $totalPages = (int) max(1, ceil($total / $this->entriesPerSpread));
             $this->currentPage = min($this->currentPage, $totalPages);
@@ -346,29 +334,36 @@ class Diary extends Component
             ]);
         }
 
-        $allEntries = $query->get();
-
         return view('livewire.diary-view', [
             'entries' => collect(),
             'totalPages' => 1,
-            'allEntries' => $allEntries,
+            'allEntries' => $entries,
         ]);
     }
 
-    private function getTotalPages(): int
+    /** @return \Illuminate\Support\Collection<int, DiaryEntry> */
+    private function filteredEntries(): \Illuminate\Support\Collection
     {
-        $query = DiaryEntry::where('user_id', Auth::id());
+        $user = Auth::user();
 
-        if ($this->search !== '') {
-            $query->where(function ($q) {
-                $q->where('title', 'like', '%'.$this->search.'%')
-                    ->orWhere('body', 'like', '%'.$this->search.'%');
-            });
+        $entries = DiaryEntry::query()
+            ->where('user_id', $user->id)
+            ->with(['tags', 'user'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        if ($this->search === '') {
+            return $entries;
         }
 
-        $total = $query->count();
+        $needle = mb_strtolower($this->search);
 
-        return (int) max(1, ceil($total / $this->entriesPerSpread));
+        return $entries->filter(function (DiaryEntry $entry) use ($needle): bool {
+            $title = mb_strtolower((string) ($entry->title ?? ''));
+            $body = mb_strtolower((string) ($entry->body ?? ''));
+
+            return str_contains($title, $needle) || str_contains($body, $needle);
+        })->values();
     }
 
     private function loadAvailableTags(): void

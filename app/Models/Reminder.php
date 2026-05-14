@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\UserContentEncrypted;
 use App\Enums\Mood;
 use App\Enums\ReminderType;
 use App\Models\Concerns\HasEntityDefaults;
@@ -52,6 +53,8 @@ class Reminder extends Model
             'mood' => Mood::class,
             'reminder_type' => ReminderType::class,
             'is_completed' => 'boolean',
+            'title' => UserContentEncrypted::class,
+            'body' => UserContentEncrypted::class,
         ];
     }
 

@@ -122,6 +122,7 @@ class DataImportService
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
                 $new->user_id = $userId;
+                $new->setRelation('user', $user);
                 $new->title = $entry['title'];
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
@@ -142,6 +143,7 @@ class DataImportService
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
                 $new->user_id = $userId;
+                $new->setRelation('user', $user);
                 $new->title = $entry['title'];
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
@@ -162,6 +164,7 @@ class DataImportService
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
                 $new->user_id = $userId;
+                $new->setRelation('user', $user);
                 $new->body = $entry['body'];
                 $new->mood = $entry['mood'];
                 $new->color_override = $entry['color_override'] ?? null;
@@ -181,6 +184,7 @@ class DataImportService
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
                 $new->user_id = $userId;
+                $new->setRelation('user', $user);
                 $new->path = $entry['path'];
                 $new->disk = $entry['disk'] ?? 'private';
                 $new->alt = $entry['alt'] ?? null;
@@ -214,6 +218,7 @@ class DataImportService
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
                 $new->user_id = $userId;
+                $new->setRelation('user', $user);
                 $new->label = $entry['label'];
                 $new->date = Carbon::parse((string) $entry['date']);
                 $new->recurs_annually = $entry['recurs_annually'] ?? false;
@@ -233,6 +238,7 @@ class DataImportService
                 $this->idMap[$entry['id']] = $newId;
                 $new->id = $newId;
                 $new->user_id = $userId;
+                $new->setRelation('user', $user);
                 $new->title = $entry['title'];
                 $new->body = $entry['body'] ?? null;
                 $new->remind_at = Carbon::parse((string) $entry['remind_at']);

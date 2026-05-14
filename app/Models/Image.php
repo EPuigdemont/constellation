@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\UserContentEncrypted;
 use App\Enums\Mood;
 use App\Models\Concerns\HasEntityDefaults;
 use Carbon\CarbonInterface;
@@ -53,6 +54,8 @@ class Image extends Model
             'image_width' => 'integer',
             'image_height' => 'integer',
             'mood' => Mood::class,
+            'alt' => UserContentEncrypted::class,
+            'title' => UserContentEncrypted::class,
         ];
     }
 
