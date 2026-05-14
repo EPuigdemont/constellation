@@ -64,6 +64,7 @@ class ImagesGallery extends Component
 
         $images = Image::query()
             ->where('user_id', $user->id)
+            ->with('user')
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (Image $image): array => [

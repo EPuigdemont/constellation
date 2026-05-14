@@ -109,10 +109,9 @@ class CalendarTest extends TestCase
             ->set('createBody', 'Written from calendar')
             ->call('saveNewEntity');
 
-        $this->assertDatabaseHas('diary_entries', [
-            'user_id' => $user->id,
-            'title' => 'Calendar Diary',
-        ]);
+        $entry = DiaryEntry::where('user_id', $user->id)->first();
+        $this->assertNotNull($entry);
+        $this->assertSame('Calendar Diary', $entry->title);
     }
 
     public function test_save_new_entity_creates_note(): void
@@ -125,10 +124,9 @@ class CalendarTest extends TestCase
             ->set('createTitle', 'Calendar Note')
             ->call('saveNewEntity');
 
-        $this->assertDatabaseHas('notes', [
-            'user_id' => $user->id,
-            'title' => 'Calendar Note',
-        ]);
+        $note = Note::where('user_id', $user->id)->first();
+        $this->assertNotNull($note);
+        $this->assertSame('Calendar Note', $note->title);
     }
 
     public function test_save_new_entity_resets_create_form(): void

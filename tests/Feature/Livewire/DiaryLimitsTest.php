@@ -28,9 +28,10 @@ class DiaryLimitsTest extends TestCase
             ->call('createEntry')
             ->assertSet('limitError', 'You have reached your diary entry limit for today. Remaining: 0.');
 
-        $this->assertDatabaseMissing('diary_entries', [
-            'user_id' => $user->id,
-            'title' => 'Blocked entry',
-        ]);
+        $this->assertFalse(
+            DiaryEntry::where('user_id', $user->id)
+                ->get()
+                ->contains(fn (DiaryEntry $entry): bool => $entry->title === 'Blocked entry')
+        );
     }
 }

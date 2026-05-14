@@ -15,10 +15,13 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Encryption\Encrypter;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use RuntimeException;
 
 /**
  * @property int $id
@@ -37,11 +40,14 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property Tier $tier
  * @property CarbonInterface|null $guest_expires_at
  * @property CarbonInterface|null $guest_created_at
+ * @property string|null $encryption_key
  */
 class User extends Authenticatable // implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    private ?Encrypter $encrypterInstance = null;
 
     /**
      * The attributes that are mass assignable.
@@ -77,7 +83,33 @@ class User extends Authenticatable // implements MustVerifyEmail
         'two_factor_secret',
         'two_factor_recovery_codes',
         'remember_token',
+        'encryption_key',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (! is_string($user->encryption_key) || $user->encryption_key === '') {
+                $user->encryption_key = Crypt::encryptString(random_bytes(32));
+            }
+        });
+    }
+
+    public function encrypter(): Encrypter
+    {
+        if ($this->encrypterInstance !== null) {
+            return $this->encrypterInstance;
+        }
+
+        if (! is_string($this->encryption_key) || $this->encryption_key === '') {
+            throw new RuntimeException('User has no encryption key. Run users:backfill-encryption-keys.');
+        }
+
+        return $this->encrypterInstance = new Encrypter(
+            Crypt::decryptString($this->encryption_key),
+            (string) config('app.cipher'),
+        );
+    }
 
     /**
      * Get the attributes that should be cast.

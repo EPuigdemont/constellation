@@ -28,10 +28,10 @@ class RemindersLimitsTest extends TestCase
             ->call('saveReminder')
             ->assertSet('limitError', __('You have reached your reminder limit for today. Remaining: :remaining.', ['remaining' => 0]));
 
-        $this->assertDatabaseMissing('reminders', [
-            'user_id' => $user->id,
-            'title' => 'Blocked reminder',
-        ]);
+        $this->assertFalse(
+            Reminder::where('user_id', $user->id)->get()
+                ->contains(fn (Reminder $r): bool => $r->title === 'Blocked reminder')
+        );
     }
 
     public function test_reminder_limit_error_is_localized_when_locale_is_spanish(): void
@@ -48,9 +48,9 @@ class RemindersLimitsTest extends TestCase
             ->call('saveReminder')
             ->assertSet('limitError', __('You have reached your reminder limit for today. Remaining: :remaining.', ['remaining' => 0]));
 
-        $this->assertDatabaseMissing('reminders', [
-            'user_id' => $user->id,
-            'title' => 'Recordatorio bloqueado',
-        ]);
+        $this->assertFalse(
+            Reminder::where('user_id', $user->id)->get()
+                ->contains(fn (Reminder $r): bool => $r->title === 'Recordatorio bloqueado')
+        );
     }
 }

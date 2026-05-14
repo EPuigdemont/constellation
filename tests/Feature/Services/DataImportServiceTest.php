@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Services;
 
 use App\Models\DiaryEntry;
+use App\Models\Note;
 use App\Models\Tag;
 use App\Models\User;
 use App\Services\DataImportService;
@@ -139,7 +140,9 @@ class DataImportServiceTest extends TestCase
         $result = $this->service->import($user, $zipPath);
         @unlink($zipPath);
 
-        $this->assertDatabaseHas('diary_entries', ['user_id' => $user->id, 'title' => 'Imported Diary']);
+        $imported = DiaryEntry::where('user_id', $user->id)->first();
+        $this->assertNotNull($imported);
+        $this->assertSame('Imported Diary', $imported->title);
         $this->assertGreaterThan(0, $result['entities']);
     }
 
@@ -167,7 +170,9 @@ class DataImportServiceTest extends TestCase
         $this->service->import($user, $zipPath);
         @unlink($zipPath);
 
-        $this->assertDatabaseHas('notes', ['user_id' => $user->id, 'title' => 'Imported Note']);
+        $importedNote = Note::where('user_id', $user->id)->first();
+        $this->assertNotNull($importedNote);
+        $this->assertSame('Imported Note', $importedNote->title);
     }
 
     public function test_import_applies_user_settings(): void

@@ -41,10 +41,9 @@ class DiaryTest extends TestCase
             ->set('newBody', '<p>Hello world</p>')
             ->call('createEntry');
 
-        $this->assertDatabaseHas('diary_entries', [
-            'user_id' => $user->id,
-            'title' => 'My New Entry',
-        ]);
+        $entry = DiaryEntry::where('user_id', $user->id)->first();
+        $this->assertNotNull($entry);
+        $this->assertSame('My New Entry', $entry->title);
     }
 
     public function test_create_entry_resets_form_after_creation(): void
@@ -74,10 +73,7 @@ class DiaryTest extends TestCase
             ->set('editBody', 'Updated body')
             ->call('saveEntry');
 
-        $this->assertDatabaseHas('diary_entries', [
-            'id' => $entry->id,
-            'title' => 'Updated Title',
-        ]);
+        $this->assertSame('Updated Title', $entry->fresh()->title);
     }
 
     public function test_cannot_edit_another_users_entry(): void

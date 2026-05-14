@@ -44,11 +44,10 @@ class RemindersTest extends TestCase
             ->set('dateRecurs', true)
             ->call('saveDate');
 
-        $this->assertDatabaseHas('important_dates', [
-            'user_id' => $user->id,
-            'label' => 'Birthday',
-            'recurs_annually' => true,
-        ]);
+        $created = ImportantDate::where('user_id', $user->id)->first();
+        $this->assertNotNull($created);
+        $this->assertSame('Birthday', $created->label);
+        $this->assertTrue($created->recurs_annually);
     }
 
     public function test_save_date_resets_form_after_creation(): void
@@ -75,7 +74,7 @@ class RemindersTest extends TestCase
             ->set('dateLabel', 'New Label')
             ->call('saveDate');
 
-        $this->assertDatabaseHas('important_dates', ['id' => $date->id, 'label' => 'New Label']);
+        $this->assertSame('New Label', $date->fresh()?->label);
     }
 
     public function test_delete_date_removes_important_date(): void
@@ -141,10 +140,9 @@ class RemindersTest extends TestCase
             ->set('reminderAt', now()->addDay()->format('Y-m-d\TH:i'))
             ->call('saveReminder');
 
-        $this->assertDatabaseHas('reminders', [
-            'user_id' => $user->id,
-            'title' => 'Buy groceries',
-        ]);
+        $created = Reminder::where('user_id', $user->id)->first();
+        $this->assertNotNull($created);
+        $this->assertSame('Buy groceries', $created->title);
     }
 
     public function test_save_reminder_resets_form_after_creation(): void
@@ -171,7 +169,7 @@ class RemindersTest extends TestCase
             ->set('reminderTitle', 'New Title')
             ->call('saveReminder');
 
-        $this->assertDatabaseHas('reminders', ['id' => $reminder->id, 'title' => 'New Title']);
+        $this->assertSame('New Title', $reminder->fresh()?->title);
     }
 
     public function test_toggle_complete_toggles_reminder_is_completed(): void

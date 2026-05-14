@@ -36,6 +36,14 @@ class DataExportService
         $positions = EntityPosition::where('user_id', $userId)->get();
         $calendarMoods = CalendarDayMood::where('user_id', $userId)->get();
 
+        $hydrate = static fn ($collection) => $collection->each(fn ($model) => $model->setRelation('user', $user));
+        $hydrate($diaryEntries);
+        $hydrate($notes);
+        $hydrate($postits);
+        $hydrate($images);
+        $hydrate($importantDates);
+        $hydrate($reminders);
+
         // Collect all entity IDs for relationship and taggable queries
         $entityIds = collect()
             ->merge($diaryEntries->pluck('id'))
