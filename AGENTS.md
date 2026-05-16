@@ -55,6 +55,9 @@ resources/
 - Login route is throttled: max 5 attempts per minute per IP (Laravel `throttle:5,1` middleware).
 - All routes except `/login` require auth middleware.
 - `robots.txt` must disallow all crawlers.
+- `SecurityHeaders` middleware is prepended to the web group (see `bootstrap/app.php`). Do not remove it. It sets CSP, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and HSTS. If a new feature requires a new external domain (e.g. a CDN), update the CSP allowlist in `SecurityHeaders::handle()`.
+- Session data is encrypted at rest (`SESSION_ENCRYPT=true`). Do not disable this.
+- User content is encrypted at rest via per-user envelope encryption (see `EncryptionService`).
 
 ## Theming
 
@@ -92,7 +95,7 @@ resources/
 - Write feature tests for all Service classes.
 - Write Livewire component tests for all interactive components.
 - Use SQLite in-memory for tests.
-- Run tests with `php artisan test`.
+- Run `composer test` before opening a PR — this runs Pint lint check + full PHPUnit suite. `php artisan test` runs tests only.
 
 ## What NOT to Do
 

@@ -24,10 +24,13 @@ Constellation is a private-feeling journaling and memory-mapping app with a drag
 
 ## Security Model (High-Level)
 
-- Entity access is policy-based
+- Entity access is policy-based (all reads/writes go through Policy classes)
 - Login attempts are rate-limited (`throttle:5,1`)
-- Uploaded files are stored privately and served through protected routes
+- Uploaded files are stored privately and served through signed routes (never direct storage URLs)
 - Crawlers are blocked via `public/robots.txt`
+- Security headers on every response: CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS (HTTPS only)
+- Session data encrypted at rest (`SESSION_ENCRYPT=true`); session cookie is `Secure` + `HttpOnly` + `SameSite=lax`
+- User content (diary entries, notes, etc.) encrypted at rest via per-user envelope encryption
 
 ## Quick Start (Local)
 
@@ -44,7 +47,8 @@ Open http://127.0.0.1:8000 after the server starts.
 ## Testing
 
 ```bash
-php artisan test
+composer test        # lint check (Pint) + full test suite — use this before opening a PR
+php artisan test     # test suite only
 ```
 
 ## License
