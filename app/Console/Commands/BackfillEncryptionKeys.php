@@ -67,6 +67,7 @@ final class BackfillEncryptionKeys extends Command
                 }
                 try {
                     $encrypter->decryptString((string) $value);
+
                     continue;
                 } catch (DecryptException) {
                     $changes[$column] = $encrypter->encryptString((string) $value);
