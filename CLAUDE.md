@@ -61,6 +61,9 @@ Directives for Claude Code working on this project.
 - The login route must always have `throttle:5,1` middleware.
 - File uploads (vision board images) must be validated for MIME type and max size. Store in private disk, serve through a signed route.
 - Never expose entity IDs in URLs directly — use UUIDs or Hashids.
+- `SecurityHeaders` middleware is global (prepended to web group). Do not remove it. If a feature needs a new external domain, update the CSP in `App\Http\Middleware\SecurityHeaders::handle()`.
+- Session encryption (`SESSION_ENCRYPT=true`) must stay on. Do not revert to plaintext sessions.
+- User content encryption via `EncryptionService` must not be bypassed when reading/writing entity fields.
 
 ## Prioritization
 

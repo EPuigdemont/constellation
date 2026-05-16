@@ -10,6 +10,7 @@ use App\Models\Tag;
 use App\Services\LimitCheckerService;
 use App\Services\ReminderService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Layout;
@@ -341,8 +342,8 @@ class Diary extends Component
         ]);
     }
 
-    /** @return \Illuminate\Support\Collection<int, DiaryEntry> */
-    private function filteredEntries(): \Illuminate\Support\Collection
+    /** @return Collection<int, DiaryEntry> */
+    private function filteredEntries(): Collection
     {
         $user = Auth::user();
 

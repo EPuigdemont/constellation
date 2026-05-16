@@ -225,6 +225,9 @@ Tasks sorted by implementation priority. Do not skip phases.
 - [x] Loading states on Livewire components
 - [x] Accessibility: keyboard navigation on modals, focus trapping
 - [ ] Performance: eager load relationships in Constellation endpoint, cache proximity scores
+- [x] Security headers: CSP, X-Frame-Options, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy (`SecurityHeaders` middleware)
+- [x] Session hardening: encrypted at rest, secure cookie in production
+- [x] User content encrypted at rest (per-user envelope encryption via `EncryptionService`)
 
 ---
 
