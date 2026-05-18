@@ -24,6 +24,7 @@ Directives for Claude Code working on this project.
 
 ## When Writing Code
 
+- Test driven design, everything added, modified or removed must have tests.
 - Controllers must stay thin. If logic exceeds ~20 lines in a controller method, extract to a Service.
 - Use typed properties in all PHP classes (`string $name`, not untyped).
 - Use `readonly` constructor promotion where appropriate.

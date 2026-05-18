@@ -220,14 +220,15 @@ Tasks sorted by implementation priority. Do not skip phases.
 ## Phase 12 — Polish & QA
 
 - [x] Responsive check: desktop view on tablet/mobile (degraded but usable)
-- [ ] Error states on all forms
+- [x] Error states on all forms
 - [x] Empty states on desktop (first-time user experience)
 - [x] Loading states on Livewire components
 - [x] Accessibility: keyboard navigation on modals, focus trapping
-- [ ] Performance: eager load relationships in Constellation endpoint, cache proximity scores
+- [x] Performance: eager load relationships in Constellation endpoint, cache proximity scores
 - [x] Security headers: CSP, X-Frame-Options, HSTS, X-Content-Type-Options, Referrer-Policy, Permissions-Policy (`SecurityHeaders` middleware)
 - [x] Session hardening: encrypted at rest, secure cookie in production
 - [x] User content encrypted at rest (per-user envelope encryption via `EncryptionService`)
+- [x] Database encryption - no plaintext user content in the database, all encrypted via `EncryptionService` before saving, decrypted on read
 
 ---
 
@@ -238,14 +239,12 @@ Tasks sorted by implementation priority. Do not skip phases.
 - [x] Guest mode: allow users to try the app without registering, with data stored in database with a temporary user account that expires after a certain time (e.g. 24 hours), with a prompt to register and migrate data before expiration
 - [x] Publish the project as source-available on GitHub, with documentation for local development setup
 - [ ] API to allow third-party integrations (e.g. mobile app, browser extension), with token-based authentication and rate limiting
-- [ ] Mobile app (Flutter or React Native) that connects to the API, with offline support and local caching
-- [ ] Notifications: email reminders for important dates, push notifications for reminders and important dates (requires mobile app or browser push support)
-- [ ] Emails: daily/weekly summary of entries, reminders for important dates, etc. (requires email service integration like SendGrid or Mailgun)
+- [ ] Mobile app (NativePHP) that connects to the API, with offline support and local caching
+- [ ] Notifications: push notifications for reminders and important dates (requires mobile app or browser push support)
 
 ## Backlog (Post-MVP)
 
 - [ ] AI-powered smart linking (NLP similarity between entity content)
-- [ ] iOS share extension / import mechanism
 - [ ] Export diary entries to PDF
 - [ ] Full-text search across all entities
 - [ ] Entry streaks / journaling stats
