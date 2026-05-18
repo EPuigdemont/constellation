@@ -6,6 +6,7 @@ namespace App\Livewire;
 
 use App\Enums\Mood;
 use App\Models\DiaryEntry;
+use App\Models\EntityShare;
 use App\Models\Tag;
 use App\Services\LimitCheckerService;
 use App\Services\ReminderService;
@@ -65,9 +66,17 @@ class Diary extends Component
 
     public string $limitError = '';
 
+    public bool $showShared = false;
+
     public function mount(): void
     {
         $this->displayMode = Auth::user()->diary_display_mode ?? 'paginated';
+        $this->showShared = request()->boolean('showShared');
+    }
+
+    public function toggleShowShared(): void
+    {
+        $this->showShared = ! $this->showShared;
     }
 
     public function toggleDisplayMode(): void
@@ -352,6 +361,26 @@ class Diary extends Component
             ->with(['tags', 'user'])
             ->orderByDesc('created_at')
             ->get();
+
+        if ($this->showShared) {
+            $shares = EntityShare::where('friend_id', $user->id)
+                ->where('entity_type', 'diary_entry')
+                ->with('owner')
+                ->get();
+
+            if ($shares->isNotEmpty()) {
+                $sharedEntries = DiaryEntry::whereIn('id', $shares->pluck('entity_id'))
+                    ->with(['tags', 'user'])
+                    ->get()
+                    ->each(function (DiaryEntry $e) use ($shares): void {
+                        $share = $shares->firstWhere('entity_id', $e->id);
+                        $e->is_shared = true;
+                        $e->shared_by = $share?->owner?->name;
+                    });
+
+                $entries = $entries->merge($sharedEntries)->sortByDesc('created_at')->values();
+            }
+        }
 
         if ($this->search === '') {
             return $entries;

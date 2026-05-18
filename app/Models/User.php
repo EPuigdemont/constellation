@@ -36,6 +36,9 @@ use RuntimeException;
  * @property float $desktop_zoom
  * @property float $vision_board_zoom
  * @property string $diary_display_mode
+ * @property bool $allow_shared_reminders
+ * @property bool $notify_shared_reminders
+ * @property int $reminder_approaching_minutes
  * @property CarbonInterface|null $first_login_at
  * @property Tier $tier
  * @property CarbonInterface|null $guest_expires_at
@@ -67,6 +70,9 @@ class User extends Authenticatable // implements MustVerifyEmail
         'desktop_zoom',
         'vision_board_zoom',
         'diary_display_mode',
+        'allow_shared_reminders',
+        'notify_shared_reminders',
+        'reminder_approaching_minutes',
         'tier',
         'first_login_at',
         'guest_expires_at',

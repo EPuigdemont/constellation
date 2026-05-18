@@ -8,6 +8,7 @@ use App\Enums\FriendshipStatus;
 use App\Models\EntityShare;
 use App\Models\Friendship;
 use App\Models\User;
+use App\Notifications\ItemSharedNotification;
 
 class ShareEntityService
 {
@@ -84,12 +85,26 @@ class ShareEntityService
         }
 
         foreach ($toCreate as $friendId) {
+            $recipient = User::find($friendId);
+
+            if (! $recipient) {
+                continue;
+            }
+
+            if ($entityType === 'reminder' && ! $recipient->allow_shared_reminders) {
+                continue;
+            }
+
             EntityShare::create([
                 'owner_id' => $owner->id,
                 'friend_id' => $friendId,
                 'entity_id' => $entityId,
                 'entity_type' => $entityType,
             ]);
+
+            if ($entityType !== 'reminder' || $recipient->notify_shared_reminders) {
+                $recipient->notify(new ItemSharedNotification($owner, $entityType, $entityId));
+            }
         }
     }
 

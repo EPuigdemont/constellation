@@ -7,8 +7,10 @@ namespace Tests\Feature\Services;
 use App\Enums\FriendshipStatus;
 use App\Models\Friendship;
 use App\Models\User;
+use App\Notifications\FriendRequestNotification;
 use App\Services\FriendshipService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class FriendshipServiceTest extends TestCase
@@ -231,5 +233,28 @@ class FriendshipServiceTest extends TestCase
         $outgoing = $this->service->getPendingOutgoing($user);
 
         $this->assertCount(1, $outgoing);
+    }
+
+    public function test_send_friend_request_notifies_recipient(): void
+    {
+        Notification::fake();
+
+        $from = User::factory()->create();
+        $to = User::factory()->create();
+
+        $this->service->sendFriendRequest($from, $to->email);
+
+        Notification::assertSentTo($to, FriendRequestNotification::class);
+    }
+
+    public function test_send_friend_request_does_not_notify_when_request_fails(): void
+    {
+        Notification::fake();
+
+        $from = User::factory()->create();
+
+        $this->service->sendFriendRequest($from, 'nobody@example.com');
+
+        Notification::assertNothingSent();
     }
 }

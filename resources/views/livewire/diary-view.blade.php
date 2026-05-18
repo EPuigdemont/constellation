@@ -40,6 +40,12 @@
                      aria-label="{{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}">
             <span class="max-[420px]:hidden">{{ $displayMode === 'scroll' ? __('Paginated') : __('Scroll') }}</span>
         </flux:button>
+
+        <flux:button size="sm" :variant="$showShared ? 'primary' : 'subtle'" icon="share"
+                     wire:click="toggleShowShared"
+                     title="{{ $showShared ? __('Shared: On') : __('Show Shared') }}">
+            <span class="max-[420px]:hidden">{{ __('Shared') }}</span>
+        </flux:button>
     </div>
 
     {{-- Uplifting entry suggestion (sad entry detection) --}}
@@ -193,6 +199,12 @@
                             @if($entry->title)
                                 <h2 class="diary-entry-title relative z-[3] text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ $entry->title }}</h2>
                             @endif
+                            @if($entry->is_shared ?? false)
+                                <span class="relative z-[3] inline-flex items-center gap-1 rounded-full bg-[var(--theme-accent)]/10 px-2 py-0.5 text-[0.65rem] text-[var(--theme-accent)]">
+                                    <flux:icon name="share" variant="outline" class="size-3" />
+                                    {{ __('Shared by :name', ['name' => $entry->shared_by]) }}
+                                </span>
+                            @endif
                             <div class="diary-entry-body relative z-[3] flex-1 overflow-y-auto">
                                 <div class="tiptap-editor-content prose prose-sm max-w-none text-zinc-700 dark:text-zinc-300">
                                     {!! $entry->body !!}
@@ -275,6 +287,12 @@
                             </div>
                             @if($entry->title)
                                 <h2 class="diary-entry-title relative z-[3] text-lg font-semibold text-zinc-800 dark:text-zinc-200">{{ $entry->title }}</h2>
+                            @endif
+                            @if($entry->is_shared ?? false)
+                                <span class="relative z-[3] inline-flex items-center gap-1 rounded-full bg-[var(--theme-accent)]/10 px-2 py-0.5 text-[0.65rem] text-[var(--theme-accent)]">
+                                    <flux:icon name="share" variant="outline" class="size-3" />
+                                    {{ __('Shared by :name', ['name' => $entry->shared_by]) }}
+                                </span>
                             @endif
                             <div class="diary-entry-body relative z-[3]">
                                 <div class="tiptap-editor-content prose prose-sm max-w-none text-zinc-700 dark:text-zinc-300">

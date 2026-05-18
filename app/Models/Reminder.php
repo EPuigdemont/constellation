@@ -44,6 +44,8 @@ class Reminder extends Model
         'reminder_type',
         'is_completed',
         'created_at',
+        'approaching_notified_at',
+        'due_notified_at',
     ];
 
     protected function casts(): array

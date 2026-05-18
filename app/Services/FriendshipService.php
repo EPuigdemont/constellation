@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\FriendshipStatus;
 use App\Models\Friendship;
 use App\Models\User;
+use App\Notifications\FriendRequestNotification;
 use Illuminate\Database\Eloquent\Collection;
 
 class FriendshipService
@@ -41,6 +42,8 @@ class FriendshipService
             'friend_id' => $to->id,
             'status' => FriendshipStatus::Pending->value,
         ]);
+
+        $to->notify(new FriendRequestNotification($from));
 
         return true;
     }

@@ -31,6 +31,12 @@
         <flux:button size="sm" icon="plus" wire:click="openNoteModal" title="{{ __('New Note') }}" aria-label="{{ __('New Note') }}">
             {{ __('New Note') }}
         </flux:button>
+
+        <flux:button size="sm" :variant="$showShared ? 'primary' : 'subtle'" icon="share"
+                     wire:click="toggleShowShared"
+                     title="{{ $showShared ? __('Shared: On') : __('Show Shared') }}">
+            {{ __('Shared') }}
+        </flux:button>
     </div>
 
     <div class="flex-1 overflow-y-auto p-3 sm:p-4">
@@ -87,6 +93,11 @@
                                             <h3 class="line-clamp-2 text-sm font-semibold text-[var(--theme-text)]">{{ $note->title ?: __('Untitled') }}</h3>
                                             <span class="shrink-0 text-[0.65rem] text-[var(--theme-text-muted)]">{{ $note->created_at?->format('H:i') }}</span>
                                         </div>
+                                        @if($note->is_shared ?? false)
+                                            <span class="mb-1 inline-flex items-center gap-1 rounded-full bg-[var(--theme-accent)]/10 px-1.5 py-0.5 text-[0.6rem] text-[var(--theme-accent)]">
+                                                {{ __('By :name', ['name' => $note->shared_by]) }}
+                                            </span>
+                                        @endif
                                         <p class="line-clamp-4 text-xs leading-relaxed text-[var(--theme-text-muted)]">{{ str(strip_tags($note->body ?? ''))->limit(140) }}</p>
                                     </article>
                                 @endforeach

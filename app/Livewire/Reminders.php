@@ -6,9 +6,11 @@ namespace App\Livewire;
 
 use App\Enums\Mood;
 use App\Enums\ReminderType;
+use App\Models\EntityShare;
 use App\Models\ImportantDate;
 use App\Models\Reminder;
 use App\Services\LimitCheckerService;
+use App\Services\ShareEntityService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -49,9 +51,58 @@ class Reminders extends Component
 
     public string $limitError = '';
 
+    public bool $showShared = false;
+
+    // Share panel state
+    public bool $showSharePanel = false;
+
+    public string $sharingReminderId = '';
+
+    /** @var array<int, string> */
+    public array $shareFriendIds = [];
+
+    /** @var array<int, array{id: string, username: string, name: string}> */
+    public array $availableFriends = [];
+
     public function mount(): void
     {
         $this->reminderAt = now()->addDay()->format('Y-m-d\TH:i');
+        $this->showShared = request()->boolean('showShared');
+    }
+
+    public function toggleShowShared(): void
+    {
+        $this->showShared = ! $this->showShared;
+    }
+
+    public function openSharePanel(string $reminderId, ShareEntityService $service): void
+    {
+        Reminder::where('user_id', Auth::id())->findOrFail($reminderId);
+        $this->sharingReminderId = $reminderId;
+        $this->availableFriends = $service->getFriendsForUser(Auth::user());
+        $this->shareFriendIds = $service->getSharedFriendIds(Auth::user(), $reminderId, 'reminder');
+        $this->showSharePanel = true;
+    }
+
+    public function saveShare(ShareEntityService $service): void
+    {
+        $service->syncShares(Auth::user(), $this->sharingReminderId, 'reminder', $this->shareFriendIds);
+        $this->closeSharePanel();
+    }
+
+    public function closeSharePanel(): void
+    {
+        $this->showSharePanel = false;
+        $this->sharingReminderId = '';
+        $this->shareFriendIds = [];
+        $this->availableFriends = [];
+    }
+
+    public function dismissSharedReminder(string $entityShareId): void
+    {
+        $share = EntityShare::findOrFail($entityShareId);
+        Gate::authorize('delete', $share);
+        $share->delete();
     }
 
     // ── Important Dates CRUD ──
@@ -174,9 +225,12 @@ class Reminders extends Component
         ];
 
         if ($this->editingReminderId) {
-            Reminder::where('user_id', Auth::id())
-                ->findOrFail($this->editingReminderId)
-                ->update($data);
+            $existing = Reminder::where('user_id', Auth::id())->findOrFail($this->editingReminderId);
+            if ($existing->remind_at->toDateTimeString() !== Carbon::parse($this->reminderAt)->toDateTimeString()) {
+                $data['approaching_notified_at'] = null;
+                $data['due_notified_at'] = null;
+            }
+            $existing->update($data);
         } else {
             Gate::authorize('create', Reminder::class);
             Reminder::create($data);
@@ -218,9 +272,31 @@ class Reminders extends Component
             ->orderBy('remind_at')
             ->get();
 
+        $sharedReminders = collect();
+        if ($this->showShared) {
+            $shares = EntityShare::where('friend_id', $user->id)
+                ->where('entity_type', 'reminder')
+                ->with('owner')
+                ->get();
+
+            if ($shares->isNotEmpty()) {
+                $sharedReminders = Reminder::whereIn('id', $shares->pluck('entity_id'))
+                    ->where('is_completed', false)
+                    ->orderBy('remind_at')
+                    ->get()
+                    ->each(function (Reminder $r) use ($shares): void {
+                        $share = $shares->firstWhere('entity_id', $r->id);
+                        $r->is_shared = true;
+                        $r->shared_by = $share?->owner?->name;
+                        $r->share_id = $share?->id;
+                    });
+            }
+        }
+
         return view('livewire.reminders-view', [
             'importantDates' => $importantDates,
             'reminders' => $reminders,
+            'sharedReminders' => $sharedReminders,
         ]);
     }
 
