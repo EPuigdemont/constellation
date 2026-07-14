@@ -18,15 +18,22 @@ new #[Title('Profile settings')] class extends Component {
     public string $username = '';
     public string $email = '';
     public $avatar = null;
+    public bool $allowSharedReminders = true;
+    public bool $notifySharedReminders = true;
+    public int $reminderApproachingMinutes = 30;
 
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->username = Auth::user()->username ?? '';
-        $this->email = Auth::user()->email;
+        $user = Auth::user();
+        $this->name = $user->name;
+        $this->username = $user->username ?? '';
+        $this->email = $user->email;
+        $this->allowSharedReminders = (bool) $user->allow_shared_reminders;
+        $this->notifySharedReminders = (bool) $user->notify_shared_reminders;
+        $this->reminderApproachingMinutes = (int) $user->reminder_approaching_minutes;
     }
 
     /**
@@ -123,6 +130,23 @@ new #[Title('Profile settings')] class extends Component {
     {
         return ! Auth::user() instanceof MustVerifyEmail
             || (Auth::user() instanceof MustVerifyEmail && Auth::user()->hasVerifiedEmail());
+    }
+
+    public function updateNotificationPreferences(): void
+    {
+        $this->validate([
+            'allowSharedReminders' => ['required', 'boolean'],
+            'notifySharedReminders' => ['required', 'boolean'],
+            'reminderApproachingMinutes' => ['required', 'integer', 'min:5', 'max:1440'],
+        ]);
+
+        Auth::user()->update([
+            'allow_shared_reminders' => $this->allowSharedReminders,
+            'notify_shared_reminders' => $this->notifySharedReminders,
+            'reminder_approaching_minutes' => $this->reminderApproachingMinutes,
+        ]);
+
+        $this->dispatch('notification-prefs-updated');
     }
 }; ?>
 
@@ -242,5 +266,49 @@ new #[Title('Profile settings')] class extends Component {
         @if ($this->showDeleteUser)
             <livewire:pages::settings.delete-user-form />
         @endif
+    </x-pages::settings.layout>
+
+    {{-- Notification Preferences --}}
+    <x-pages::settings.layout :heading="__('Notification Preferences')" :subheading="__('Control how you receive notifications and shared content')">
+        <form wire:submit="updateNotificationPreferences" class="my-6 w-full space-y-6">
+            <div class="space-y-4">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-sm font-medium text-(--theme-text)">{{ __('Allow shared reminders') }}</div>
+                        <p class="text-xs text-(--theme-text-muted)">{{ __('Let friends share their reminders with you') }}</p>
+                    </div>
+                    <flux:checkbox wire:model.live="allowSharedReminders" />
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <div class="text-sm font-medium text-(--theme-text)">{{ __('Notify me of shared reminders') }}</div>
+                        <p class="text-xs text-(--theme-text-muted)">{{ __('Show a toast when a friend shares a reminder with you') }}</p>
+                    </div>
+                    <flux:checkbox wire:model="notifySharedReminders" :disabled="! $allowSharedReminders" />
+                </div>
+
+                <div>
+                    <flux:input wire:model="reminderApproachingMinutes"
+                                :label="__('Approaching reminder window (minutes)')"
+                                type="number"
+                                min="5"
+                                max="1440"
+                                :description="__('Get a notification this many minutes before a reminder is due')" />
+                    @error('reminderApproachingMinutes')
+                        <span class="mt-1 text-xs text-(--theme-accent)">{{ $message }}</span>
+                    @enderror
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <flux:button variant="primary" type="submit">
+                    {{ __('Save') }}
+                </flux:button>
+                <x-action-message on="notification-prefs-updated">
+                    {{ __('Saved.') }}
+                </x-action-message>
+            </div>
+        </form>
     </x-pages::settings.layout>
 </section>

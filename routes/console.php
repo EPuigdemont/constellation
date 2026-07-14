@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\DispatchReminderNotifications;
 use App\Models\User;
 use App\Services\ReminderService;
 use App\Services\UnverifiedUserCleanupService;
@@ -34,3 +35,4 @@ Artisan::command('users:purge-unverified {--hours=336}', function (UnverifiedUse
 
 Schedule::command('reminders:check')->dailyAt('08:00');
 Schedule::command('users:purge-unverified --hours=72')->dailyAt('03:00');
+Schedule::command(DispatchReminderNotifications::class)->everyFiveMinutes();

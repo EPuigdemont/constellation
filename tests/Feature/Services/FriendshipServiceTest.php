@@ -7,8 +7,10 @@ namespace Tests\Feature\Services;
 use App\Enums\FriendshipStatus;
 use App\Models\Friendship;
 use App\Models\User;
+use App\Notifications\FriendRequestNotification;
 use App\Services\FriendshipService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class FriendshipServiceTest extends TestCase
@@ -39,6 +41,16 @@ class FriendshipServiceTest extends TestCase
         $this->assertDatabaseMissing('friendships', [
             'id' => $friendship->id,
         ]);
+    }
+
+    public function test_remove_friend_returns_false_when_no_accepted_friendship_exists(): void
+    {
+        $user = User::factory()->create();
+        $nonFriend = User::factory()->create();
+
+        $result = $this->service->removeFriend($user, (string) $nonFriend->id);
+
+        $this->assertFalse($result);
     }
 
     public function test_remove_friend_only_deletes_accepted_rows_for_target_pair(): void
@@ -231,5 +243,28 @@ class FriendshipServiceTest extends TestCase
         $outgoing = $this->service->getPendingOutgoing($user);
 
         $this->assertCount(1, $outgoing);
+    }
+
+    public function test_send_friend_request_notifies_recipient(): void
+    {
+        Notification::fake();
+
+        $from = User::factory()->create();
+        $to = User::factory()->create();
+
+        $this->service->sendFriendRequest($from, $to->email);
+
+        Notification::assertSentTo($to, FriendRequestNotification::class);
+    }
+
+    public function test_send_friend_request_does_not_notify_when_request_fails(): void
+    {
+        Notification::fake();
+
+        $from = User::factory()->create();
+
+        $this->service->sendFriendRequest($from, 'nobody@example.com');
+
+        Notification::assertNothingSent();
     }
 }

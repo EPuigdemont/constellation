@@ -11,6 +11,7 @@ use App\Models\Note;
 use App\Models\Postit;
 use App\Models\Reminder;
 use App\Models\Tag;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Date;
@@ -43,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
             'tag' => Tag::class,
             'important_date' => ImportantDate::class,
             'reminder' => Reminder::class,
+            'user' => User::class,
         ]);
     }
 

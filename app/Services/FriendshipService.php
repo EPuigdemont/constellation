@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\FriendshipStatus;
 use App\Models\Friendship;
 use App\Models\User;
+use App\Notifications\FriendRequestNotification;
 use Illuminate\Database\Eloquent\Collection;
 
 class FriendshipService
@@ -41,6 +42,8 @@ class FriendshipService
             'friend_id' => $to->id,
             'status' => FriendshipStatus::Pending->value,
         ]);
+
+        $to->notify(new FriendRequestNotification($from));
 
         return true;
     }
@@ -91,7 +94,7 @@ class FriendshipService
      */
     public function removeFriend(User $user, string $friendId): bool
     {
-        Friendship::where(function ($query) use ($user, $friendId) {
+        $deleted = Friendship::where(function ($query) use ($user, $friendId) {
             $query->where(function ($direction) use ($user, $friendId) {
                 $direction->where('user_id', $user->id)
                     ->where('friend_id', $friendId);
@@ -103,7 +106,7 @@ class FriendshipService
             ->where('status', FriendshipStatus::Accepted->value)
             ->delete();
 
-        return true;
+        return $deleted > 0;
     }
 
     /**

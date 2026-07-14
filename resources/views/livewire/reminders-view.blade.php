@@ -8,6 +8,10 @@
     @endif
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-semibold text-[var(--theme-text)]">{{ __('Reminders & Dates') }}</h1>
+        <flux:button size="sm" :variant="$showShared ? 'primary' : 'subtle'" icon="share"
+                     wire:click="toggleShowShared">
+            {{ $showShared ? __('Shared: On') : __('Show Shared') }}
+        </flux:button>
     </div>
 
     {{-- Tabs --}}
@@ -194,6 +198,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
+                        <flux:button size="xs" variant="subtle" icon="share" wire:click="openSharePanel('{{ $reminder->id }}')" />
                         <flux:button size="xs" variant="subtle" icon="pencil" wire:click="openReminderForm('{{ $reminder->id }}')" />
                         <flux:button size="xs" variant="subtle" icon="trash" wire:click="deleteReminder('{{ $reminder->id }}')" wire:confirm="{{ __('Delete this reminder?') }}" wire:loading.attr="disabled" />
                     </div>
@@ -202,5 +207,69 @@
                 <p class="py-8 text-center text-sm text-[var(--theme-text-muted)]">{{ __('No reminders yet.') }}</p>
             @endforelse
         </div>
+
+        {{-- Share Panel --}}
+        @if ($showSharePanel)
+            <div class="rounded-lg border border-[var(--theme-accent)]/30 p-4"
+                 style="background: color-mix(in srgb, var(--theme-bg) 95%, var(--theme-accent));">
+                <div class="mb-3 text-sm font-medium text-[var(--theme-accent)]">{{ __('Share this reminder') }}</div>
+                @if (count($availableFriends) === 0)
+                    <p class="text-sm text-[var(--theme-text-muted)]">{{ __('You have no friends to share with yet.') }}</p>
+                @else
+                    <div class="mb-3 flex flex-col gap-2">
+                        @foreach ($availableFriends as $friend)
+                            <label class="flex cursor-pointer items-center gap-2 text-sm text-[var(--theme-text)]">
+                                <input type="checkbox" wire:model="shareFriendIds" value="{{ $friend['id'] }}"
+                                       @if (!auth()->user()->allow_shared_reminders) title="{{ __('This friend has disabled shared reminders') }}" @endif
+                                       class="rounded border-[var(--theme-border)] text-[var(--theme-accent)] focus:ring-[var(--theme-accent)]" />
+                                {{ $friend['name'] }}
+                                <span class="text-[var(--theme-text-muted)]">@{{ $friend['username'] }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                @endif
+                <div class="flex justify-end gap-2">
+                    <flux:button size="xs" variant="subtle" wire:click="closeSharePanel">{{ __('Cancel') }}</flux:button>
+                    <flux:button size="xs" variant="primary" wire:click="saveShare">{{ __('Save') }}</flux:button>
+                </div>
+            </div>
+        @endif
+
+        {{-- Shared With Me --}}
+        @if ($showShared && $sharedReminders->isNotEmpty())
+            <div class="mt-4">
+                <h2 class="mb-2 text-sm font-semibold text-[var(--theme-text-muted)]">{{ __('Shared With Me') }}</h2>
+                <div class="flex flex-col gap-2">
+                    @foreach ($sharedReminders as $reminder)
+                        @php $isDue = $reminder->isDue(); @endphp
+                        <div @class([
+                            'flex items-center justify-between rounded-lg border p-3 transition-colors',
+                            'border-[var(--theme-accent)] bg-[var(--theme-accent)]/5' => $isDue,
+                            'border-[var(--theme-border)]' => !$isDue,
+                        ]) style="background: color-mix(in srgb, var(--theme-bg) 92%, var(--theme-accent));">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[var(--theme-accent)]/10 text-[var(--theme-accent)]">
+                                    <flux:icon :name="$reminder->reminder_type?->icon() ?? 'bell'" variant="outline" class="size-4" />
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-[var(--theme-text)]">
+                                        {{ $reminder->title }}
+                                        <span class="ml-1 rounded-full bg-[var(--theme-accent)]/10 px-1.5 py-0.5 text-[0.6rem] text-[var(--theme-accent)]">
+                                            {{ __('By :name', ['name' => $reminder->shared_by]) }}
+                                        </span>
+                                    </div>
+                                    <div class="text-xs text-[var(--theme-text-muted)]">
+                                        {{ $reminder->remind_at->translatedFormat('j F Y, H:i') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <flux:button size="xs" variant="subtle" icon="x-mark"
+                                         wire:click="dismissSharedReminder('{{ $reminder->share_id }}')"
+                                         wire:confirm="{{ __('Remove this shared reminder?') }}" />
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
     @endif
 </div>

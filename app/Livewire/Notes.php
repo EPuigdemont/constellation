@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Enums\Mood;
+use App\Models\EntityShare;
 use App\Models\Note;
 use App\Models\Tag;
 use App\Models\User;
@@ -52,10 +53,18 @@ class Notes extends Component
 
     public string $limitError = '';
 
+    public bool $showShared = false;
+
     public function mount(): void
     {
         $this->editorDate = now()->toDateString();
         $this->editorMood = Auth::user()->activeTheme();
+        $this->showShared = request()->boolean('showShared');
+    }
+
+    public function toggleShowShared(): void
+    {
+        $this->showShared = ! $this->showShared;
     }
 
     public function updatedSearch(): void
@@ -209,11 +218,33 @@ class Notes extends Component
 
     public function render(): View
     {
+        $user = Auth::user();
+
         $notes = Note::query()
-            ->where('user_id', Auth::id())
+            ->where('user_id', $user->id)
             ->with(['tags', 'user'])
             ->orderByDesc('created_at')
             ->get();
+
+        if ($this->showShared) {
+            $shares = EntityShare::where('friend_id', $user->id)
+                ->where('entity_type', 'note')
+                ->with('owner')
+                ->get();
+
+            if ($shares->isNotEmpty()) {
+                $sharedNotes = Note::whereIn('id', $shares->pluck('entity_id'))
+                    ->with(['tags', 'user'])
+                    ->get()
+                    ->each(function (Note $n) use ($shares): void {
+                        $share = $shares->firstWhere('entity_id', $n->id);
+                        $n->is_shared = true;
+                        $n->shared_by = $share?->owner?->name;
+                    });
+
+                $notes = $notes->merge($sharedNotes)->sortByDesc('created_at')->values();
+            }
+        }
 
         if ($this->search !== '') {
             $needle = mb_strtolower($this->search);

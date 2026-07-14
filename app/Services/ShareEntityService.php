@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Enums\FriendshipStatus;
 use App\Models\EntityShare;
-use App\Models\Friendship;
 use App\Models\User;
+use App\Notifications\ItemSharedNotification;
+use Illuminate\Support\Facades\Gate;
 
 class ShareEntityService
 {
+    public function __construct(private readonly FriendshipService $friendshipService) {}
+
     /**
      * Get friends for a user (bidirectional), returns array with id and username.
      *
@@ -18,30 +20,14 @@ class ShareEntityService
      */
     public function getFriendsForUser(User $user): array
     {
-        $sentFriendships = Friendship::where('user_id', $user->id)
-            ->where('status', FriendshipStatus::Accepted->value)
-            ->pluck('friend_id')
-            ->all();
-
-        $receivedFriendships = Friendship::where('friend_id', $user->id)
-            ->where('status', FriendshipStatus::Accepted->value)
-            ->pluck('user_id')
-            ->all();
-
-        $friendIds = array_unique(array_merge($sentFriendships, $receivedFriendships));
-
-        if (empty($friendIds)) {
-            return [];
-        }
-
-        return User::whereIn('id', $friendIds)
-            ->orderBy('name')
-            ->get()
-            ->map(fn (User $user): array => [
-                'id' => (string) $user->id,
-                'username' => $user->username,
-                'name' => $user->name,
+        return $this->friendshipService->getFriendsForUser($user)
+            ->sortBy('name')
+            ->map(fn (User $u): array => [
+                'id' => (string) $u->id,
+                'username' => $u->username,
+                'name' => $u->name,
             ])
+            ->values()
             ->all();
     }
 
@@ -84,12 +70,26 @@ class ShareEntityService
         }
 
         foreach ($toCreate as $friendId) {
+            $recipient = User::find($friendId);
+
+            if (! $recipient) {
+                continue;
+            }
+
+            if ($entityType === 'reminder' && ! $recipient->allow_shared_reminders) {
+                continue;
+            }
+
             EntityShare::create([
                 'owner_id' => $owner->id,
                 'friend_id' => $friendId,
                 'entity_id' => $entityId,
                 'entity_type' => $entityType,
             ]);
+
+            if ($entityType !== 'reminder' || $recipient->notify_shared_reminders) {
+                $recipient->notify(new ItemSharedNotification($owner, $entityType, $entityId));
+            }
         }
     }
 
@@ -98,6 +98,7 @@ class ShareEntityService
      */
     public function shareWithFriend(User $owner, string $entityId, string $entityType, string $friendId): void
     {
+        Gate::authorize('create', EntityShare::class);
         EntityShare::firstOrCreate([
             'owner_id' => $owner->id,
             'friend_id' => $friendId,

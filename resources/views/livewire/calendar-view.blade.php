@@ -37,6 +37,12 @@
                     <option value="{{ $tag->id }}">{{ $tag->name }}</option>
                 @endforeach
             </flux:select>
+
+            <flux:button size="sm" :variant="$showShared ? 'primary' : 'subtle'" icon="share"
+                         wire:click="toggleShowShared"
+                         title="{{ $showShared ? __('Shared: On') : __('Show Shared') }}">
+                {{ __('Shared') }}
+            </flux:button>
         </div>
     </div>
 
@@ -292,6 +298,11 @@
                                     <span class="text-xs text-(--theme-text-muted)">
                                         {{ $entity['created_at']->format('H:i') }}
                                     </span>
+                                    @if($entity['is_shared'] ?? false)
+                                        <span class="rounded-full bg-[var(--theme-accent)]/10 px-1.5 py-0.5 text-[0.6rem] text-[var(--theme-accent)]">
+                                            {{ __('Shared') }}
+                                        </span>
+                                    @endif
                                 </div>
                                 @if ($entity['preview'])
                                     <p class="mt-1 text-xs leading-relaxed text-(--theme-text-muted)">

@@ -7,6 +7,7 @@ namespace App\Livewire;
 use App\Enums\Mood;
 use App\Models\CalendarDayMood;
 use App\Models\DiaryEntry;
+use App\Models\EntityShare;
 use App\Models\ImportantDate;
 use App\Models\Note;
 use App\Models\Postit;
@@ -68,10 +69,17 @@ class Calendar extends Component
 
     public string $limitError = '';
 
+    public bool $showShared = false;
+
     public function mount(): void
     {
         $this->year = (int) now()->year;
         $this->month = (int) now()->month;
+    }
+
+    public function toggleShowShared(): void
+    {
+        $this->showShared = ! $this->showShared;
     }
 
     public function previousMonth(): void
@@ -367,6 +375,35 @@ class Calendar extends Component
                 ->get()
             : collect();
 
+        if ($this->showShared) {
+            if ($this->shouldShowType('diary')) {
+                $shared = $this->fetchSharedEntities($userId, 'diary_entry',
+                    fn ($ids) => DiaryEntry::whereIn('id', $ids)->with('tags')
+                        ->whereBetween('created_at', [$startOfMonth, $endOfMonth])->get());
+                if ($shared->isNotEmpty()) {
+                    $diaryEntries = $diaryEntries->merge($shared);
+                }
+            }
+
+            if ($this->shouldShowType('note')) {
+                $shared = $this->fetchSharedEntities($userId, 'note',
+                    fn ($ids) => Note::whereIn('id', $ids)->with('tags')
+                        ->whereBetween('created_at', [$startOfMonth, $endOfMonth])->get());
+                if ($shared->isNotEmpty()) {
+                    $notes = $notes->merge($shared);
+                }
+            }
+
+            if ($this->shouldShowType('all') || $this->filterType === 'reminder') {
+                $shared = $this->fetchSharedEntities($userId, 'reminder',
+                    fn ($ids) => Reminder::whereIn('id', $ids)->with('tags')
+                        ->whereMonth('remind_at', $this->month)->whereYear('remind_at', $this->year)->get());
+                if ($shared->isNotEmpty()) {
+                    $reminders = $reminders->merge($shared);
+                }
+            }
+        }
+
         $calendarDays = $this->buildCalendarGrid($startOfMonth, $diaryEntries, $notes, $postits, $importantDates, $reminders);
 
         $selectedDayEntities = $this->selectedDate !== ''
@@ -392,6 +429,23 @@ class Calendar extends Component
     private function shouldShowType(string $type): bool
     {
         return $this->filterType === 'all' || $this->filterType === $type;
+    }
+
+    /**
+     * @param  \Closure(\Illuminate\Support\Collection<int, string>): \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model>  $buildQuery
+     * @return \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model>
+     */
+    private function fetchSharedEntities(int $userId, string $entityType, \Closure $buildQuery): \Illuminate\Database\Eloquent\Collection
+    {
+        $ids = EntityShare::where('friend_id', $userId)
+            ->where('entity_type', $entityType)
+            ->pluck('entity_id');
+
+        if ($ids->isEmpty()) {
+            return new \Illuminate\Database\Eloquent\Collection;
+        }
+
+        return $buildQuery($ids)->each(static fn ($e) => $e->is_shared = true);
     }
 
     /**
@@ -480,6 +534,7 @@ class Calendar extends Component
                 'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
+                'is_shared' => $e->is_shared ?? false,
             ]));
 
         $notes->filter(fn ($e) => $e->created_at->toDateString() === $date)
@@ -490,6 +545,7 @@ class Calendar extends Component
                 'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
+                'is_shared' => $e->is_shared ?? false,
             ]));
 
         $postits->filter(fn ($e) => $e->created_at->toDateString() === $date)
@@ -500,6 +556,7 @@ class Calendar extends Component
                 'mood' => $this->moodValue($e->mood),
                 'preview' => str(strip_tags($e->body ?? ''))->limit(80)->toString(),
                 'created_at' => $e->created_at,
+                'is_shared' => $e->is_shared ?? false,
             ]));
 
         // Important dates (exact match or recurring annual match)
@@ -518,6 +575,7 @@ class Calendar extends Component
             'mood' => 'love',
             'preview' => $d->recurs_annually ? __('Yearly') : '',
             'created_at' => Carbon::parse((string) $d->date)->setYear($parsedDate->year),
+            'is_shared' => false,
         ]));
 
         // Reminders
@@ -529,6 +587,7 @@ class Calendar extends Component
                 'mood' => $this->moodValue($r->mood),
                 'preview' => str(strip_tags($r->body ?? ''))->limit(80)->toString(),
                 'created_at' => Carbon::parse((string) $r->remind_at),
+                'is_shared' => $r->is_shared ?? false,
             ]));
 
         return $entities->sortBy('created_at')->values();
