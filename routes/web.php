@@ -67,6 +67,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('data/export', DataExportController::class)
         ->middleware(RejectGuestSettings::class)
         ->name('data.export');
+    Route::get('keep-alive', function () {
+        session()->put('kept-alive-at', now()->toDateTimeString());
+
+        return response()->noContent();
+    })->name('keep-alive');
 });
 
 require __DIR__.'/settings.php';

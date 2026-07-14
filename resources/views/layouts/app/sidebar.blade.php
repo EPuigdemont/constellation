@@ -4,6 +4,29 @@
         @include('partials.head')
     </head>
     <body data-theme-scene class="min-h-screen bg-[var(--theme-bg,#fff)] dark:bg-[var(--theme-bg,theme(colors.zinc.800))] theme-{{ auth()->user()?->activeTheme() ?? 'summer' }}">
+        {{-- Session-expired recovery banner: replaces Livewire's black screen on 419 --}}
+        <div x-data="{ expired: false }"
+             x-on:livewire-session-expired.window="expired = true"
+             x-show="expired"
+             x-cloak
+             class="fixed inset-x-0 top-0 z-[99999] border-b border-red-200 bg-red-50 px-4 py-3 dark:border-red-900/50 dark:bg-red-950">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+                    <flux:icon name="exclamation-triangle" variant="solid" class="size-4 shrink-0" />
+                    {{ __('Your session has expired. Copy any unsaved work, then refresh the page.') }}
+                </div>
+                <div class="flex shrink-0 items-center gap-2">
+                    <button onclick="window.location.reload()"
+                            class="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600">
+                        {{ __('Refresh') }}
+                    </button>
+                    <button @click="expired = false"
+                            class="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                        {{ __('Dismiss') }}
+                    </button>
+                </div>
+            </div>
+        </div>
         <flux:sidebar sticky collapsible class="border-e bg-[var(--theme-sidebar-bg,theme(colors.zinc.50))] border-[var(--theme-sidebar-border,theme(colors.zinc.200))] dark:border-[var(--theme-sidebar-border,theme(colors.zinc.700))] dark:bg-[var(--theme-sidebar-bg,theme(colors.zinc.900))]">
             <flux:sidebar.header>
                 <x-app-logo :sidebar="true" href="{{ route('diary') }}" wire:navigate />
@@ -52,9 +75,10 @@
                 {{-- Collapsed: icon-only navigation with tooltips --}}
                 <div class="not-in-data-flux-sidebar-collapsed-desktop:hidden flex flex-col items-center gap-1 pt-2">
                     <flux:tooltip :content="__('Notifications')" position="right">
-                        <div class="flex items-center justify-center rounded-md p-2">
-                            <livewire:notifications-bell />
-                        </div>
+                        <a href="{{ route('notifications') }}" wire:navigate
+                           @class(['flex items-center justify-center rounded-md p-2 transition-colors', 'text-(--theme-accent) bg-(--theme-accent)/10' => request()->routeIs('notifications'), 'text-(--theme-text-muted) hover:text-(--theme-accent) hover:bg-(--theme-accent)/5' => ! request()->routeIs('notifications')])>
+                            <flux:icon name="bell-alert" variant="{{ request()->routeIs('notifications') ? 'solid' : 'outline' }}" class="size-5" />
+                        </a>
                     </flux:tooltip>
                     <flux:tooltip :content="__('Diary')" position="right">
                         <a href="{{ route('diary') }}" wire:navigate
@@ -260,6 +284,25 @@
         {{ $slot }}
 
         <livewire:toast-notifications />
+
+        {{-- Ping keep-alive every 10 minutes to prevent session expiry during long editing sessions --}}
+        <div x-data x-init="setInterval(() => fetch('{{ route('keep-alive') }}', { credentials: 'same-origin' }), 600000)"></div>
+
+        {{-- Intercept Livewire 419s: suppress default black screen, fire event for the recovery banner instead --}}
+        <script>
+            document.addEventListener('livewire:init', () => {
+                Livewire.hook('request', ({ fail }) => {
+                    fail((details) => {
+                        if (details && details.status === 419) {
+                            if (typeof details.preventDefault === 'function') {
+                                details.preventDefault()
+                            }
+                            window.dispatchEvent(new CustomEvent('livewire-session-expired'))
+                        }
+                    })
+                })
+            })
+        </script>
 
         @fluxScripts
     </body>
