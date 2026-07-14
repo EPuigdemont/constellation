@@ -233,4 +233,46 @@ class RemindersTest extends TestCase
             ->call('saveReminder')
             ->assertHasErrors(['reminderTitle']);
     }
+
+    public function test_delete_reminder_prevents_deleting_another_users_reminder(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $reminder = Reminder::factory()->create(['user_id' => $owner->id]);
+
+        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+
+        Livewire::actingAs($other)
+            ->test(Reminders::class)
+            ->call('deleteReminder', $reminder->id);
+    }
+
+    public function test_save_reminder_prevents_updating_another_users_reminder(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $reminder = Reminder::factory()->create(['user_id' => $owner->id, 'title' => 'Original']);
+
+        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+
+        Livewire::actingAs($other)
+            ->test(Reminders::class)
+            ->set('editingReminderId', $reminder->id)
+            ->set('reminderTitle', 'Hacked')
+            ->set('reminderAt', now()->addDay()->format('Y-m-d\TH:i'))
+            ->call('saveReminder');
+    }
+
+    public function test_open_share_panel_prevents_sharing_another_users_reminder(): void
+    {
+        $owner = User::factory()->create();
+        $other = User::factory()->create();
+        $reminder = Reminder::factory()->create(['user_id' => $owner->id]);
+
+        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+
+        Livewire::actingAs($other)
+            ->test(Reminders::class)
+            ->call('openSharePanel', $reminder->id);
+    }
 }

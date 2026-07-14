@@ -376,28 +376,31 @@ class Calendar extends Component
             : collect();
 
         if ($this->showShared) {
-            $sharedDiaryIds = EntityShare::where('friend_id', $userId)->where('entity_type', 'diary_entry')->pluck('entity_id');
-            if ($sharedDiaryIds->isNotEmpty() && $this->shouldShowType('diary')) {
-                $shared = DiaryEntry::whereIn('id', $sharedDiaryIds)->with('tags')
-                    ->whereBetween('created_at', [$startOfMonth, $endOfMonth])->get()
-                    ->each(fn ($e) => $e->is_shared = true);
-                $diaryEntries = $diaryEntries->merge($shared);
+            if ($this->shouldShowType('diary')) {
+                $shared = $this->fetchSharedEntities($userId, 'diary_entry',
+                    fn ($ids) => DiaryEntry::whereIn('id', $ids)->with('tags')
+                        ->whereBetween('created_at', [$startOfMonth, $endOfMonth])->get());
+                if ($shared->isNotEmpty()) {
+                    $diaryEntries = $diaryEntries->merge($shared);
+                }
             }
 
-            $sharedNoteIds = EntityShare::where('friend_id', $userId)->where('entity_type', 'note')->pluck('entity_id');
-            if ($sharedNoteIds->isNotEmpty() && $this->shouldShowType('note')) {
-                $shared = Note::whereIn('id', $sharedNoteIds)->with('tags')
-                    ->whereBetween('created_at', [$startOfMonth, $endOfMonth])->get()
-                    ->each(fn ($n) => $n->is_shared = true);
-                $notes = $notes->merge($shared);
+            if ($this->shouldShowType('note')) {
+                $shared = $this->fetchSharedEntities($userId, 'note',
+                    fn ($ids) => Note::whereIn('id', $ids)->with('tags')
+                        ->whereBetween('created_at', [$startOfMonth, $endOfMonth])->get());
+                if ($shared->isNotEmpty()) {
+                    $notes = $notes->merge($shared);
+                }
             }
 
-            $sharedReminderIds = EntityShare::where('friend_id', $userId)->where('entity_type', 'reminder')->pluck('entity_id');
-            if ($sharedReminderIds->isNotEmpty() && ($this->shouldShowType('all') || $this->filterType === 'reminder')) {
-                $shared = Reminder::whereIn('id', $sharedReminderIds)->with('tags')
-                    ->whereMonth('remind_at', $this->month)->whereYear('remind_at', $this->year)->get()
-                    ->each(fn ($r) => $r->is_shared = true);
-                $reminders = $reminders->merge($shared);
+            if ($this->shouldShowType('all') || $this->filterType === 'reminder') {
+                $shared = $this->fetchSharedEntities($userId, 'reminder',
+                    fn ($ids) => Reminder::whereIn('id', $ids)->with('tags')
+                        ->whereMonth('remind_at', $this->month)->whereYear('remind_at', $this->year)->get());
+                if ($shared->isNotEmpty()) {
+                    $reminders = $reminders->merge($shared);
+                }
             }
         }
 
@@ -426,6 +429,23 @@ class Calendar extends Component
     private function shouldShowType(string $type): bool
     {
         return $this->filterType === 'all' || $this->filterType === $type;
+    }
+
+    /**
+     * @param  \Closure(\Illuminate\Support\Collection<int, string>): \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model>  $buildQuery
+     * @return \Illuminate\Database\Eloquent\Collection<int, \Illuminate\Database\Eloquent\Model>
+     */
+    private function fetchSharedEntities(int $userId, string $entityType, \Closure $buildQuery): \Illuminate\Database\Eloquent\Collection
+    {
+        $ids = EntityShare::where('friend_id', $userId)
+            ->where('entity_type', $entityType)
+            ->pluck('entity_id');
+
+        if ($ids->isEmpty()) {
+            return new \Illuminate\Database\Eloquent\Collection;
+        }
+
+        return $buildQuery($ids)->each(static fn ($e) => $e->is_shared = true);
     }
 
     /**

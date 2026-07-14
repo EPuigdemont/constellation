@@ -77,7 +77,8 @@ class Reminders extends Component
 
     public function openSharePanel(string $reminderId, ShareEntityService $service): void
     {
-        Reminder::where('user_id', Auth::id())->findOrFail($reminderId);
+        $reminder = Reminder::where('user_id', Auth::id())->findOrFail($reminderId);
+        Gate::authorize('update', $reminder);
         $this->sharingReminderId = $reminderId;
         $this->availableFriends = $service->getFriendsForUser(Auth::user());
         $this->shareFriendIds = $service->getSharedFriendIds(Auth::user(), $reminderId, 'reminder');
@@ -226,6 +227,7 @@ class Reminders extends Component
 
         if ($this->editingReminderId) {
             $existing = Reminder::where('user_id', Auth::id())->findOrFail($this->editingReminderId);
+            Gate::authorize('update', $existing);
             if ($existing->remind_at->toDateTimeString() !== Carbon::parse($this->reminderAt)->toDateTimeString()) {
                 $data['approaching_notified_at'] = null;
                 $data['due_notified_at'] = null;
@@ -247,7 +249,9 @@ class Reminders extends Component
 
     public function deleteReminder(string $id): void
     {
-        Reminder::where('user_id', Auth::id())->findOrFail($id)->delete();
+        $reminder = Reminder::where('user_id', Auth::id())->findOrFail($id);
+        Gate::authorize('delete', $reminder);
+        $reminder->delete();
     }
 
     public function closeReminderForm(): void

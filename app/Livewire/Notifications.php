@@ -91,24 +91,23 @@ class Notifications extends Component
             ->limit(20)
             ->get();
 
-        $allDates = ImportantDate::where('user_id', $userId)
-            ->orderBy('date')
+        $today = now();
+
+        $todayDates = ImportantDate::where('user_id', $userId)
+            ->whereMonth('date', $today->month)
+            ->whereDay('date', $today->day)
             ->get();
 
-        $todayDates = $allDates->filter(function (ImportantDate $date): bool {
-            $eventDate = Carbon::parse((string) $date->date);
+        $upcomingDates = ImportantDate::where('user_id', $userId)
+            ->get()
+            ->filter(function (ImportantDate $date) use ($today): bool {
+                $thisYear = Carbon::parse((string) $date->date)->setYear($today->year);
+                if ($thisYear->isPast() && ! $thisYear->isToday()) {
+                    $thisYear->addYear();
+                }
 
-            return $eventDate->month === now()->month && $eventDate->day === now()->day;
-        });
-
-        $upcomingDates = $allDates->filter(function (ImportantDate $date): bool {
-            $thisYear = Carbon::parse((string) $date->date)->setYear(now()->year);
-            if ($thisYear->isPast() && ! $thisYear->isToday()) {
-                $thisYear->addYear();
-            }
-
-            return ! $thisYear->isToday() && $thisYear->diffInDays(now()) <= 30;
-        });
+                return ! $thisYear->isToday() && $thisYear->diffInDays($today) <= 30;
+            });
 
         return view('livewire.notifications-view', [
             'friendRequests' => $friendRequests,

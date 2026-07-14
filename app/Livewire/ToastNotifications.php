@@ -25,11 +25,13 @@ class ToastNotifications extends Component
             return;
         }
 
+        $fetchedAt = now()->toDateTimeString();
+
         $newNotifications = $user->unreadNotifications()
             ->where('created_at', '>', $this->lastFetchedAt)
             ->get();
 
-        $this->lastFetchedAt = now()->toDateTimeString();
+        $this->lastFetchedAt = $fetchedAt;
 
         foreach ($newNotifications as $notification) {
             $data = $notification->data;

@@ -10,6 +10,7 @@ use App\Models\Note;
 use App\Models\Reminder;
 use App\Models\User;
 use App\Notifications\ItemSharedNotification;
+use App\Services\FriendshipService;
 use App\Services\ShareEntityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -24,7 +25,7 @@ class ShareEntityServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ShareEntityService;
+        $this->service = new ShareEntityService(new FriendshipService);
     }
 
     public function test_get_friends_for_user_includes_only_accepted_sent_friendships(): void

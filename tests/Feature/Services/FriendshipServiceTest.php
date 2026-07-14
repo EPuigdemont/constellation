@@ -43,6 +43,16 @@ class FriendshipServiceTest extends TestCase
         ]);
     }
 
+    public function test_remove_friend_returns_false_when_no_accepted_friendship_exists(): void
+    {
+        $user = User::factory()->create();
+        $nonFriend = User::factory()->create();
+
+        $result = $this->service->removeFriend($user, (string) $nonFriend->id);
+
+        $this->assertFalse($result);
+    }
+
     public function test_remove_friend_only_deletes_accepted_rows_for_target_pair(): void
     {
         $user = User::factory()->create();

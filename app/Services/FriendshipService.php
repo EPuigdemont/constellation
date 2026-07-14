@@ -94,7 +94,7 @@ class FriendshipService
      */
     public function removeFriend(User $user, string $friendId): bool
     {
-        Friendship::where(function ($query) use ($user, $friendId) {
+        $deleted = Friendship::where(function ($query) use ($user, $friendId) {
             $query->where(function ($direction) use ($user, $friendId) {
                 $direction->where('user_id', $user->id)
                     ->where('friend_id', $friendId);
@@ -106,7 +106,7 @@ class FriendshipService
             ->where('status', FriendshipStatus::Accepted->value)
             ->delete();
 
-        return true;
+        return $deleted > 0;
     }
 
     /**
