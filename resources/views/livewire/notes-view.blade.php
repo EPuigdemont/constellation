@@ -113,7 +113,7 @@
                                         $moodClass = $note->mood ? 'mood-' . $note->mood->value : '';
                                     @endphp
                                     <div wire:key="notes-day-{{ $date }}-stack-{{ $note->id }}" class="notes-stack-item {{ $moodClass }} absolute inset-x-0 rounded-lg border border-[var(--theme-border)] p-3"
-                                         style="top: {{ $index * 14 }}px; z-index: {{ 30 - $index }}; border-color: var(--card-border, var(--theme-border));">
+                                         style="top: {{ $index * 14 }}px; z-index: {{ 3 - $index }}; border-color: var(--card-border, var(--theme-border));">
                                         <h3 class="line-clamp-1 text-sm font-semibold text-[var(--theme-text)]">{{ $note->title ?: __('Untitled') }}</h3>
                                         <p class="mt-1 line-clamp-2 text-xs text-[var(--theme-text-muted)]">{{ str(strip_tags($note->body ?? ''))->limit(80) }}</p>
                                     </div>
